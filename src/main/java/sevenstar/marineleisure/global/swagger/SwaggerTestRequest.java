@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "swagger 테스트용 request", example = "testuser")
 public class SwaggerTestRequest {
 	@Schema(description = "사용자 이름", example = "testuser")
 	private final String username;
