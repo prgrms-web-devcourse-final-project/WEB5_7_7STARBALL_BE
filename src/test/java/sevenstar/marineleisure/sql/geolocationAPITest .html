@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>GPS 테스트</title>
+</head>
+<body>
+<h2>📍 현재 위치 가져오기 테스트</h2>
+<button onclick="getLocation()">내 위치 확인</button>
+<p id="output"></p>
+
+<script>
+    function getLocation(retry = 0) {
+        if (!navigator.geolocation) {
+            document.getElementById("output").innerText = "이 브라우저는 위치 정보를 지원하지 않습니다.";
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                document.getElementById("output").innerText = `✅ 위도: ${lat}, 경도: ${lng}`;
+                console.log("📍 위도:", lat, "경도:", lng);
+            },
+            (error) => {
+                console.warn("🚨 위치 정보 오류:", error.message);
+                if (retry < 3) {
+                    // 최대 3번까지 재시도 (2초 간격)
+                    setTimeout(() => getLocation(retry + 1), 2000);
+                } else {
+                    document.getElementById("output").innerText =
+                        "❌ 위치 정보를 가져오지 못했습니다. 위치 서비스를 활성화했는지 확인하세요.";
+                }
+            },
+            {
+                enableHighAccuracy: false,  // 실내에서는 false가 더 안정적
+                timeout: 10000,
+                maximumAge: 10000
+            }
+        );
+    }
+</script>
+</body>
+</html>
