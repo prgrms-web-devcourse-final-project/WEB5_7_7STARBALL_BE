@@ -1,0 +1,42 @@
+package sevenstar.marineleisure.forecast.adapter.external;
+
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+/**
+ * MarineLeisure - FishingForecastApiClient
+ * create date:    25. 7. 3.
+ * last update:    25. 7. 3.
+ * author:  gigol
+ * purpose: 
+ */
+@Component
+public class FishingForecastApiClient {
+	@Value("${dataportal.api.key}")
+	private String serviceKey;
+
+	private final RestTemplate restTemplate = new RestTemplate();
+	String baseUrl = "https://apis.data.go.kr/1192136/fcstFishing/GetFcstFishingApiService";
+
+	public String callApi(){
+		URI uri = UriComponentsBuilder.fromUriString(baseUrl)
+			.queryParam("serviceKey", URLEncoder.encode(serviceKey, StandardCharsets.UTF_8))
+			.queryParam("type", "json")
+			.queryParam("gubun",URLEncoder.encode("갯바위",StandardCharsets.UTF_8))
+			.queryParam("pageNo", 1)
+			.queryParam("numOfRows", 3)
+			.build(true)
+			.toUri();
+		System.out.println(uri);
+		ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
+
+		return response.getBody();
+	}
+}
