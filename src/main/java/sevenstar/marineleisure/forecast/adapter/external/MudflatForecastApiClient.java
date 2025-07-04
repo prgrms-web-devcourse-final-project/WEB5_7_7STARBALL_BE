@@ -10,9 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * 갯벌지수를 받기위한 외부  API연결
- */
 @Component
 public class MudflatForecastApiClient {
 	@Value("${dataportal.api.key}")

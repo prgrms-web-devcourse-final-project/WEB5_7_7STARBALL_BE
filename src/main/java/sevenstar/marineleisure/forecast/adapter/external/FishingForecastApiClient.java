@@ -10,13 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * MarineLeisure - FishingForecastApiClient
- * create date:    25. 7. 3.
- * last update:    25. 7. 3.
- * author:  gigol
- * purpose: 
- */
 @Component
 public class FishingForecastApiClient {
 	@Value("${dataportal.api.key}")
