@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import sevenstar.marineleisure.global.domain.BaseResponse;
 import sevenstar.marineleisure.global.exception.CustomException;
-import sevenstar.marineleisure.global.exception.ErrorCode;
+import sevenstar.marineleisure.global.exception.enums.CommonErrorCode;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -19,6 +19,6 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<BaseResponse<Void>> handleGenericException(Exception ex) {
 		ex.printStackTrace();
-		return BaseResponse.error(ErrorCode.INTERNET_SERVER_ERROR);
+		return BaseResponse.error(CommonErrorCode.INTERNET_SERVER_ERROR);
 	}
 }

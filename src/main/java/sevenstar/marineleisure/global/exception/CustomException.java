@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.global.exception;
 
 import lombok.Getter;
+import sevenstar.marineleisure.global.exception.enums.ErrorCode;
 
 @Getter
 public class CustomException extends RuntimeException {

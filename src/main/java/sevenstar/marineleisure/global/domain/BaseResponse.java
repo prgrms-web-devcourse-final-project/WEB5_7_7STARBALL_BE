@@ -2,7 +2,7 @@ package sevenstar.marineleisure.global.domain;
 
 import org.springframework.http.ResponseEntity;
 
-import sevenstar.marineleisure.global.exception.ErrorCode;
+import sevenstar.marineleisure.global.exception.enums.ErrorCode;
 
 public record BaseResponse<T>(
 	int code,
