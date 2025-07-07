@@ -14,9 +14,11 @@ public interface MeetingService {
 	 * 모임 목록 조회
 	 * [GET] /meetings
 	 * @param member
-	 * @return MeetingListResponse 입니다.
+	 * @param cursorId : cursorId 부터 탐색 합니다.
+	 * @param size : 가져올 갯수
+	 * @return
 	 */
-	MeetingListResponse getAllMeetings(Member member);
+	MeetingListResponse getAllMeetings(Member member,Long cursorId, int size);
 
 	/**
 	 * 모임 상세 정보 조회
@@ -30,25 +32,31 @@ public interface MeetingService {
 	 * 내 모임 목록 조회 - 내가 주최한 모임
 	 * [GET] /meetings/my/hosted
 	 * @param member
+	 * @param cursorId : cursorId 부터 탐색 합니다.
+	 * @param size : 가져올 갯수
 	 * @return
 	 */
-	MeetingListResponse getHostedMeetings(Member member);
+	MeetingListResponse getHostedMeetings(Member member,Long cursorId, int size);
 
 	/**
 	 * 내 모임 목록 조회 - 내가 참여한 모임
 	 * [GET] /meetings/my/joined
 	 * @param member
+	 * @param cursorId : cursorId 부터 탐색 합니다.
+	 * @param size : 가져올 갯수
 	 * @return
 	 */
-	MeetingListResponse getJoinedMeetings(Member member);
+	MeetingListResponse getJoinedMeetings(Member member,Long cursorId, int size);
 
 	/**
 	 * 내 모임 목록 조회 - 끝난 모임
 	 * [GET] /meetings/my/end
 	 * @param member
+	 * @param cursorId : cursorId 부터 탐색 합니다.
+	 * @param size : 가져올 갯수
 	 * @return
 	 */
-	MeetingListResponse getEndMeetings(Member member);
+	MeetingListResponse getEndMeetings(Member member,Long cursorId, int size);
 
 	/**
 	 * 모임 개수 조회 - 대시보드용
