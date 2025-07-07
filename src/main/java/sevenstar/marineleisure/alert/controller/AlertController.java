@@ -8,7 +8,7 @@ import sevenstar.marineleisure.alert.service.JellyfishService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/alert")
+@RequestMapping("/alerts")
 public class AlertController {
 	private final JellyfishService jellyfishService;
 }
