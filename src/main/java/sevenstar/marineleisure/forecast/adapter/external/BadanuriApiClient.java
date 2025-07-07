@@ -10,17 +10,16 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class BadanuriApiClient {
+	private final RestTemplate restTemplate = new RestTemplate();
+	String baseUrl = "http://www.khoa.go.kr/api/oceangrid/tideObsPreTab/search.do";
 	@Value("${badanuri.api.key}")
 	private String serviceKey;
 
-	private final RestTemplate restTemplate = new RestTemplate();
-	String baseUrl = "http://www.khoa.go.kr/api/oceangrid/tideObsPreTab/search.do";
-
-	public String callApi(){
+	public String callApi() {
 		URI uri = UriComponentsBuilder.fromUriString(baseUrl)
 			.queryParam("ServiceKey", serviceKey)
-			.queryParam("Date","20250703")
-			.queryParam("ObsCode","DT_0001")
+			.queryParam("Date", "20250703")
+			.queryParam("ObsCode", "DT_0001")
 			.queryParam("ResultType", "json")
 			.build()
 			.encode()
