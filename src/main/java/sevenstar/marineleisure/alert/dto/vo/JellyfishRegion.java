@@ -10,5 +10,5 @@ import lombok.Builder;
  * @param species : 해당 지역 발생 해파리정보
  */
 @Builder
-public record JellyfishRegion(String regionName, List<JellyfishSpcies> species) {
+public record JellyfishRegion(String regionName, List<JellyfishSpcies> spcies) {
 }
