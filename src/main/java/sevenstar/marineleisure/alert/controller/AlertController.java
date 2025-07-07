@@ -1,16 +1,9 @@
 package sevenstar.marineleisure.alert.controller;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import sevenstar.marineleisure.alert.dto.response.JellyfishResponseDto;
-import sevenstar.marineleisure.alert.dto.vo.JellyfishDetailVO;
-import sevenstar.marineleisure.alert.mapper.AlertMapper;
 import sevenstar.marineleisure.alert.service.JellyfishService;
 import sevenstar.marineleisure.global.domain.BaseResponse;
 
