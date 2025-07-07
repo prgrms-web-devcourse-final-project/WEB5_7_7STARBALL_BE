@@ -33,13 +33,22 @@ public class Surfing extends BaseEntity {
 	@Column(name = "time_period", length = 10, nullable = false)
 	private String timePeriod;
 
+	@Column(name = "wave_height")
 	private Float waveHeight;
+
+	@Column(name = "wave_period")
 	private Float wavePeriod;
+
+	@Column(name = "wind_speed")
 	private Float windSpeed;
+
+	@Column(name = "sea_temp")
 	private Float seaTemp;
 
+	@Column(name = "total_index")
 	private TotalIndex totalIndex;
 
+	@Column(name = "uv_index")
 	private Float uvIndex;
 
 	@Builder

@@ -31,17 +31,31 @@ public class Mudflat extends BaseEntity {
 	@Column(name = "forecast_date", nullable = false)
 	private LocalDate forecastDate;
 
+	@Column(name = "start_time")
 	private LocalTime startTime;
+
+	@Column(name = "end_time")
 	private LocalTime endTime;
 
+	@Column(name = "uv_index")
 	private Float uvIndex;
+
+	@Column(name = "air_temp_min")
 	private Float airTempMin;
+
+	@Column(name = "air_temp_max")
 	private Float airTempMax;
+
+	@Column(name = "wind_speed_min")
 	private Float windSpeedMin;
+
+	@Column(name = "wind_speed_max")
 	private Float windSpeedMax;
 
+	@Column(name = "weather")
 	private String weather;
 
+	@Column(name = "total_index")
 	private TotalIndex totalIndex;
 
 	@Builder

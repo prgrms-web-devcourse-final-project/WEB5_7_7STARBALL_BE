@@ -35,7 +35,7 @@ public class Observatory extends BaseEntity {
 	@Column(precision = 9, scale = 6, nullable = false)
 	private BigDecimal longitude;
 
-	@Column(nullable = false)
+	@Column(name = "hl_code", nullable = false)
 	private HlCode hlCode;
 
 	@Column(nullable = false)

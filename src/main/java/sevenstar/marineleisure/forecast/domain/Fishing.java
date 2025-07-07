@@ -36,25 +36,43 @@ public class Fishing extends BaseEntity {
 	@Column(name = "time_period", length = 10)
 	private String timePeriod;
 
+	@Column(name = "tide")
 	private Integer tide;
 
+	@Column(name = "total_index")
 	private TotalIndex totalIndex;
 
+	@Column(name = "wave_height_min")
 	private Float waveHeightMin;
+
+	@Column(name = "wave_height_max")
 	private Float waveHeightMax;
 
+	@Column(name = "sea_temp_min")
 	private Float seaTempMin;
+
+	@Column(name = "sea_temp_max")
 	private Float seaTempMax;
 
+	@Column(name = "air_temp_min")
 	private Float airTempMin;
+
+	@Column(name = "air_temp_max")
 	private Float airTempMax;
 
+	@Column(name = "current_speed_min")
 	private Float currentSpeedMin;
+
+	@Column(name = "current_speed_max")
 	private Float currentSpeedMax;
 
+	@Column(name = "wind_speed_min")
 	private Float windSpeedMin;
+
+	@Column(name = "wind_speed_max")
 	private Float windSpeedMax;
 
+	@Column(name = "uv_index")
 	private Float uvIndex;
 
 	@Builder

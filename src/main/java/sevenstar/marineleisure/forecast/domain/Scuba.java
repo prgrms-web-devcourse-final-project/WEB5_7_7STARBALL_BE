@@ -40,13 +40,25 @@ public class Scuba extends BaseEntity {
 	@Column(columnDefinition = "TEXT")
 	private String tide;
 
+	@Column(name = "total_index")
 	private TotalIndex totalIndex;
 
+	@Column(name = "wave_height_min")
 	private Float waveHeightMin;
+
+	@Column(name = "wave_height_max")
 	private Float waveHeightMax;
+
+	@Column(name = "sea_temp_min")
 	private Float seaTempMin;
+
+	@Column(name = "sea_temp_max")
 	private Float seaTempMax;
+
+	@Column(name = "current_speed_min")
 	private Float currentSpeedMin;
+
+	@Column(name = "current_speed_max")
 	private Float currentSpeedMax;
 
 	@Builder

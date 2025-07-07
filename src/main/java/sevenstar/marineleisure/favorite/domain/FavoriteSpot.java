@@ -13,10 +13,10 @@ import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseEntity;
 
 @Entity
-@Table(name = "favorite_spot")
+@Table(name = "favorite_spots")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FavoriteSpots extends BaseEntity {
+public class FavoriteSpot extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +32,7 @@ public class FavoriteSpots extends BaseEntity {
 	private Boolean notification = true;
 
 	@Builder
-	public FavoriteSpots(Long userId, Long spotId) {
+	public FavoriteSpot(Long userId, Long spotId) {
 		this.userId = userId;
 		this.spotId = spotId;
 	}

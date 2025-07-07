@@ -14,7 +14,7 @@ import sevenstar.marineleisure.global.domain.BaseEntity;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "tag")
+@Table(name = "tags")
 public class Tag extends BaseEntity {
 
 	@Id
