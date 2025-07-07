@@ -17,7 +17,7 @@ import sevenstar.marineleisure.meeting.Dto.VO.DetailSpot;
  * @param hostNickName : 모임장의 닉네임
  * @param hostEmail : 모임장의 EMAIL
  * @param description : 모임의 설명
- * @param spot : 장소의 객
+ * @param spot : 장소의 객체
  * @param meetingTime : 모임 예정시간
  * @param status : 상태 MeetingStatus.java 참고
  * @param createdAt : 만들어진 시간
