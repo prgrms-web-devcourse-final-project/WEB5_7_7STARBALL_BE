@@ -2,7 +2,8 @@ package sevenstar.marineleisure.global.enums;
 
 public enum FishingType {
 	ROCK("갯바위"),
-	BOAT("선상");
+	BOAT("선상"),
+	NONE("없음");
 
 	private final String description;
 
