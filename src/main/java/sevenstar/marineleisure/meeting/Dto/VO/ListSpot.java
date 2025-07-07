@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record ListSpot(
-    Long id,
+    long id,
     String name,
     String location
 ) {

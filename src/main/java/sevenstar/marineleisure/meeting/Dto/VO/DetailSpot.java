@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record DetailSpot(
-    Long id,
+    long id,
     String title,
 	String location,
     Double latitude,

@@ -5,7 +5,7 @@ import sevenstar.marineleisure.global.enums.MeetingRole;
 
 @Builder
 public record ParticipantResponse(
-	Long id,
+	long id,
 	MeetingRole role,
 	String nickName
 ) {

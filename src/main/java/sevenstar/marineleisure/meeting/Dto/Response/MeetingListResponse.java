@@ -10,11 +10,11 @@ import sevenstar.marineleisure.meeting.Dto.VO.Tag;
 
 @Builder
 public record MeetingListResponse(
-	Long id,
+	long id,
 	ActivityCategory category,
 	Integer capacity,
-	Long currentParticipants,
-	Long hostId,
+	long currentParticipants,
+	long hostId,
 	String hostNickName,
 	LocalDateTime meetingTime,
 	MeetingStatus status,

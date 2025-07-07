@@ -24,11 +24,11 @@ import sevenstar.marineleisure.meeting.Dto.VO.DetailSpot;
  */
 @Builder
 public record MeetingDetailResponse(
-	Long id,
+	long id,
 	String title,
 	ActivityCategory category,
-	Long capacity,
-	Long hostId,
+	long capacity,
+	long hostId,
 	String hostNickName,
 	String hostEmail,
 	String description,
