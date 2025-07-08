@@ -3,6 +3,7 @@ package sevenstar.marineleisure.alert.util;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -15,23 +16,23 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import sevenstar.marineleisure.alert.domain.JellyfishSpecies;
 import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishData;
-import sevenstar.marineleisure.alert.service.JellyfishService;
+import sevenstar.marineleisure.alert.repository.JellyfishSpeciesRepository;
 import sevenstar.marineleisure.global.enums.DensityLevel;
 import sevenstar.marineleisure.global.enums.ToxicityLevel;
 
 /**
- * 해파리 주간보고pdf를 파싱하여 DB에 적재하는 파서입니다.
+ * 해파리 주간보고pdf를 파싱하여 DB에 적재할수 있도록 ParsedJellusifhData를 만들어 주는 파서입니다.
  */
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class JellyfishPdfParser {
 
-	private final JellyfishService service;
-
-	private static final Pattern DATE_PATTERN = Pattern.compile("(\\d{4})\\.(\\d{2})\\.(\\d{2})");
-	private static final Pattern SPECIES_PATTERN = Pattern.compile("- (.+?)\\((\\d+)%.*?\\):");
+	private static final Pattern SPECIES_PATTERN =
+		Pattern.compile("-\\s*(.+?)\\([^\\)]*%[^\\)]*\\):");
+	private final JellyfishSpeciesRepository repository;
 
 	/**
 	 *
@@ -42,15 +43,16 @@ public class JellyfishPdfParser {
 	public List<ParsedJellyfishData> parse(File file) throws IOException {
 		List<ParsedJellyfishData> parsedDataList = new ArrayList<>();
 		try (PDDocument document = Loader.loadPDF(file)) {
+
+			LocalDate reportDate = extractReportDate(file);
+			log.info("보고서 날짜: {}", reportDate);
+
 			PDFTextStripper pdfTextStripper = new PDFTextStripper();
 			pdfTextStripper.setStartPage(1);
 			pdfTextStripper.setEndPage(1);
 
 			String text = pdfTextStripper.getText(document);
 			log.debug("pdf first page text extraction complete");
-
-			LocalDate reportDate = extractReportDate(text);
-			log.info("보고서 날짜: {}", reportDate);
 
 			parsedDataList.addAll(parseSection(text, "◇ 대량출현해파리", reportDate, false));
 
@@ -82,67 +84,126 @@ public class JellyfishPdfParser {
 		// 파싱할 부분 추출
 		int sectionEnd = findNextSection(text, sectionStart + sectionTitle.length());
 		String sectionText = text.substring(sectionStart, sectionEnd);
-
 		String[] lines = sectionText.split("\n");
+
 		String currentSpecies = null;
 		ToxicityLevel toxicityLevel = null;
+		Long currentSpeciesId = 0L;
+		DensityLevel currentDensity = null;
+		List<String> regionBuffer = new ArrayList<>();
 
-		for (String line : lines) {
-			line = line.trim();
+		for (String rawLine : lines) {
+			String line = rawLine.trim();
 
-			Matcher speciesMatcher = SPECIES_PATTERN.matcher(line);
-			if (speciesMatcher.find()) {
-				currentSpecies = speciesMatcher.group(1).trim();
-				if (service.searchByName(currentSpecies) != null) {
-					toxicityLevel = service.searchByName(currentSpecies).getToxicity();
+			// 1. 새로운 해파리 종 시작
+			if (line.startsWith("-")) {
+				// 이전 buffer 처리
+				if (currentSpecies != null && !regionBuffer.isEmpty() && currentDensity != null) {
+					for (String region : regionBuffer) {
+						dataList.add(ParsedJellyfishData.builder()
+							.species(currentSpecies)
+							.speciesId(currentSpeciesId)
+							.toxicity(toxicityLevel)
+							.reportDate(reportDate)
+							.region(region)
+							.densityType(currentDensity)
+							.build());
+					}
+				}
+				regionBuffer.clear();
+				currentDensity = null;
+
+				// 종 추출
+				Matcher matcher = SPECIES_PATTERN.matcher(line);
+				if (matcher.find()) {
+					currentSpecies = matcher.group(1).trim();
+					JellyfishSpecies found = repository.findByName(currentSpecies).orElse(null);
+					if (found != null) {
+						toxicityLevel = found.getToxicity();
+						currentSpeciesId = found.getId();
+					} else {
+						log.warn("해파리 종 정보 없음: {}", currentSpecies);
+						currentSpecies = null;
+						currentSpeciesId = null;
+					}
 				}
 				continue;
 			}
-			if (currentSpecies != null && line.contains("고밀도") || line.contains("저밀도")) {
-				List<String> regions = extractRegions(line);
-				DensityLevel densityLevel = line.contains("고밀도") ? DensityLevel.HIGH : DensityLevel.LOW;
 
-				for (String region : regions) {
-					ParsedJellyfishData data = ParsedJellyfishData.builder()
-						.species(currentSpecies)
-						.region(region)
-						.reportDate(reportDate)
-						.densityType(densityLevel)
-						.toxicity(toxicityLevel)
-						.build();
-
-					dataList.add(data);
-					log.debug("데이터 추가: {} - {} ({})", currentSpecies, region, densityLevel);
+			// 2. '/' → 다음 밀도 섹션 시작
+			if (line.contains("/")) {
+				// '/' 기준으로 밀도별 블록 분리
+				String[] parts = line.split("/");
+				for (String part : parts) {
+					currentDensity = extractDensity(part);
+					List<String> regions = extractRegions(part);
+					for (String region : regions) {
+						dataList.add(ParsedJellyfishData.builder()
+							.species(currentSpecies)
+							.speciesId(currentSpeciesId)
+							.toxicity(toxicityLevel)
+							.reportDate(reportDate)
+							.region(region)
+							.densityType(currentDensity)
+							.build());
+					}
 				}
+				regionBuffer.clear();
+				currentDensity = null;
+				continue;
+			}
+
+			// 3. 밀도 있는 라인 → 바로 저장
+			if (line.contains("고밀도") || line.contains("저밀도")) {
+				currentDensity = extractDensity(line);
+				List<String> regions = extractRegions(line);
+				for (String region : regions) {
+					dataList.add(ParsedJellyfishData.builder()
+						.species(currentSpecies)
+						.speciesId(currentSpeciesId)
+						.toxicity(toxicityLevel)
+						.reportDate(reportDate)
+						.region(region)
+						.densityType(currentDensity)
+						.build());
+				}
+				continue;
+			}
+
+			// 4. 밀도 언급 없는 경우 → buffer에 지역 추가
+			if (!line.isBlank()) {
+				List<String> regions = extractRegions(line);
+				regionBuffer.addAll(regions);
 			}
 		}
+
 		return dataList;
 	}
 
 	/**
 	 * 텍스트에서 지역명들을 추출합니다.
-	 * @param line 텍스트 라인
+	 * @param text 텍스트 라인
 	 * @return 추출된 지역명 리스트
 	 */
-	private List<String> extractRegions(String line) {
-		List<String> regions = new ArrayList<>();
-
-		if (line.startsWith("-")) {
-			String regionPart = line.substring(1).trim();
-
-			regionPart = regionPart.replaceAll("(고밀도|저밀도)\\s+출현.*", "").trim();
-
-			if (regionPart.contains(",")) {
-				String[] regionArray = regionPart.split(",");
-				for (String region : regionArray) {
-					regions.add(region.trim());
-				}
-			} else {
-				regions.add(regionPart);
-			}
+	private List<String> extractRegions(String text) {
+		text = text.replaceAll("(고밀도|저밀도)\\s*출현", "")
+			.replaceAll("[/]", "") // 혹시 남아 있으면 제거
+			.trim();
+		String[] raw = text.split(",");
+		List<String> result = new ArrayList<>();
+		for (String region : raw) {
+			if (!region.isBlank())
+				result.add(region.trim());
 		}
+		return result;
+	}
 
-		return regions;
+	private DensityLevel extractDensity(String text) {
+		if (text.contains("고밀도"))
+			return DensityLevel.HIGH;
+		if (text.contains("저밀도"))
+			return DensityLevel.LOW;
+		return null;
 	}
 
 	/**
@@ -172,25 +233,24 @@ public class JellyfishPdfParser {
 
 	/**
 	 *
-	 * @param text : PDF 텍스트
+	 * @param file : PDF 파일
 	 * @return 보고서 날짜
 	 */
-	private LocalDate extractReportDate(String text) {
-		Matcher matcher = DATE_PATTERN.matcher(text);
-		if (matcher.find()) {
-			try {
-				int year = Integer.parseInt(matcher.group(1));
-				int month = Integer.parseInt(matcher.group(2));
-				int day = Integer.parseInt(matcher.group(3));
+	private LocalDate extractReportDate(File file) {
+		String fileName = file.getName(); // 예: jellyfish_20250703.pdf
+		Pattern filenamePattern = Pattern.compile("jellyfish_(\\d{8})\\.pdf");
+		Matcher matcher = filenamePattern.matcher(fileName);
 
-				if (year < 100) {
-					year += 2000;
-				}
-				return LocalDate.of(year, month, day);
+		if (matcher.find()) {
+			String dateStr = matcher.group(1); // 20250703
+			try {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+				return LocalDate.parse(dateStr, formatter);
 			} catch (Exception e) {
-				log.warn("Error occurred while parse reportDate", e.getMessage());
+				log.warn("파일명에서 날짜 파싱 실패: {}", e.getMessage());
 			}
 		}
-		return LocalDate.now();
+
+		return LocalDate.now(); // fallback
 	}
 }

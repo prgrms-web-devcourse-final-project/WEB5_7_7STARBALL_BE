@@ -24,10 +24,14 @@ public class AlertController {
 	@GetMapping("/jellyfish")
 	public ResponseEntity<BaseResponse<JellyfishResponseDto>> getJellyfishList() {
 		List<JellyfishRegionDensity> items = jellyfishService.search();
-		for (JellyfishRegionDensity item : items) {
 
-		}
 		JellyfishResponseDto result = null;
 		return BaseResponse.success(result);
+	}
+
+	@GetMapping("/jellyfish/crawl")
+	public ResponseEntity<String> triggerCrawl() {
+		jellyfishService.updateLatestReport();
+		return ResponseEntity.ok("해파리 리포트 크롤링 완료");
 	}
 }

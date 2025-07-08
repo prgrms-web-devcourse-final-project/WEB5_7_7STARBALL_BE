@@ -15,10 +15,10 @@ public class AlertMapper {
 			.build();
 	}
 
-	public JellyfishRegionDensity toRegionDensityEntity(ParsedJellyfishData data, Long speciesId) {
+	public JellyfishRegionDensity toRegionDensityEntity(ParsedJellyfishData data) {
 		return JellyfishRegionDensity.builder()
-			.regionName(data.getSpecies())
-			.species(speciesId)
+			.regionName(data.getRegion())
+			.species(data.getSpeciesId())
 			.reportDate(data.getReportDate())
 			.densityType(data.getDensityType())
 			.build();

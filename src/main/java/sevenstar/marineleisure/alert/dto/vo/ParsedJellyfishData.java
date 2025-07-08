@@ -11,6 +11,7 @@ import sevenstar.marineleisure.global.enums.ToxicityLevel;
 @Builder
 public class ParsedJellyfishData {
 	private String species;
+	private Long speciesId;
 	private String region;
 	private LocalDate reportDate;
 	private DensityLevel densityType;

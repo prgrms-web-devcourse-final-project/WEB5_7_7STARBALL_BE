@@ -10,3 +10,9 @@ VALUES (1, '노무라입깃해파리', 'HIGH', NOW(), NOW()),
        (8, '기수식용해파리', 'LOW', NOW(), NOW()),
        (9, '송곳살파', 'NONE', NOW(), NOW()),
        (10, '큰살파', 'NONE', NOW(), NOW());
+
+select *
+from jellyfish_region_density;
+desc jellyfish_region_density;
+select *
+from jellyfish_species;

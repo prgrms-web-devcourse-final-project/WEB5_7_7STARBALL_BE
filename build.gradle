@@ -46,8 +46,10 @@ dependencies {
     // swagger dependencies
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
 
-//    parse PDF
+    //  parse PDF
     implementation 'org.apache.pdfbox:pdfbox:3.0.5'
+    //  html crawl
+    implementation 'org.jsoup:jsoup:1.21.1'
 }
 
 tasks.named('test') {
