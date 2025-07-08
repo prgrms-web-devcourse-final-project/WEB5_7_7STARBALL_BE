@@ -5,26 +5,20 @@ import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseEntity;
-import sevenstar.marineleisure.global.enums.TidePhase;
-import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "scuba_forecast", uniqueConstraints = {
-	@UniqueConstraint(columnNames = {"spot_id", "forecast_date", "time_period"})})
+@Table(name = "scuba_forecast")
 public class Scuba extends BaseEntity {
 
 	@Id
@@ -38,18 +32,15 @@ public class Scuba extends BaseEntity {
 	private LocalDate forecastDate;
 
 	@Column(name = "time_period", length = 10, nullable = false)
-	@Enumerated(EnumType.STRING)
-	private TimePeriod timePeriod;
+	private String timePeriod;
 
 	private LocalTime sunrise;
 	private LocalTime sunset;
 
-	@Column(name = "tide")
-	@Enumerated(EnumType.STRING)
-	private TidePhase tide;
+	@Column(columnDefinition = "TEXT")
+	private String tide;
 
 	@Column(name = "total_index")
-	@Enumerated(EnumType.STRING)
 	private TotalIndex totalIndex;
 
 	@Column(name = "wave_height_min")
@@ -71,9 +62,10 @@ public class Scuba extends BaseEntity {
 	private Float currentSpeedMax;
 
 	@Builder
-	public Scuba(Long spotId, LocalDate forecastDate, TimePeriod timePeriod, LocalTime sunrise, LocalTime sunset,
-		TidePhase tide, TotalIndex totalIndex, Float waveHeightMin, Float waveHeightMax, Float seaTempMin,
-		Float seaTempMax, Float currentSpeedMin, Float currentSpeedMax) {
+	public Scuba(Long spotId, LocalDate forecastDate, String timePeriod, LocalTime sunrise, LocalTime sunset,
+		String tide,
+		TotalIndex totalIndex, Float waveHeightMin, Float waveHeightMax, Float seaTempMin, Float seaTempMax,
+		Float currentSpeedMin, Float currentSpeedMax) {
 		this.spotId = spotId;
 		this.forecastDate = forecastDate;
 		this.timePeriod = timePeriod;
@@ -87,10 +79,5 @@ public class Scuba extends BaseEntity {
 		this.seaTempMax = seaTempMax;
 		this.currentSpeedMin = currentSpeedMin;
 		this.currentSpeedMax = currentSpeedMax;
-	}
-
-	public void updateSunriseAndSunset(LocalTime sunrise, LocalTime sunset) {
-		this.sunrise = sunrise;
-		this.sunset = sunset;
 	}
 }

@@ -1,16 +1,12 @@
 package sevenstar.marineleisure.spot.dto;
 
-import java.time.LocalDate;
 import java.util.List;
 
-import sevenstar.marineleisure.global.enums.ActivityCategory;
-import sevenstar.marineleisure.global.enums.TimePeriod;
-import sevenstar.marineleisure.global.enums.TotalIndex;
-
 public record SpotDetailReadResponse<T>(
-	Long spotId,
+	Long id,
 	String name,
-	ActivityCategory category,
+	String category,
+	String location,
 	float latitude,
 	float longitude,
 	boolean isFavorite,
@@ -18,10 +14,10 @@ public record SpotDetailReadResponse<T>(
 ) {
 
 	public record FishingSpotDetail(
-		LocalDate forecastDate,
-		TimePeriod timePeriod,
-		String tide,
-		TotalIndex totalIndex,
+		String forecastDate,
+		String timePeriod,
+		int tide,
+		String totalIndex,
 		RangeDetail waveHeight,
 		RangeDetail seaTemp,
 		RangeDetail airTemp,
@@ -33,27 +29,27 @@ public record SpotDetailReadResponse<T>(
 	}
 
 	public record SurfingSpotDetail(
-		LocalDate forecastDate,
-		TimePeriod timePeriod,
+		String forecastDate,
+		String timePeriod,
 		float waveHeight,
 		int wavePeriod,
 		float windSpeed,
 		float seaTemp,
-		TotalIndex totalIndex,
+		String totalIndex,
 		int uvIndex
 	) {
 	}
 
 	public record ScubaSpotDetail(
-		LocalDate forecastDate,
-		TimePeriod timePeriod,
+		String forecastDate,
+		String timePeriod,
 		String sunrise,
 		String sunset,
 		String tide,
 		RangeDetail waveHeight,
 		RangeDetail seaTemp,
 		RangeDetail currentSpeed,
-		TotalIndex totalIndex
+		String totalIndex
 	) {
 
 	}
@@ -65,7 +61,7 @@ public record SpotDetailReadResponse<T>(
 		RangeDetail airTemp,
 		RangeDetail windSpeed,
 		String weather,
-		TotalIndex totalIndex,
+		String totalIndex,
 		int uvIndex
 	) {
 

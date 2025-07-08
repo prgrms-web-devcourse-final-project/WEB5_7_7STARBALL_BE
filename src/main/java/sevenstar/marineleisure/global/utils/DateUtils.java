@@ -2,6 +2,9 @@ package sevenstar.marineleisure.global.utils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import lombok.experimental.UtilityClass;
 
@@ -15,22 +18,26 @@ import lombok.experimental.UtilityClass;
 public class DateUtils {
 	private static final DateTimeFormatter REQ_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 	private static final DateTimeFormatter FORECAST_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
-
-	public static String formatTime(LocalDate localDate) {
-		return localDate.format(REQ_DATE_FORMATTER);
-	}
 
 	/**
+	 * 현재 날짜를 기준으로 지정된 일수만큼의 날짜 리스트를 생성합니다.
+	 *
+	 * @param days 생성할 날짜의 개수(오늘 포함)
+	 * @return 지정된 일수만큼의 날짜 리스트
+	 */
+	public static List<String> getRangeDateListFromNow(int days) {
+		LocalDate today = LocalDate.now();
+
+		return IntStream.range(0, days)
+			.mapToObj(i -> today.plusDays(i).format(REQ_DATE_FORMATTER))
+			.collect(Collectors.toList());
+	}
+
+	/**\
 	 * 특정 날짜를 기준으로 date format 변경
 	 */
 	public static LocalDate parseDate(String date) {
 		return LocalDate.parse(date, FORECAST_DATE_FORMATTER);
-	}
-
-	public static String formatTime(LocalTime time) {
-		return time.format(DATE_TIME_FORMATTER);
-
 	}
 
 }

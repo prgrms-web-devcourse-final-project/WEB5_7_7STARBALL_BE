@@ -1,11 +1,9 @@
 package sevenstar.marineleisure.global.api.khoa.dto.item;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 import lombok.Getter;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
-import sevenstar.marineleisure.global.utils.DateUtils;
 
 @Getter
 public class FishingItem implements KhoaItem {
@@ -15,7 +13,7 @@ public class FishingItem implements KhoaItem {
 	private String predcYmd;
 	private String predcNoonSeCd;
 	private String seafsTgfshNm;
-	private int tdlvHrScr;
+	private float tdlvHrScr;
 	private float minWvhgt;
 	private float maxWvhgt;
 	private float minWtem;
@@ -47,10 +45,5 @@ public class FishingItem implements KhoaItem {
 	@Override
 	public ActivityCategory getCategory() {
 		return ActivityCategory.FISHING;
-	}
-
-	@Override
-	public LocalDate getForecastDate() {
-		return DateUtils.parseDate(predcYmd);
 	}
 }

@@ -2,8 +2,6 @@ package sevenstar.marineleisure.global.api.khoa.mapper;
 
 import java.time.LocalTime;
 
-import org.locationtech.jts.geom.Point;
-
 import lombok.experimental.UtilityClass;
 import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.FishingTarget;
@@ -16,8 +14,6 @@ import sevenstar.marineleisure.global.api.khoa.dto.item.MudflatItem;
 import sevenstar.marineleisure.global.api.khoa.dto.item.ScubaItem;
 import sevenstar.marineleisure.global.api.khoa.dto.item.SurfingItem;
 import sevenstar.marineleisure.global.enums.FishingType;
-import sevenstar.marineleisure.global.enums.TidePhase;
-import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.utils.DateUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
@@ -31,7 +27,7 @@ public class KhoaMapper {
 	 * @return
 	 * @param <T> FishingItem / ScubaItem / SurfingItem / MudflatItem 중 하나
 	 */
-	public static <T extends KhoaItem> OutdoorSpot toEntity(T item, FishingType fishingType, Point point) {
+	public static <T extends KhoaItem> OutdoorSpot toEntity(T item, FishingType fishingType) {
 		return OutdoorSpot.builder()
 			.name(item.getLocation())
 			.category(item.getCategory())
@@ -39,7 +35,6 @@ public class KhoaMapper {
 			.location(item.getLocation())
 			.latitude(item.getLatitude())
 			.longitude(item.getLongitude())
-			.point(point)
 			.build();
 	}
 
@@ -50,13 +45,14 @@ public class KhoaMapper {
 	 * @param targetId fishTarget id
 	 * @return
 	 */
+	// TODO : tide, uvIndex
 	public static Fishing toEntity(FishingItem item, Long spotId, Long targetId) {
 		return Fishing.builder()
 			.spotId(spotId)
 			.targetId(targetId)
 			.forecastDate(DateUtils.parseDate(item.getPredcYmd()))
-			.timePeriod(TimePeriod.from(item.getPredcNoonSeCd()))
-			.tide(TidePhase.parse(item.getTdlvHrScr()))
+			.timePeriod(item.getPredcNoonSeCd())
+			// .tide()
 			.totalIndex(TotalIndex.fromDescription(item.getTotalIndex()))
 			.waveHeightMin(item.getMinWvhgt())
 			.waveHeightMax(item.getMaxWvhgt())
@@ -68,6 +64,7 @@ public class KhoaMapper {
 			.currentSpeedMax(item.getMaxCrsp())
 			.windSpeedMin(item.getMinWspd())
 			.windSpeedMax(item.getMaxWspd())
+			// .uvIndex()
 			.build();
 	}
 
@@ -77,16 +74,18 @@ public class KhoaMapper {
 	 * @param spotId outdoorSpot id
 	 * @return
 	 */
+	// TODO : uvIndex
 	public static Surfing toEntity(SurfingItem item, Long spotId) {
 		return Surfing.builder()
 			.spotId(spotId)
 			.forecastDate(DateUtils.parseDate(item.getPredcYmd()))
-			.timePeriod(TimePeriod.from(item.getPredcNoonSeCd()))
+			.timePeriod(item.getPredcNoonSeCd())
 			.waveHeight(Float.parseFloat(item.getAvgWvhgt()))
 			.wavePeriod(Float.parseFloat(item.getAvgWvpd()))
 			.windSpeed(Float.parseFloat(item.getAvgWspd()))
 			.seaTemp(Float.parseFloat(item.getAvgWtem()))
 			.totalIndex(TotalIndex.fromDescription(item.getTotalIndex()))
+			// .uvIndex()
 			.build();
 	}
 
@@ -96,12 +95,15 @@ public class KhoaMapper {
 	 * @param spotId outdoorSpot id
 	 * @return
 	 */
+	// TODO : sunrise, sunset
 	public static Scuba toEntity(ScubaItem item, Long spotId) {
 		return Scuba.builder()
 			.spotId(spotId)
 			.forecastDate(DateUtils.parseDate(item.getPredcYmd()))
-			.timePeriod(TimePeriod.from(item.getPredcNoonSeCd()))
-			.tide(TidePhase.parse(item.getTdlvHrCn()))
+			.timePeriod(item.getPredcNoonSeCd())
+			// .sunrise()
+			// .sunset()
+			.tide(item.getTdlvHrCn())
 			.totalIndex(TotalIndex.fromDescription(item.getTotalIndex()))
 			.waveHeightMin(Float.parseFloat(item.getMinWvhgt()))
 			.waveHeightMax(Float.parseFloat(item.getMaxWvhgt()))
@@ -118,17 +120,19 @@ public class KhoaMapper {
 	 * @param spotId outdoorSpot id
 	 * @return
 	 */
+	// TODO : uvIndex
 	public static Mudflat toEntity(MudflatItem item, Long spotId) {
 		return Mudflat.builder()
 			.spotId(spotId)
 			.forecastDate(DateUtils.parseDate(item.getPredcYmd()))
 			.startTime(LocalTime.parse(item.getMdftExprnBgngTm()))
 			.endTime(LocalTime.parse(item.getMdftExprnEndTm()))
+			// .uvIndex()
 			.airTempMin(Float.parseFloat(item.getMinArtmp()))
 			.airTempMax(Float.parseFloat(item.getMaxArtmp()))
 			.windSpeedMin(Float.parseFloat(item.getMinWspd()))
 			.windSpeedMax(Float.parseFloat(item.getMaxWspd()))
-			.weather(item.getWeather())
+			// .weather()
 			.totalIndex(TotalIndex.fromDescription(item.getTotalIndex()))
 			.build();
 	}
