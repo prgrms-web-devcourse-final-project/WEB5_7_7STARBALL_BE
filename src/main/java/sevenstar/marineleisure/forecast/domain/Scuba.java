@@ -62,7 +62,6 @@ public class Scuba extends BaseEntity {
 	private Float currentSpeedMax;
 
 	@Builder
-
 	public Scuba(Long spotId, LocalDate forecastDate, String timePeriod, LocalTime sunrise, LocalTime sunset,
 		String tide,
 		TotalIndex totalIndex, Float waveHeightMin, Float waveHeightMax, Float seaTempMin, Float seaTempMax,
