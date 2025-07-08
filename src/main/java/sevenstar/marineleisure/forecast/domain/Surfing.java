@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +18,8 @@ import sevenstar.marineleisure.global.enums.TotalIndex;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "surfing_forecast")
+@Table(name = "surfing_forecast", uniqueConstraints = {
+	@UniqueConstraint(columnNames = {"spot_id", "forecast_date", "time_period"})})
 public class Surfing extends BaseEntity {
 
 	@Id
@@ -62,6 +64,10 @@ public class Surfing extends BaseEntity {
 		this.windSpeed = windSpeed;
 		this.seaTemp = seaTemp;
 		this.totalIndex = totalIndex;
+		this.uvIndex = uvIndex;
+	}
+
+	public void updateUvIndex(Float uvIndex) {
 		this.uvIndex = uvIndex;
 	}
 }
