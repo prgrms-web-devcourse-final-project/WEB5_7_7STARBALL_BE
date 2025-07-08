@@ -33,11 +33,24 @@ public class DateUtils {
 			.collect(Collectors.toList());
 	}
 
-	/**\
+	public static String parseDate(LocalDate localDate) {
+		return localDate.format(REQ_DATE_FORMATTER);
+	}
+
+	/**
 	 * 특정 날짜를 기준으로 date format 변경
 	 */
 	public static LocalDate parseDate(String date) {
 		return LocalDate.parse(date, FORECAST_DATE_FORMATTER);
+	}
+
+	// ex) 20250708 -> 2025-07-08
+	public static String formatDate(String date) {
+		return date.substring(0, 4) + "-" + date.substring(4, 6) + "-" + date.substring(6);
+	}
+
+	public static String formatDate(LocalDate date) {
+		return date.format(FORECAST_DATE_FORMATTER);
 	}
 
 }

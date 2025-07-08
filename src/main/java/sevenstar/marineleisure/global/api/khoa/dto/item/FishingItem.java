@@ -13,7 +13,7 @@ public class FishingItem implements KhoaItem {
 	private String predcYmd;
 	private String predcNoonSeCd;
 	private String seafsTgfshNm;
-	private float tdlvHrScr;
+	private int tdlvHrScr;
 	private float minWvhgt;
 	private float maxWvhgt;
 	private float minWtem;
