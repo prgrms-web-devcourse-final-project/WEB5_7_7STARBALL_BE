@@ -54,4 +54,8 @@ public class Member extends BaseEntity {
 		this.longitude = longitude;
 	}
 
+	public Member update(String nickname) {
+		this.nickname = nickname;
+		return this;
+	}
 }
