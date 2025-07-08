@@ -1,11 +1,11 @@
 package sevenstar.marineleisure.global.api.khoa.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +34,6 @@ import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 @RequiredArgsConstructor
 @Slf4j
 public class KhoaApiService {
-	private static final int MAX_EXPECT_DAY = 7;
 	private final KhoaApiClient khoaApiClient;
 	private final OutdoorSpotRepository outdoorSpotRepository;
 	private final FishingRepository fishingRepository;
@@ -46,84 +45,99 @@ public class KhoaApiService {
 	/**
 	 * KHOA API를 통해 스쿠버, 낚시, 갯벌, 서핑 정보를 업데이트합니다.
 	 * <p>
-	 * 최대 7일치 데이터를 가져오며, 각 카테고리별로 데이터를 저장합니다.
+	 * 3일치 데이터를 가져오며, 각 카테고리별로 데이터를 저장합니다.
 	 */
 	// TODO : 리팩토링 필요
-	@Scheduled(cron = "0 0 1 * * MON") // 초 분 시 일 월 요일
 	@Transactional
-	public void updateApi() {
-		FishingTarget emptyFishTarget = fishingTargetRepository.findByName("EMPTY").orElseGet(
-			() -> fishingTargetRepository.save(KhoaMapper.toEntity("EMPTY"))
-		);
-
-		for (String reqDate : DateUtils.getRangeDateListFromNow(MAX_EXPECT_DAY)) {
+	public void updateApi(LocalDate startDate, LocalDate endDate) {
+		FishingTarget emptyFishTarget = fishingTargetRepository.findByName("EMPTY")
+			.orElseGet(() -> fishingTargetRepository.save(KhoaMapper.toEntity("EMPTY")));
+		for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+			String reqDate = DateUtils.parseDate(date);
 			// scuba
-			List<ScubaItem> scubaItems = getTotalApi(new ParameterizedTypeReference<>() {
+			List<ScubaItem> scubaItems = getKhoaApiData(new ParameterizedTypeReference<>() {
 			}, reqDate, ActivityCategory.SCUBA);
 
 			for (ScubaItem item : scubaItems) {
-				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation()).orElseGet(
-					() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE))
-				);
-				scubaRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));
+				if (DateUtils.parseDate(item.getPredcYmd()).isAfter(endDate)) {
+					continue;
+				}
+				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation())
+					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE)));
+
+				if (!scubaRepository.existsBySpotIdAndForecastDateAndTimePeriod(outdoorSpot.getId(),
+					DateUtils.parseDate(item.getPredcYmd()),
+					item.getPredcNoonSeCd())) {
+					scubaRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));
+				}
 			}
 
 			// fishing
 			for (FishingType fishingType : FishingType.getFishingTypes()) {
-				List<FishingItem> fishingItems = getTotalApi(new ParameterizedTypeReference<>() {
+				List<FishingItem> fishingItems = getKhoaApiData(new ParameterizedTypeReference<>() {
 				}, reqDate, fishingType.getDescription());
 				for (FishingItem item : fishingItems) {
-					OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation()).orElseGet(
-						() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, fishingType))
-					);
-					if (item.getSeafsTgfshNm() == null) {
-						fishingRepository.save(
-							KhoaMapper.toEntity(item, outdoorSpot.getId(), emptyFishTarget.getId()));
+					if (DateUtils.parseDate(item.getPredcYmd()).isAfter(endDate)) {
 						continue;
 					}
-					FishingTarget fishingTarget = fishingTargetRepository.findByName(
-						item.getSeafsTgfshNm()).orElseGet(
-						() -> fishingTargetRepository.save(KhoaMapper.toEntity(item.getSeafsTgfshNm()))
-					);
-					fishingRepository.save(
-						KhoaMapper.toEntity(item, outdoorSpot.getId(), fishingTarget.getId()));
-
+					OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation())
+						.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, fishingType)));
+					if (item.getSeafsTgfshNm() == null) {
+						fishingRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId(), emptyFishTarget.getId()));
+						continue;
+					}
+					FishingTarget fishingTarget = fishingTargetRepository.findByName(item.getSeafsTgfshNm())
+						.orElseGet(() -> fishingTargetRepository.save(KhoaMapper.toEntity(item.getSeafsTgfshNm())));
+					if (!fishingRepository.existsBySpotIdAndForecastDateAndTimePeriod(outdoorSpot.getId(),
+						DateUtils.parseDate(item.getPredcYmd()), item.getPredcNoonSeCd())) {
+						fishingRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId(), fishingTarget.getId()));
+					}
 				}
 			}
 
 			// surfing
-			List<SurfingItem> surfingItems = getTotalApi(new ParameterizedTypeReference<>() {
+			List<SurfingItem> surfingItems = getKhoaApiData(new ParameterizedTypeReference<>() {
 			}, reqDate, ActivityCategory.SURFING);
 
 			for (SurfingItem item : surfingItems) {
-				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation()).orElseGet(
-					() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE))
-				);
-				surfingRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));
+				if (DateUtils.parseDate(item.getPredcYmd()).isAfter(endDate)) {
+					continue;
+				}
+				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation())
+					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE)));
+
+				if (!surfingRepository.existsBySpotIdAndForecastDateAndTimePeriod(outdoorSpot.getId(),
+					DateUtils.parseDate(item.getPredcYmd()), item.getPredcNoonSeCd())) {
+					surfingRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));
+				}
 			}
 
 			// mudflat
-			List<MudflatItem> mudflatItems = getTotalApi(new ParameterizedTypeReference<>() {
+			List<MudflatItem> mudflatItems = getKhoaApiData(new ParameterizedTypeReference<>() {
 			}, reqDate, ActivityCategory.MUDFLAT);
 
 			for (MudflatItem item : mudflatItems) {
-				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation()).orElseGet(
-					() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE))
-				);
-				mudflatRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));
+				if (DateUtils.parseDate(item.getPredcYmd()).isAfter(endDate)) {
+					continue;
+				}
+				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation())
+					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE)));
+				if (!mudflatRepository.existsBySpotIdAndForecastDate(outdoorSpot.getId(),
+					DateUtils.parseDate(item.getPredcYmd()))) {
+					mudflatRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));
+				}
 			}
 		}
 	}
 
-	private <T> List<T> getTotalApi(ParameterizedTypeReference<ApiResponse<T>> responseType, String reqDate,
+	private <T> List<T> getKhoaApiData(ParameterizedTypeReference<ApiResponse<T>> responseType, String reqDate,
 		ActivityCategory category) {
 		List<T> result = new ArrayList<>();
 
 		int page = 1;
 		int size = 300;
 		while (true) {
-			ResponseEntity<ApiResponse<T>> response = khoaApiClient.get(responseType, reqDate, page++, size,
-				category);
+			ResponseEntity<ApiResponse<T>> response = khoaApiClient.get(responseType, reqDate, page++, size, category);
 			result.addAll(response.getBody().getResponse().getBody().getItems().getItem());
 			if (response.getBody().getResponse().getBody().getPageNo() * response.getBody()
 				.getResponse()
@@ -135,7 +149,7 @@ public class KhoaApiService {
 		return result;
 	}
 
-	private List<FishingItem> getTotalApi(ParameterizedTypeReference<ApiResponse<FishingItem>> responseType,
+	private List<FishingItem> getKhoaApiData(ParameterizedTypeReference<ApiResponse<FishingItem>> responseType,
 		String reqDate, String gubun) {
 		List<FishingItem> result = new ArrayList<>();
 
@@ -155,3 +169,4 @@ public class KhoaApiService {
 		return result;
 	}
 }
+

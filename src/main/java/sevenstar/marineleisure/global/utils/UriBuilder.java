@@ -16,6 +16,10 @@ public class UriBuilder {
 	}
 
 	public URI buildQueryParameter(String baseUrl, String path, MultiValueMap<String, String> params) {
-		return UriComponentsBuilder.fromHttpUrl(baseUrl).path(path).queryParams(params).build(true).toUri();
+		return UriComponentsBuilder.fromUri(URI.create(baseUrl)).path(path).queryParams(params).build(true).toUri();
+	}
+
+	public URI buildQueryParameter(String baseUrl, MultiValueMap<String, String> params) {
+		return UriComponentsBuilder.fromUri(URI.create(baseUrl)).queryParams(params).build(true).toUri();
 	}
 }
