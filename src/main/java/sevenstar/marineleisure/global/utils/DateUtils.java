@@ -17,6 +17,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class DateUtils {
 	private static final DateTimeFormatter REQ_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+	private static final DateTimeFormatter FORECAST_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	/**
 	 * 현재 날짜를 기준으로 지정된 일수만큼의 날짜 리스트를 생성합니다.
@@ -28,8 +29,15 @@ public class DateUtils {
 		LocalDate today = LocalDate.now();
 
 		return IntStream.range(0, days)
-			.mapToObj(i -> String.format("%s00", today.plusDays(i).format(REQ_DATE_FORMATTER)))
+			.mapToObj(i -> today.plusDays(i).format(REQ_DATE_FORMATTER))
 			.collect(Collectors.toList());
+	}
+
+	/**\
+	 * 특정 날짜를 기준으로 date format 변경
+	 */
+	public static LocalDate parseDate(String date) {
+		return LocalDate.parse(date, FORECAST_DATE_FORMATTER);
 	}
 
 }

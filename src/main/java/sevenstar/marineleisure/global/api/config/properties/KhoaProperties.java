@@ -45,15 +45,30 @@ public class KhoaProperties {
 		return switch (category) {
 			case FISHING -> path.getFishing();
 			case MUDFLAT -> path.getMudflat();
-			case DIVING -> path.getDiving();
+			case SCUBA -> path.getDiving();
 			case SURFING -> path.getSurfing();
 		};
 	}
 
+	/**
+	 * mudflat, diving, surfing api
+	 * @param reqDate 요청일자
+	 * @param page
+	 * @param size
+	 * @return
+	 */
 	public MultiValueMap<String, String> getParams(String reqDate, int page, int size) {
-		return getDefaultParams(reqDate, page, size);
+		return getDefaultParams(String.format("%s00",reqDate), page, size);
 	}
 
+	/**
+	 * fishing api
+	 * @param reqDate 요청일자
+	 * @param page
+	 * @param size
+	 * @param gubun
+	 * @return
+	 */
 	public MultiValueMap<String, String> getParams(String reqDate, int page, int size, String gubun) {
 		MultiValueMap<String, String> defaultParams = getDefaultParams(reqDate, page, size);
 		defaultParams.add("gubun", URLEncoder.encode(gubun, StandardCharsets.UTF_8));
