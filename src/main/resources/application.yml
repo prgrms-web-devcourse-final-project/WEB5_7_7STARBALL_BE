@@ -2,21 +2,20 @@ spring:
   application:
     name: MarineLeisure
   profiles:
-    active: local
+    active: dev,local
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/marine
     username:
     password:
-
-    jpa:
-      properties:
-        hibernate:
-          format_sql: true
-          show_sql: true
+  jpa:
+    properties:
       hibernate:
-        ddl-auto: create-drop
-      defer-datasource-initialization: true
+        format_sql: true
+        show_sql: true
+    hibernate:
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
 
 dataportal:
   api:
