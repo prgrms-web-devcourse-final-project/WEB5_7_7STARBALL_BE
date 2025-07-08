@@ -9,7 +9,7 @@ package sevenstar.marineleisure.member.dto;
  */
 //@param state :프론트엔드에서 받을 상태
 public record AuthCodeRequest(
-        String code
-        //String state
+        String code,
+        String state
 ) {
 }
