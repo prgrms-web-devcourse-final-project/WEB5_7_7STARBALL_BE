@@ -5,20 +5,25 @@ import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseEntity;
+import sevenstar.marineleisure.global.enums.TidePhase;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "scuba_forecast")
+@Table(name = "scuba_forecast", uniqueConstraints = {
+	@UniqueConstraint(columnNames = {"spot_id", "forecast_date", "time_period"})})
 public class Scuba extends BaseEntity {
 
 	@Id
@@ -37,8 +42,9 @@ public class Scuba extends BaseEntity {
 	private LocalTime sunrise;
 	private LocalTime sunset;
 
-	@Column(columnDefinition = "TEXT")
-	private String tide;
+	@Column(name = "tide")
+	@Enumerated(EnumType.STRING)
+	private TidePhase tide;
 
 	@Column(name = "total_index")
 	private TotalIndex totalIndex;
@@ -63,9 +69,8 @@ public class Scuba extends BaseEntity {
 
 	@Builder
 	public Scuba(Long spotId, LocalDate forecastDate, String timePeriod, LocalTime sunrise, LocalTime sunset,
-		String tide,
-		TotalIndex totalIndex, Float waveHeightMin, Float waveHeightMax, Float seaTempMin, Float seaTempMax,
-		Float currentSpeedMin, Float currentSpeedMax) {
+		TidePhase tide, TotalIndex totalIndex, Float waveHeightMin, Float waveHeightMax, Float seaTempMin,
+		Float seaTempMax, Float currentSpeedMin, Float currentSpeedMax) {
 		this.spotId = spotId;
 		this.forecastDate = forecastDate;
 		this.timePeriod = timePeriod;
@@ -79,5 +84,10 @@ public class Scuba extends BaseEntity {
 		this.seaTempMax = seaTempMax;
 		this.currentSpeedMin = currentSpeedMin;
 		this.currentSpeedMax = currentSpeedMax;
+	}
+
+	public void updateSunriseAndSunset(LocalTime sunrise, LocalTime sunset) {
+		this.sunrise = sunrise;
+		this.sunset = sunset;
 	}
 }

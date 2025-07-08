@@ -4,20 +4,25 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseEntity;
+import sevenstar.marineleisure.global.enums.TidePhase;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "fishing_forecast")
+@Table(name = "fishing_forecast", uniqueConstraints = @UniqueConstraint(columnNames = {"spot_id", "forecast_date",
+	"time_period"}))
 public class Fishing extends BaseEntity {
 
 	@Id
@@ -37,7 +42,8 @@ public class Fishing extends BaseEntity {
 	private String timePeriod;
 
 	@Column(name = "tide")
-	private Integer tide;
+	@Enumerated(EnumType.STRING)
+	private TidePhase tide;
 
 	@Column(name = "total_index")
 	private TotalIndex totalIndex;
@@ -75,8 +81,8 @@ public class Fishing extends BaseEntity {
 	@Column(name = "uv_index")
 	private Float uvIndex;
 
-	@Builder
-	public Fishing(Long spotId, Long targetId, LocalDate forecastDate, String timePeriod, Integer tide,
+	@Builder(toBuilder = true)
+	public Fishing(Long spotId, Long targetId, LocalDate forecastDate, String timePeriod, TidePhase tide,
 		TotalIndex totalIndex, Float waveHeightMin, Float waveHeightMax, Float seaTempMin, Float seaTempMax,
 		Float airTempMin, Float airTempMax, Float currentSpeedMin, Float currentSpeedMax, Float windSpeedMin,
 		Float windSpeedMax, Float uvIndex) {
@@ -96,6 +102,10 @@ public class Fishing extends BaseEntity {
 		this.currentSpeedMax = currentSpeedMax;
 		this.windSpeedMin = windSpeedMin;
 		this.windSpeedMax = windSpeedMax;
+		this.uvIndex = uvIndex;
+	}
+
+	public void updateUvIndex(Float uvIndex) {
 		this.uvIndex = uvIndex;
 	}
 }
