@@ -11,5 +11,5 @@ import sevenstar.marineleisure.global.enums.ToxicityLevel;
  * @param density : 밀도
  */
 @Builder
-public record JellyfishSpcies(String name, ToxicityLevel toxicity, DensityLevel density) {
+public record JellyfishSpecies(String name, ToxicityLevel toxicity, DensityLevel density) {
 }
