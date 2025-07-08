@@ -44,18 +44,16 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(Member member) {
-        Claims claims = Jwts.claims()
-                .add("email", member.getEmail())
-                .build();
-
         Date now = new Date();
-        Date validity = new Date(now.getTime() + accessTokenValidityInSeconds * 1000);
+        Date exp = new Date(now.getTime() + accessTokenValidityInSeconds * 1000);
 
         return Jwts.builder()
-                .claims(claims)
-                .subject(member.getEmail().toString())
+                .subject(member.getId().toString())          // 회원 ID
+                .claim("token_type", "access")
+                .claim("memberId", member.getId())
+                .claim("email", member.getEmail())
                 .issuedAt(now)
-                .expiration(validity)
+                .expiration(exp)
                 .signWith(key)
                 .compact();
     }
@@ -66,7 +64,9 @@ public class JwtTokenProvider {
         Date validity = new Date(now.getTime() + accessTokenValidityInSeconds * 1000);
 
         String refreshToken = Jwts.builder()
-                .subject(member.getEmail().toString())
+                .subject(member.getId().toString())
+                .claim("email", member.getEmail())
+                .claim("memberId", member.getId())
                 .claim("jti", jti)
                 .issuedAt(now)
                 .expiration(validity)
@@ -89,18 +89,18 @@ public class JwtTokenProvider {
         }
     }
 
-    public String getMemberId(String refreshToken) {
+    public Long getMemberId(String refreshToken) {
         Jws<Claims> jwt = Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(refreshToken);
-        return jwt.getPayload().getSubject();
+        return jwt.getPayload().get("memberId", Long.class);
     }
 
     public void blacklistRefreshToken(String refreshToken) {
         try {
             String jti = getJti(refreshToken);
-            String memberId = getMemberId(refreshToken);
+            Long memberId = getMemberId(refreshToken);
             Claims claims = Jwts.parser().verifyWith(key)
                     .build()
                     .parseSignedClaims(refreshToken)

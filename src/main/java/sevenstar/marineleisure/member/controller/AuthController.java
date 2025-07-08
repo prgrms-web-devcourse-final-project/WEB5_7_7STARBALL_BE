@@ -154,8 +154,9 @@ public class AuthController {
 
         try {
             // 토큰에서 사용자 id 추출
-            String memberId = jwtTokenProvider.getMemberId(refreshToken);
-            Member member = oauthService.findUserById(Long.parseLong(memberId));
+            Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+            log.info("Refreshing token for userId: {}", memberId);
+            Member member = oauthService.findUserById(memberId);
 
             // 기존 리프레시 토큰 블랙리스트에 추가
             jwtTokenProvider.blacklistRefreshToken(refreshToken);

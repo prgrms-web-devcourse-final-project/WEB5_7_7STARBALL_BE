@@ -21,13 +21,13 @@ public class BlacklistedRefreshToken extends BaseEntity {
     private String jti;
 
     @Column(nullable = false)
-    private String memberId;
+    private Long memberId;
 
     @Column(nullable = false)
     private LocalDateTime expiryDate;
 
     @Builder
-    public BlacklistedRefreshToken(String jti, String memberId, LocalDateTime expiryDate) {
+    public BlacklistedRefreshToken(String jti, Long memberId, LocalDateTime expiryDate) {
         this.jti = jti;
         this.memberId = memberId;
         this.expiryDate = expiryDate;
