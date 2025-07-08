@@ -35,7 +35,7 @@ public class JellyfishRegionDensity extends BaseEntity {
 	private LocalDate reportDate;
 
 	@Column(name = "appearance_rate", length = 10)
-	private String appearanceRate;
+	private Float appearanceRate;
 
 	@Column(name = "density_type", nullable = false, length = 10)
 	private DensityLevel densityType;
@@ -45,13 +45,11 @@ public class JellyfishRegionDensity extends BaseEntity {
 		String regionName,
 		Long species,
 		LocalDate reportDate,
-		String appearanceRate,
 		DensityLevel densityType
 	) {
 		this.regionName = regionName;
 		this.species = species;
 		this.reportDate = reportDate;
-		this.appearanceRate = appearanceRate;
 		this.densityType = densityType;
 	}
 }
