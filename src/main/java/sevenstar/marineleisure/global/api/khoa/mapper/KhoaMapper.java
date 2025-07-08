@@ -92,7 +92,6 @@ public class KhoaMapper {
 	 * @param spotId outdoorSpot id
 	 * @return
 	 */
-	// TODO : sunrise, sunset
 	public static Scuba toEntity(ScubaItem item, Long spotId) {
 		return Scuba.builder()
 			.spotId(spotId)
@@ -115,7 +114,6 @@ public class KhoaMapper {
 	 * @param spotId outdoorSpot id
 	 * @return
 	 */
-	// TODO : uvIndex
 	public static Mudflat toEntity(MudflatItem item, Long spotId) {
 		return Mudflat.builder()
 			.spotId(spotId)

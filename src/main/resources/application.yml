@@ -3,12 +3,12 @@ spring:
     name: MarineLeisure
   profiles:
     active: local
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/marine
-    username:
-    password:
-
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     jpa:
       properties:
         hibernate:
@@ -20,7 +20,8 @@ spring:
 
 dataportal:
   api:
-    key:
+    key: ${DATAPORTAL_KEY}
+
 badanuri:
   api:
-    key:
+    key: ${BADANURI_KEY}
