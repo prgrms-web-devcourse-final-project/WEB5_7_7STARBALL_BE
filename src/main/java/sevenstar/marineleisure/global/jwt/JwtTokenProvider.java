@@ -121,7 +121,7 @@ public class JwtTokenProvider {
 
     /**
      * 리프레시 토큰을 블랙리스트에 추가
-     * 
+     *
      * @param refreshToken 블랙리스트에 추가할 리프레시 토큰
      */
     public void blacklistRefreshToken(String refreshToken) {
@@ -177,9 +177,9 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token);
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
             log.info("Token Expired : {}", e.getMessage());
@@ -205,10 +205,13 @@ public class JwtTokenProvider {
         String email = claims.get("email", String.class);
 
         // 사용자 정보와 권한을 포함한 Authentication 객체 생성
+        // Custom UserPrincipal 생성
+        UserPrincipal principal = new UserPrincipal(memberId, email, null);
+
         return new UsernamePasswordAuthenticationToken(
-                memberId,
-                email,
-                null // credentials (password)는 null로 설정 (OAuth 기반 인증이므로)
+                principal,
+                null,
+                null
         );
     }
 }
