@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVo;
+import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVO;
 
 /**
  * 해파리 주간보고pdf를 파싱하여 DB에 적재할수 있도록 ParsedJellusifhData를 만들어 주는 파서입니다.
@@ -30,7 +30,7 @@ public class JellyfishParser {
 	private final JellyfishExtractor extractor;
 	private final ObjectMapper objectMapper;
 
-	public List<ParsedJellyfishVo> parsePdfToJson(File pdfFile) {
+	public List<ParsedJellyfishVO> parsePdfToJson(File pdfFile) {
 		// 파일에서 ai호출할 부분 추출
 		String rawString = extractSummarySection(pdfFile);
 

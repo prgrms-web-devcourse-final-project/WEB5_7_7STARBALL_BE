@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVo;
+import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVO;
 
 @Slf4j
 @Component
@@ -21,7 +21,7 @@ public class JellyfishExtractor {
 	private final OpenAiChatModel chatModel;
 	private final ObjectMapper objectMapper;
 
-	public List<ParsedJellyfishVo> extractJellyfishData(String text) {
+	public List<ParsedJellyfishVO> extractJellyfishData(String text) {
 		try {
 			String instruction = """
 				다음은 해파리 주간 보고서의 일부입니다.
@@ -51,13 +51,15 @@ public class JellyfishExtractor {
 			// JSON을 DTO 리스트로 파싱
 			return objectMapper.readValue(
 				jsonResponse,
-				new TypeReference<List<ParsedJellyfishVo>>() {
+				new TypeReference<List<ParsedJellyfishVO>>() {
 				}
 			);
 
 		} catch (Exception e) {
-			log.error("데이터 추출 실패", e);
-			throw new RuntimeException("데이터 추출 실패", e);
+			log.error("pdf에서 AI를 통해 JSON으로 파싱하는 도중 에러가 발생하였습니다.", e);
+
+			// 무료 모델에서 응답이 불안정할 수 있으므로 빈 리스트 반환
+			return List.of();
 		}
 	}
 }

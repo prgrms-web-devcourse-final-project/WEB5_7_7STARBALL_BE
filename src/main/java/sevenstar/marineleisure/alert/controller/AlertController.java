@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import sevenstar.marineleisure.alert.domain.JellyfishRegionDensity;
 import sevenstar.marineleisure.alert.dto.response.JellyfishResponseDto;
+import sevenstar.marineleisure.alert.dto.vo.JellyfishDetailVO;
 import sevenstar.marineleisure.alert.mapper.AlertMapper;
 import sevenstar.marineleisure.alert.service.JellyfishService;
 import sevenstar.marineleisure.global.domain.BaseResponse;
@@ -23,9 +23,8 @@ public class AlertController {
 
 	@GetMapping("/jellyfish")
 	public ResponseEntity<BaseResponse<JellyfishResponseDto>> getJellyfishList() {
-		List<JellyfishRegionDensity> items = jellyfishService.search();
-
-		JellyfishResponseDto result = null;
+		List<JellyfishDetailVO> items = jellyfishService.searchLastestDetailVO();
+		JellyfishResponseDto result = alertMapper.toResponseDto(items);
 		return BaseResponse.success(result);
 	}
 

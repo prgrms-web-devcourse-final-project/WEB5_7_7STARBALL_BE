@@ -19,7 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.alert.domain.JellyfishRegionDensity;
 import sevenstar.marineleisure.alert.domain.JellyfishSpecies;
-import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVo;
+import sevenstar.marineleisure.alert.dto.vo.JellyfishDetailVO;
+import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVO;
 import sevenstar.marineleisure.alert.mapper.AlertMapper;
 import sevenstar.marineleisure.alert.repository.JellyfishRegionDensityRepository;
 import sevenstar.marineleisure.alert.repository.JellyfishSpeciesRepository;
@@ -47,7 +48,12 @@ public class JellyfishService implements AlertService<JellyfishRegionDensity> {
 	@Override
 	@Transactional(readOnly = true)
 	public List<JellyfishRegionDensity> search() {
-		return List.of();
+		return densityRepository.findAll();
+	}
+
+	@Transactional(readOnly = true)
+	public List<JellyfishDetailVO> searchLastestDetailVO() {
+		return densityRepository.findLatestJellyfishDetails();
 	}
 
 	/**
@@ -75,10 +81,10 @@ public class JellyfishService implements AlertService<JellyfishRegionDensity> {
 			log.info("reportDate : {}", reportDate.toString());
 
 			//OpenAI를 통해서 보고서 내용 Dto로 반환
-			List<ParsedJellyfishVo> parsedJellyfishVos = parser.parsePdfToJson(pdfFile);
+			List<ParsedJellyfishVO> parsedJellyfishVOS = parser.parsePdfToJson(pdfFile);
 
 			//Dto를 이용하여 기존 해파리 목록 검색후, 해파리 지역별 분포 DB에 적재
-			for (ParsedJellyfishVo dto : parsedJellyfishVos) {
+			for (ParsedJellyfishVO dto : parsedJellyfishVOS) {
 				JellyfishSpecies species = searchByName(dto.getSpecies());
 
 				//기존 DB에 없는 신종일경우, 새로 등록 후 data.sql에도 구문 추가

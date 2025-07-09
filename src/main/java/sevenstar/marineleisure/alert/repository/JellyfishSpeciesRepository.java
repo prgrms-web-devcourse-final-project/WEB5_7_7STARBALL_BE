@@ -10,4 +10,5 @@ import sevenstar.marineleisure.alert.domain.JellyfishSpecies;
 @Repository
 public interface JellyfishSpeciesRepository extends JpaRepository<JellyfishSpecies, Long> {
 	Optional<JellyfishSpecies> findByName(String name);
+
 }
