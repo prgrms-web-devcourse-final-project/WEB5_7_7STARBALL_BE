@@ -29,6 +29,7 @@ import java.util.UUID;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @PropertySource("classpath:application-auth.properties")
+//@CrossOrigin(origins = "https://your-react-app.com", allowCredentials = "true")
 public class AuthController {
 
     private final OauthService oauthService;
@@ -121,7 +122,7 @@ public class AuthController {
         refreshTokenCookie.setSecure(true);
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge((int) (14 * 24 * 60 * 60)); // 14일
-        refreshTokenCookie.setAttribute("SameSite", "Lax");
+        refreshTokenCookie.setAttribute("SameSite", "None");
         response.addCookie(refreshTokenCookie);
 
         // 5. 응답 생성
@@ -171,7 +172,7 @@ public class AuthController {
             refreshTokenCookie.setSecure(true);
             refreshTokenCookie.setPath("/");
             refreshTokenCookie.setMaxAge((int) (14 * 24 * 60 * 60)); // 14일
-            refreshTokenCookie.setAttribute("SameSite", "Lax");
+            refreshTokenCookie.setAttribute("SameSite", "None");
             response.addCookie(refreshTokenCookie);
 
             LoginResponse loginResponse = LoginResponse.builder()
@@ -211,6 +212,7 @@ public class AuthController {
         refreshTokenCookie.setSecure(true);
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge(0); // 쿠키 즉시 만료
+        refreshTokenCookie.setAttribute("SameSite", "None");
         response.addCookie(refreshTokenCookie);
 
         log.info("로그아웃 성공");
