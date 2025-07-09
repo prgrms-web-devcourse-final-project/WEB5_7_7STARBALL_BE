@@ -2,8 +2,15 @@ package sevenstar.marineleisure.alert.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -12,12 +19,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.alert.domain.JellyfishRegionDensity;
 import sevenstar.marineleisure.alert.domain.JellyfishSpecies;
-import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishData;
+import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVo;
 import sevenstar.marineleisure.alert.mapper.AlertMapper;
 import sevenstar.marineleisure.alert.repository.JellyfishRegionDensityRepository;
 import sevenstar.marineleisure.alert.repository.JellyfishSpeciesRepository;
 import sevenstar.marineleisure.alert.util.JellyfishCrawler;
-import sevenstar.marineleisure.alert.util.JellyfishPdfParser;
+import sevenstar.marineleisure.alert.util.JellyfishParser;
+import sevenstar.marineleisure.global.enums.DensityLevel;
+import sevenstar.marineleisure.global.enums.ToxicityLevel;
 
 @Slf4j
 @Service
@@ -26,7 +35,7 @@ public class JellyfishService implements AlertService<JellyfishRegionDensity> {
 
 	private final JellyfishRegionDensityRepository densityRepository;
 	private final JellyfishSpeciesRepository speciesRepository;
-	private final JellyfishPdfParser parser;
+	private final JellyfishParser parser;
 	private final JellyfishCrawler crawler;
 	private final AlertMapper mapper;
 	private final RestTemplate restTemplate = new RestTemplate();
@@ -52,29 +61,84 @@ public class JellyfishService implements AlertService<JellyfishRegionDensity> {
 	}
 
 	/**
-	 * 웹에서 크롤링 해와 Pdf를 DB에 적재합니다.
+	 * 웹에서 크롤링 해 Pdf를 DB에 적재합니다.
 	 */
+	@Scheduled(cron = "0 0 9 ? * FRI")
+	@Transactional
 	public void updateLatestReport() {
 		try {
-			File pdf = crawler.downloadLastedPdf();
-			if (pdf == null) {
-				log.warn("pdf다운로드 실패");
-				return;
-			}
-			List<ParsedJellyfishData> dataList = parser.parse(pdf);
-			if (dataList == null) {
-				log.warn("데이터베이스 적재 실패");
-				return;
-			}
-			for (ParsedJellyfishData data : dataList) {
-				densityRepository.save(mapper.toRegionDensityEntity(data));
-			}
-			log.info("총 {}건의 해파리 데이터 저장 완료", dataList.size());
+			//웹에서 보고서파일 크롤링
+			File pdfFile = crawler.downloadLastedPdf();
 
-			pdf.delete(); // 임시 파일 삭제
+			//파일 명에서 보고일자 추출
+			LocalDate reportDate = parser.extractDateFromFileName(pdfFile.getName());
+			log.info("reportDate : {}", reportDate.toString());
+
+			//OpenAI를 통해서 보고서 내용 Dto로 반환
+			List<ParsedJellyfishVo> parsedJellyfishVos = parser.parsePdfToJson(pdfFile);
+
+			//Dto를 이용하여 기존 해파리 목록 검색후, 해파리 지역별 분포 DB에 적재
+			for (ParsedJellyfishVo dto : parsedJellyfishVos) {
+				JellyfishSpecies species = searchByName(dto.getSpecies());
+
+				//기존 DB에 없는 신종일경우, 새로 등록 후 data.sql에도 구문 추가
+				if (species == null) {
+					species = JellyfishSpecies.builder()
+						.name(dto.getSpecies())
+						.toxicity(ToxicityLevel.NONE)
+						.build();
+					speciesRepository.save(species);
+					log.info("신종 해파리등록 : {}", dto.getSpecies());
+
+					appendToDataSql(dto.getSpecies(), ToxicityLevel.NONE);
+				}
+
+				DensityLevel densityLevel = dto.getDensityType().equals("HIGH") ? DensityLevel.HIGH : DensityLevel.LOW;
+
+				//DB에 적재
+				JellyfishRegionDensity regionDensity = JellyfishRegionDensity.builder()
+					.regionName(dto.getRegion())
+					.reportDate(reportDate)
+					.densityType(densityLevel)
+					.species(species.getId())
+					.build();
+
+				densityRepository.save(regionDensity);
+			}
 		} catch (IOException e) {
-			log.error("해파리 리포트 크롤링 중 오류 발생", e);
+			throw new RuntimeException(e);
 		}
 	}
 
+	/**
+	 * DB적재중 신종해파리 등록시 자동으로 data.sql에 INSERT문을 추가하는 메서드입니다.
+	 * @param speciesName 신종 해파리 등록
+	 * @param toxicity 무독성 고정
+	 */
+	private void appendToDataSql(String speciesName, ToxicityLevel toxicity) {
+		try {
+
+			String resourcePath = "src/main/resources/data.sql";
+			Path dataFilePath = Paths.get(resourcePath);
+
+			if (!Files.exists(dataFilePath)) {
+				Files.createFile(dataFilePath);
+				log.info("data.sql 파일 생성");
+			}
+
+			String insertStatement = String.format(
+				"INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)\n" +
+					"VALUES ('%s', '%s', NOW(), NOW());\n",
+				speciesName, toxicity.name()
+			);
+
+			Files.write(dataFilePath, insertStatement.getBytes(StandardCharsets.UTF_8),
+				StandardOpenOption.APPEND);
+
+			log.info("새로운 종 인서트문 생성: {}", speciesName);
+
+		} catch (IOException e) {
+			log.error("쓰기 실패", e);
+		}
+	}
 }
