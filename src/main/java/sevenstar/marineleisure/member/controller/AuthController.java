@@ -1,5 +1,6 @@
 package sevenstar.marineleisure.member.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import sevenstar.marineleisure.member.dto.LoginResponse;
 import sevenstar.marineleisure.member.service.AuthService;
 import sevenstar.marineleisure.member.service.OauthService;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -26,6 +28,22 @@ public class AuthController {
     private final AuthService authService;
 
     /**
+     * GET /auth/kakao?redirectUri=…
+     * → 내부에서 state도 생성해서 저장하고,
+     *    kakaAuthUrl 로 곧장 302 리다이렉트
+     */
+    @GetMapping("/kakao")
+    public void kakaoLoginRedirect(
+            @RequestParam String redirectUri,
+            HttpServletRequest request,
+            HttpServletResponse resp
+    ) throws IOException {
+        Map<String,String> info = oauthService.getKakaoLoginUrl(redirectUri, request);
+        // state는 이제 세션에 저장됨
+        resp.sendRedirect(info.get("kakaoAuthUrl"));
+    }
+
+    /**
      * 카카오 로그인 URL 생성
      *
      * @param redirectUri 커스텀 리다이렉트 URI (선택적)
@@ -33,10 +51,11 @@ public class AuthController {
      */
     @GetMapping("/kakao/url")
     public ResponseEntity<BaseResponse<Map<String, String>>> getKakaoLoginUrl(
-            @RequestParam(required = false) String redirectUri
+            @RequestParam(required = false) String redirectUri,
+            HttpServletRequest request
     ) {
         log.info("Generating Kakao login URL with redirectUri: {}", redirectUri);
-        Map<String, String> loginUrlInfo = oauthService.getKakaoLoginUrl(redirectUri);
+        Map<String, String> loginUrlInfo = oauthService.getKakaoLoginUrl(redirectUri, request);
         return BaseResponse.success(loginUrlInfo);
     }
 
@@ -44,18 +63,23 @@ public class AuthController {
      * 카카오 로그인 처리
      *
      * @param request 인증 코드 요청 DTO
+     * @param httpRequest HTTP 요청
      * @param response HTTP 응답
      * @return 로그인 응답 DTO
      */
     @PostMapping("/kakao/code")
     public ResponseEntity<BaseResponse<LoginResponse>> kakaoLogin(
             @RequestBody AuthCodeRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
-        log.info("Processing Kakao login with code: {}", request.code());
+        log.info("Processing Kakao login with code: {}, state: {}", request.code(), request.state());
         try {
-            LoginResponse loginResponse = authService.processKakaoLogin(request.code(), response);
+            LoginResponse loginResponse = authService.processKakaoLogin(request.code(), request.state(), httpRequest, response);
             return BaseResponse.success(loginResponse);
+        } catch (SecurityException e) {
+            log.error("Security validation failed: {}", e.getMessage(), e);
+            return BaseResponse.error(403, 403, "보안 검증에 실패했습니다: " + e.getMessage());
         } catch (Exception e) {
             log.error("Kakao login failed: {}", e.getMessage(), e);
             return BaseResponse.error(500, 500, "카카오 로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
