@@ -1,11 +1,12 @@
 package sevenstar.marineleisure.member.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -21,31 +22,17 @@ import sevenstar.marineleisure.member.service.AuthService;
 @Slf4j
 @Controller
 @RequiredArgsConstructor
+@PropertySource("classpath:application-auth.properties")
 public class OauthCallbackController {
-
     private final AuthService authService;
 
-    /**
-     * 카카오 OAuth 콜백 처리 (GET)
-     * 브라우저 리다이렉트를 통해 호출됨
-     *
-     * @return 클라이언트 페이지로 포워드
-     */
-    @GetMapping("/oauth/kakao/code")
-    public String kakaoCallbackGet() {
-        log.info("Forwarding /oauth/kakao/code GET to index.html for client-side handling");
-        // src/main/resources/static/index.html (또는 templates/index.html)이 보여지도록 포워드
-
-        // react로 리다이렉트
-        //return "redirect:" + clientAppUrl + "/oauth/kakao/callback?code=" + code + "&state=" + state;
-        return "forward:/index.html";
-    }
 
     /**
      * 카카오 OAuth 콜백 처리 (POST)
      * 클라이언트에서 인증 코드를 받아 처리
      *
      * @param request 인증 코드 요청 DTO
+     * @param httpRequest HTTP 요청 (세션 접근용)
      * @param response HTTP 응답
      * @return 로그인 응답 DTO
      */
@@ -53,11 +40,15 @@ public class OauthCallbackController {
     @ResponseBody
     public ResponseEntity<BaseResponse<LoginResponse>> kakaoCallbackPost(
             @RequestBody AuthCodeRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response) {
-        log.info("Received Kakao OAuth callback (POST) at /oauth/kakao/code with code: {}", request.code());
+        log.info("Received Kakao OAuth callback (POST) at /oauth/kakao/code with code: {}, state: {}", request.code(), request.state());
         try {
-            LoginResponse loginResponse = authService.processKakaoLogin(request.code(), response);
+            LoginResponse loginResponse = authService.processKakaoLogin(request.code(), request.state(), httpRequest, response);
             return BaseResponse.success(loginResponse);
+        } catch (SecurityException e) {
+            log.error("Security validation failed: {}", e.getMessage(), e);
+            return BaseResponse.error(403, 403, "보안 검증에 실패했습니다: " + e.getMessage());
         } catch (Exception e) {
             log.error("Kakao login failed: {}", e.getMessage(), e);
             return BaseResponse.error(500, 500, "카카오 로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
