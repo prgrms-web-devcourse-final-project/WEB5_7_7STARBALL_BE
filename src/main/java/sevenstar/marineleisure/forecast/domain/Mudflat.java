@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +19,7 @@ import sevenstar.marineleisure.global.enums.TotalIndex;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "mudflat_forecast")
+@Table(name = "mudflat_forecast", uniqueConstraints = {@UniqueConstraint(columnNames = {"spot_id", "forecast_date"})})
 public class Mudflat extends BaseEntity {
 
 	@Id
@@ -73,5 +74,9 @@ public class Mudflat extends BaseEntity {
 		this.windSpeedMax = windSpeedMax;
 		this.weather = weather;
 		this.totalIndex = totalIndex;
+	}
+
+	public void updateUvIndex(Float uvIndex) {
+		this.uvIndex = uvIndex;
 	}
 }

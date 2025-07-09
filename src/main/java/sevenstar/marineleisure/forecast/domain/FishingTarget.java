@@ -19,6 +19,10 @@ public class FishingTarget {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(length = 50, nullable = false, unique = true)
+	@Column(length = 50, unique = true)
 	private String name;
+
+	public FishingTarget(String name) {
+		this.name = name;
+	}
 }
