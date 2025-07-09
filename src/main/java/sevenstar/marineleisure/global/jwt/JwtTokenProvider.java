@@ -9,6 +9,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import sevenstar.marineleisure.member.domain.Member;
 
@@ -26,6 +28,7 @@ import java.util.UUID;
 public class JwtTokenProvider {
 
     private final BlacklistedRefreshTokenRepository blacklistedRefreshTokenRepository;
+    private final RedisBlacklistedTokenRepository redisBlacklistedTokenRepository;
 
     @Value("${jwt.secret:defaultSecretKeyForDevelopmentEnvironmentOnly}")
     private String secretKey;
@@ -67,6 +70,7 @@ public class JwtTokenProvider {
                 .subject(member.getId().toString())
                 .claim("email", member.getEmail())
                 .claim("memberId", member.getId())
+                .claim("token_type", "refresh")
                 .claim("jti", jti)
                 .issuedAt(now)
                 .expiration(validity)
@@ -77,14 +81,32 @@ public class JwtTokenProvider {
     }
 
     public boolean validateRefreshToken(String refreshToken) {
+        // 1. First check if the token is blacklisted in Redis (faster in-memory check)
+        if (redisBlacklistedTokenRepository.isBlacklisted(refreshToken)) {
+            log.info("Refresh Token is blacklisted in Redis: {}", refreshToken);
+            return false;
+        }
+
         try {
+            // 2. Verify token signature and expiration
             Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(refreshToken);
+
+            // 3. If token is valid, check if it's blacklisted in RDB by JTI
+            String jti = getJti(refreshToken);
+            if (blacklistedRefreshTokenRepository.existsByJti(jti)) {
+                log.info("Refresh Token is blacklisted in RDB by JTI: {}", jti);
+                return false;
+            }
+
             return true;
         } catch (ExpiredJwtException e) {
             log.info("Refresh Token Expired : {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Refresh Token Validation Error : {}", e.getMessage());
             return false;
         }
     }
@@ -97,6 +119,11 @@ public class JwtTokenProvider {
         return jwt.getPayload().get("memberId", Long.class);
     }
 
+    /**
+     * 리프레시 토큰을 블랙리스트에 추가
+     * 
+     * @param refreshToken 블랙리스트에 추가할 리프레시 토큰
+     */
     public void blacklistRefreshToken(String refreshToken) {
         try {
             String jti = getJti(refreshToken);
@@ -109,9 +136,9 @@ public class JwtTokenProvider {
             Date expirationDate = claims.getExpiration();
             long expirationTime = expirationDate.getTime() - System.currentTimeMillis();
 
-            // 만료를 redis에서 ?
+            // Redis에 토큰 블랙리스트 추가
             if (expirationTime > 0) {
-
+                redisBlacklistedTokenRepository.addToBlacklist(refreshToken, expirationTime);
             }
 
             LocalDateTime expiration = Instant.ofEpochMilli(expirationDate.getTime())
@@ -132,12 +159,56 @@ public class JwtTokenProvider {
         }
     }
 
-    private String getJti(String refreshToken) {
+
+    public String getJti(String refreshToken) {
         return Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(refreshToken)
                 .getPayload()
                 .get("jti", String.class);
+    }
+
+    /**
+     * JWT 토큰 유효성 검증
+     * 토큰이 만료되었거나 서명이 유효하지 않은 경우 false를 반환합니다.
+     * 액세스 토큰은 블랙리스트 확인을 하지 않습니다.
+     */
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            log.info("Token Expired : {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Token Validation Error : {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * JWT 토큰에서 인증 정보 추출
+     * 토큰에서 사용자 ID와 이메일을 추출하여 Authentication 객체를 생성합니다.
+     */
+    public Authentication getAuthentication(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        Long memberId = claims.get("memberId", Long.class);
+        String email = claims.get("email", String.class);
+
+        // 사용자 정보와 권한을 포함한 Authentication 객체 생성
+        return new UsernamePasswordAuthenticationToken(
+                memberId,
+                email,
+                null // credentials (password)는 null로 설정 (OAuth 기반 인증이므로)
+        );
     }
 }
