@@ -81,20 +81,20 @@ public class JwtTokenProvider {
     }
 
     public boolean validateRefreshToken(String refreshToken) {
-        // 1. First check if the token is blacklisted in Redis (faster in-memory check)
+        // 1. 먼저 Redis에서 토큰이 블랙리스트에 있는지 확인 (더 빠른 인메모리 확인)
         if (redisBlacklistedTokenRepository.isBlacklisted(refreshToken)) {
             log.info("Refresh Token is blacklisted in Redis: {}", refreshToken);
             return false;
         }
 
         try {
-            // 2. Verify token signature and expiration
+            // 2. 토큰 서명 및 만료 확인
             Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(refreshToken);
 
-            // 3. If token is valid, check if it's blacklisted in RDB by JTI
+            // 3. 토큰이 유효하면 JTI로 RDB에서 블랙리스트 확인
             String jti = getJti(refreshToken);
             if (blacklistedRefreshTokenRepository.existsByJti(jti)) {
                 log.info("Refresh Token is blacklisted in RDB by JTI: {}", jti);
