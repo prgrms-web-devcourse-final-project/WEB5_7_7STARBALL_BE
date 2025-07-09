@@ -26,7 +26,9 @@ import sevenstar.marineleisure.global.api.khoa.dto.item.SurfingItem;
 import sevenstar.marineleisure.global.api.khoa.mapper.KhoaMapper;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.utils.DateUtils;
+import sevenstar.marineleisure.global.utils.GeoUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
@@ -41,6 +43,7 @@ public class KhoaApiService {
 	private final MudflatRepository mudflatRepository;
 	private final ScubaRepository scubaRepository;
 	private final SurfingRepository surfingRepository;
+	private final GeoUtils geoUtils;
 
 	/**
 	 * KHOA API를 통해 스쿠버, 낚시, 갯벌, 서핑 정보를 업데이트합니다.
@@ -62,12 +65,14 @@ public class KhoaApiService {
 				if (DateUtils.parseDate(item.getPredcYmd()).isAfter(endDate)) {
 					continue;
 				}
-				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation())
-					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE)));
+				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLatitudeAndLongitude(item.getLatitude(),
+						item.getLongitude())
+					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE,
+						geoUtils.createPoint(item.getLatitude(), item.getLongitude()))));
 
 				if (!scubaRepository.existsBySpotIdAndForecastDateAndTimePeriod(outdoorSpot.getId(),
 					DateUtils.parseDate(item.getPredcYmd()),
-					item.getPredcNoonSeCd())) {
+					TimePeriod.from(item.getPredcNoonSeCd()))) {
 					scubaRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));
 				}
 			}
@@ -80,8 +85,10 @@ public class KhoaApiService {
 					if (DateUtils.parseDate(item.getPredcYmd()).isAfter(endDate)) {
 						continue;
 					}
-					OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation())
-						.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, fishingType)));
+					OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLatitudeAndLongitude(item.getLatitude(),
+							item.getLongitude())
+						.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, fishingType,
+							geoUtils.createPoint(item.getLatitude(), item.getLongitude()))));
 					if (item.getSeafsTgfshNm() == null) {
 						fishingRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId(), emptyFishTarget.getId()));
 						continue;
@@ -89,7 +96,7 @@ public class KhoaApiService {
 					FishingTarget fishingTarget = fishingTargetRepository.findByName(item.getSeafsTgfshNm())
 						.orElseGet(() -> fishingTargetRepository.save(KhoaMapper.toEntity(item.getSeafsTgfshNm())));
 					if (!fishingRepository.existsBySpotIdAndForecastDateAndTimePeriod(outdoorSpot.getId(),
-						DateUtils.parseDate(item.getPredcYmd()), item.getPredcNoonSeCd())) {
+						DateUtils.parseDate(item.getPredcYmd()), TimePeriod.from(item.getPredcNoonSeCd()))) {
 						fishingRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId(), fishingTarget.getId()));
 					}
 				}
@@ -103,11 +110,13 @@ public class KhoaApiService {
 				if (DateUtils.parseDate(item.getPredcYmd()).isAfter(endDate)) {
 					continue;
 				}
-				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation())
-					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE)));
+				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLatitudeAndLongitude(item.getLatitude(),
+						item.getLongitude())
+					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE,
+						geoUtils.createPoint(item.getLatitude(), item.getLongitude()))));
 
 				if (!surfingRepository.existsBySpotIdAndForecastDateAndTimePeriod(outdoorSpot.getId(),
-					DateUtils.parseDate(item.getPredcYmd()), item.getPredcNoonSeCd())) {
+					DateUtils.parseDate(item.getPredcYmd()), TimePeriod.from(item.getPredcNoonSeCd()))) {
 					surfingRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));
 				}
 			}
@@ -120,8 +129,10 @@ public class KhoaApiService {
 				if (DateUtils.parseDate(item.getPredcYmd()).isAfter(endDate)) {
 					continue;
 				}
-				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLocation(item.getLocation())
-					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE)));
+				OutdoorSpot outdoorSpot = outdoorSpotRepository.findByLatitudeAndLongitude(item.getLatitude(),
+						item.getLongitude())
+					.orElseGet(() -> outdoorSpotRepository.save(KhoaMapper.toEntity(item, FishingType.NONE,
+						geoUtils.createPoint(item.getLatitude(), item.getLongitude()))));
 				if (!mudflatRepository.existsBySpotIdAndForecastDate(outdoorSpot.getId(),
 					DateUtils.parseDate(item.getPredcYmd()))) {
 					mudflatRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId()));

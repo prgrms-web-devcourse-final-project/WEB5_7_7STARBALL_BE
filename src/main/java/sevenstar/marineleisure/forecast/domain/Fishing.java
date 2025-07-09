@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseEntity;
 import sevenstar.marineleisure.global.enums.TidePhase;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 
 @Entity
@@ -39,7 +40,8 @@ public class Fishing extends BaseEntity {
 	private LocalDate forecastDate;
 
 	@Column(name = "time_period", length = 10)
-	private String timePeriod;
+	@Enumerated(EnumType.STRING)
+	private TimePeriod timePeriod;
 
 	@Column(name = "tide")
 	@Enumerated(EnumType.STRING)
@@ -82,7 +84,7 @@ public class Fishing extends BaseEntity {
 	private Float uvIndex;
 
 	@Builder(toBuilder = true)
-	public Fishing(Long spotId, Long targetId, LocalDate forecastDate, String timePeriod, TidePhase tide,
+	public Fishing(Long spotId, Long targetId, LocalDate forecastDate, TimePeriod timePeriod, TidePhase tide,
 		TotalIndex totalIndex, Float waveHeightMin, Float waveHeightMax, Float seaTempMin, Float seaTempMax,
 		Float airTempMin, Float airTempMax, Float currentSpeedMin, Float currentSpeedMax, Float windSpeedMin,
 		Float windSpeedMax, Float uvIndex) {

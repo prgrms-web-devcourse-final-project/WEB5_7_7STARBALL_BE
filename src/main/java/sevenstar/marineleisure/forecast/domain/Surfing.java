@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,6 +15,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseEntity;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 
 @Entity
@@ -33,7 +36,8 @@ public class Surfing extends BaseEntity {
 	private LocalDate forecastDate;
 
 	@Column(name = "time_period", length = 10, nullable = false)
-	private String timePeriod;
+	@Enumerated(EnumType.STRING)
+	private TimePeriod timePeriod;
 
 	@Column(name = "wave_height")
 	private Float waveHeight;
@@ -54,7 +58,7 @@ public class Surfing extends BaseEntity {
 	private Float uvIndex;
 
 	@Builder
-	public Surfing(Long spotId, LocalDate forecastDate, String timePeriod, Float waveHeight, Float wavePeriod,
+	public Surfing(Long spotId, LocalDate forecastDate, TimePeriod timePeriod, Float waveHeight, Float wavePeriod,
 		Float windSpeed, Float seaTemp, TotalIndex totalIndex, Float uvIndex) {
 		this.spotId = spotId;
 		this.forecastDate = forecastDate;
