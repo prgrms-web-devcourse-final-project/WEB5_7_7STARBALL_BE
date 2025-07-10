@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import jakarta.servlet.http.HttpServletResponse;
 import sevenstar.marineleisure.member.dto.AuthCodeRequest;
 import sevenstar.marineleisure.member.dto.LoginResponse;
 import sevenstar.marineleisure.member.service.AuthService;
@@ -116,7 +117,7 @@ class AuthControllerTest {
 	@DisplayName("카카오 로그인 처리 중 오류가 발생하면 에러 응답을 반환한다")
 	void kakaoLogin_error() throws Exception {
 		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state");
-		when(authService.processKakaoLogin(eq("invalid-code"), any()))
+		when(authService.processKakaoLogin(eq("invalid-code"), any(HttpServletResponse.class)))
 			.thenThrow(new RuntimeException("Failed to get access token from Kakao"));
 
 		mockMvc.perform(post("/auth/kakao/code")
@@ -161,7 +162,7 @@ class AuthControllerTest {
 		mockMvc.perform(post("/auth/refresh")
 				.cookie(new Cookie("refresh_token", refreshToken)))
 			.andExpect(status().is4xxClientError())
-			.andExpect(jsonPath("$.code").value(401))
+			.andExpect(jsonPath("$.code").value(1402))
 			.andExpect(jsonPath("$.message").value("유효하지 않은 리프레시 토큰입니다."));
 	}
 
