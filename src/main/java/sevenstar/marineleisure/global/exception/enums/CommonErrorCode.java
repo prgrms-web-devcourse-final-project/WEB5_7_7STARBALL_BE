@@ -19,16 +19,16 @@ public enum CommonErrorCode implements ErrorCode {
 
 	@Override
 	public int getCode() {
-		return code;
+		return 0;
 	}
 
 	@Override
 	public HttpStatus getHttpStatus() {
-		return httpStatus;
+		return null;
 	}
 
 	@Override
 	public String getMessage() {
-		return message;
+		return "";
 	}
 }

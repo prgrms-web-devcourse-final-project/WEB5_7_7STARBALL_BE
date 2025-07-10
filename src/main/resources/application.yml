@@ -21,12 +21,21 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    jpa:
+      properties:
+        hibernate:
+          format_sql: true
+          show_sql: true
+      hibernate:
+        ddl-auto: create-drop
+      defer-datasource-initialization: true
 
 dataportal:
   api:
-    key:
+    key: ${DATAPORTAL_KEY}
+
 badanuri:
   api:
-    key:
-
-
+    key: ${BADANURI_KEY}

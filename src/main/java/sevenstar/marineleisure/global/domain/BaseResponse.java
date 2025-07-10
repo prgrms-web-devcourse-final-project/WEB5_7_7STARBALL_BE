@@ -13,9 +13,6 @@ public record BaseResponse<T>(
 		return ResponseEntity.ok(new BaseResponse<>(200, "Success", body));
 	}
 
-	// public static <T> ResponseEntity<BaseResponse<T>> error(int code, int detailCode, String message) {
-	// 	return ResponseEntity.status(code).body(new BaseResponse<>(detailCode, message, null));
-	// }
 	public static <T> ResponseEntity<BaseResponse<T>> error(ErrorCode errorCode) {
 		return ResponseEntity
 			.status(errorCode.getHttpStatus())
