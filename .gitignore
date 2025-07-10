@@ -36,5 +36,14 @@ out/
 ### VS Code ###
 .vscode/
 
+### Environment Variables ###
+.env
+.env.*
+*.env
+env.properties
+application-secrets.yml
+application-secrets.properties
+
+### Application Properties ###
 WEB5_7_7STARBALL_BE/src/main/resources/application-*.yml
 /src/main/resources/application-local.yml
