@@ -1,6 +1,5 @@
 package sevenstar.marineleisure.member.dto;
 
-
 /**
  * 브라우저가 받은 인증 코드를 서버로 전달하기 위한 DTO
  *
@@ -9,7 +8,7 @@ package sevenstar.marineleisure.member.dto;
  */
 //@param state :프론트엔드에서 받을 상태
 public record AuthCodeRequest(
-        String code,
-        String state
+	String code,
+	String state
 ) {
 }

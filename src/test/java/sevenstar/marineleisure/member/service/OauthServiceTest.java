@@ -1,5 +1,14 @@
 package sevenstar.marineleisure.member.service;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,262 +19,248 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClient;
+
 import reactor.core.publisher.Mono;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class OauthServiceTest {
 
-    @Mock
-    private MemberRepository memberRepository;
+	@Mock
+	private MemberRepository memberRepository;
 
-    @Mock
-    private WebClient webClient;
+	@Mock
+	private WebClient webClient;
 
-    @InjectMocks
-    private OauthService oauthService;
+	@InjectMocks
+	private OauthService oauthService;
 
-    @BeforeEach
-    void setUp() {
-        // 필요한 프로퍼티 설정
-        ReflectionTestUtils.setField(oauthService, "apiKey", "test-api-key");
-        ReflectionTestUtils.setField(oauthService, "clientSecret", "test-client-secret");
-        ReflectionTestUtils.setField(oauthService, "kakaoBaseUri", "https://kauth.kakao.com");
-        ReflectionTestUtils.setField(oauthService, "redirectUri", "http://localhost:8080/oauth/kakao/code");
-    }
+	@BeforeEach
+	void setUp() {
+		// 필요한 프로퍼티 설정
+		ReflectionTestUtils.setField(oauthService, "apiKey", "test-api-key");
+		ReflectionTestUtils.setField(oauthService, "clientSecret", "test-client-secret");
+		ReflectionTestUtils.setField(oauthService, "kakaoBaseUri", "https://kauth.kakao.com");
+		ReflectionTestUtils.setField(oauthService, "redirectUri", "http://localhost:8080/oauth/kakao/code");
+	}
 
-    @Test
-    @DisplayName("카카오 로그인 URL을 생성할 수 있다")
-    void getKakaoLoginUrl() {
-        // when
-        Map<String, String> result = oauthService.getKakaoLoginUrl(null);
+	@Test
+	@DisplayName("카카오 로그인 URL을 생성할 수 있다")
+	void getKakaoLoginUrl() {
+		// when
+		Map<String, String> result = oauthService.getKakaoLoginUrl(null);
 
-        // then
-        assertThat(result).containsKey("kakaoAuthUrl");
-        assertThat(result).containsKey("state");
-        assertThat(result.get("kakaoAuthUrl")).contains("https://kauth.kakao.com/oauth/authorize");
-        assertThat(result.get("kakaoAuthUrl")).contains("client_id=test-api-key");
-        assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=http://localhost:8080/oauth/kakao/code");
-        assertThat(result.get("kakaoAuthUrl")).contains("response_type=code");
-        assertThat(result.get("kakaoAuthUrl")).contains("state=" + result.get("state"));
-    }
+		// then
+		assertThat(result).containsKey("kakaoAuthUrl");
+		assertThat(result).containsKey("state");
+		assertThat(result.get("kakaoAuthUrl")).contains("https://kauth.kakao.com/oauth/authorize");
+		assertThat(result.get("kakaoAuthUrl")).contains("client_id=test-api-key");
+		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=http://localhost:8080/oauth/kakao/code");
+		assertThat(result.get("kakaoAuthUrl")).contains("response_type=code");
+		assertThat(result.get("kakaoAuthUrl")).contains("state=" + result.get("state"));
+	}
 
-    @Test
-    @DisplayName("커스텀 리다이렉트 URI로 카카오 로그인 URL을 생성할 수 있다")
-    void getKakaoLoginUrlWithCustomRedirectUri() {
-        // given
-        String customRedirectUri = "http://custom-redirect.com/callback";
+	@Test
+	@DisplayName("커스텀 리다이렉트 URI로 카카오 로그인 URL을 생성할 수 있다")
+	void getKakaoLoginUrlWithCustomRedirectUri() {
+		// given
+		String customRedirectUri = "http://custom-redirect.com/callback";
 
-        // when
-        Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri);
+		// when
+		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri);
 
-        // then
-        assertThat(result).containsKey("kakaoAuthUrl");
-        assertThat(result).containsKey("state");
-        assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=" + customRedirectUri);
-    }
+		// then
+		assertThat(result).containsKey("kakaoAuthUrl");
+		assertThat(result).containsKey("state");
+		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=" + customRedirectUri);
+	}
 
-    @Test
-    @DisplayName("인증 코드로 카카오 토큰을 교환할 수 있다")
-    void exchangeCodeForToken() {
-        // given
-        String code = "test-auth-code";
-        KakaoTokenResponse expectedResponse = KakaoTokenResponse.builder()
-                .accessToken("test-access-token")
-                .tokenType("bearer")
-                .refreshToken("test-refresh-token")
-                .expiresIn(3600L)
-                .scope("profile")
-                .refreshTokenExpiresIn(86400L)
-                .build();
+	@Test
+	@DisplayName("인증 코드로 카카오 토큰을 교환할 수 있다")
+	void exchangeCodeForToken() {
+		// given
+		String code = "test-auth-code";
+		KakaoTokenResponse expectedResponse = KakaoTokenResponse.builder()
+			.accessToken("test-access-token")
+			.tokenType("bearer")
+			.refreshToken("test-refresh-token")
+			.expiresIn(3600L)
+			.scope("profile")
+			.refreshTokenExpiresIn(86400L)
+			.build();
 
-        // WebClient 모킹
-        WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
-        WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
-        WebClient.RequestBodySpec requestBodySpec = mock(WebClient.RequestBodySpec.class);
-        WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
-        WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+		// WebClient 모킹
+		WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
+		WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+		WebClient.RequestBodySpec requestBodySpec = mock(WebClient.RequestBodySpec.class);
+		WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+		WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
 
-        when(webClient.post()).thenReturn(requestBodyUriSpec);
-        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
-        when(requestBodySpec.header(anyString(), anyString())).thenReturn(requestBodySpec);
-        when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(KakaoTokenResponse.class)).thenReturn(Mono.just(expectedResponse));
+		when(webClient.post()).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+		when(requestBodySpec.header(anyString(), anyString())).thenReturn(requestBodySpec);
+		when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(KakaoTokenResponse.class)).thenReturn(Mono.just(expectedResponse));
 
-        // when
-        KakaoTokenResponse result = oauthService.exchangeCodeForToken(code);
+		// when
+		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code);
 
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.accessToken()).isEqualTo("test-access-token");
-        assertThat(result.refreshToken()).isEqualTo("test-refresh-token");
-    }
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.accessToken()).isEqualTo("test-access-token");
+		assertThat(result.refreshToken()).isEqualTo("test-refresh-token");
+	}
 
-    @Test
-    @DisplayName("카카오 사용자 정보를 처리하고 회원 정보를 반환할 수 있다")
-    void processKakaoUser() {
-        // given
-        String accessToken = "test-access-token";
-        Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("id", 12345L);
+	@Test
+	@DisplayName("카카오 사용자 정보를 처리하고 회원 정보를 반환할 수 있다")
+	void processKakaoUser() {
+		// given
+		String accessToken = "test-access-token";
+		Map<String, Object> userInfo = new HashMap<>();
+		userInfo.put("id", 12345L);
 
-        Map<String, Object> kakaoAccount = new HashMap<>();
-        Map<String, Object> profile = new HashMap<>();
-        profile.put("nickname", "testUser");
-        kakaoAccount.put("profile", profile);
-        kakaoAccount.put("email", "test@example.com");
-        userInfo.put("kakao_account", kakaoAccount);
+		Map<String, Object> kakaoAccount = new HashMap<>();
+		Map<String, Object> profile = new HashMap<>();
+		profile.put("nickname", "testUser");
+		kakaoAccount.put("profile", profile);
+		kakaoAccount.put("email", "test@example.com");
+		userInfo.put("kakao_account", kakaoAccount);
 
-        Member member = Member.builder()
-                .nickname("testUser")
-                .email("test@example.com")
-                .provider("kakao")
-                .providerId("12345")
-                .build();
-        
-        // ID 설정 (리플렉션 사용)
-        ReflectionTestUtils.setField(member, "id", 1L);
+		Member member = Member.builder()
+			.nickname("testUser")
+			.email("test@example.com")
+			.provider("kakao")
+			.providerId("12345")
+			.build();
 
-        // WebClient 모킹 - 간소화된 방식
-        WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
-        WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
-        WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+		// ID 설정 (리플렉션 사용)
+		ReflectionTestUtils.setField(member, "id", 1L);
 
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class))).thenReturn(Mono.just(userInfo));
+		// WebClient 모킹 - 간소화된 방식
+		WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
+		WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+		WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
 
-        // MemberRepository 모킹
-        when(memberRepository.findByProviderAndProviderId(eq("kakao"), eq("12345")))
-                .thenReturn(Optional.empty());
-        when(memberRepository.save(any(Member.class))).thenReturn(member);
+		when(webClient.get()).thenReturn(requestHeadersUriSpec);
+		when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class))).thenReturn(Mono.just(userInfo));
 
-        // when
-        Map<String, Object> result = oauthService.processKakaoUser(accessToken);
+		// MemberRepository 모킹
+		when(memberRepository.findByProviderAndProviderId(eq("kakao"), eq("12345")))
+			.thenReturn(Optional.empty());
+		when(memberRepository.save(any(Member.class))).thenReturn(member);
 
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.get("id")).isEqualTo(1L);
-        assertThat(result.get("email")).isEqualTo("test@example.com");
-        assertThat(result.get("nickname")).isEqualTo("testUser");
-    }
+		// when
+		Map<String, Object> result = oauthService.processKakaoUser(accessToken);
 
-    @Test
-    @DisplayName("기존 회원이 있는 경우 닉네임을 업데이트하고 회원 정보를 반환할 수 있다")
-    void processKakaoUserWithExistingMember() {
-        // given
-        String accessToken = "test-access-token";
-        Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("id", 12345L);
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.get("id")).isEqualTo(1L);
+		assertThat(result.get("email")).isEqualTo("test@example.com");
+		assertThat(result.get("nickname")).isEqualTo("testUser");
+	}
 
-        Map<String, Object> kakaoAccount = new HashMap<>();
-        Map<String, Object> profile = new HashMap<>();
-        profile.put("nickname", "newNickname");
-        kakaoAccount.put("profile", profile);
-        kakaoAccount.put("email", "test@example.com");
-        userInfo.put("kakao_account", kakaoAccount);
+	@Test
+	@DisplayName("기존 회원이 있는 경우 닉네임을 업데이트하고 회원 정보를 반환할 수 있다")
+	void processKakaoUserWithExistingMember() {
+		// given
+		String accessToken = "test-access-token";
+		Map<String, Object> userInfo = new HashMap<>();
+		userInfo.put("id", 12345L);
 
-        Member existingMember = Member.builder()
-                .nickname("oldNickname")
-                .email("test@example.com")
-                .provider("kakao")
-                .providerId("12345")
-                .build();
-        
-        // ID 설정 (리플렉션 사용)
-        ReflectionTestUtils.setField(existingMember, "id", 1L);
+		Map<String, Object> kakaoAccount = new HashMap<>();
+		Map<String, Object> profile = new HashMap<>();
+		profile.put("nickname", "newNickname");
+		kakaoAccount.put("profile", profile);
+		kakaoAccount.put("email", "test@example.com");
+		userInfo.put("kakao_account", kakaoAccount);
 
-        Member updatedMember = existingMember.update("newNickname");
+		Member existingMember = Member.builder()
+			.nickname("oldNickname")
+			.email("test@example.com")
+			.provider("kakao")
+			.providerId("12345")
+			.build();
 
-        // WebClient 모킹 - 간소화된 방식
-        WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
-        WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
-        WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+		// ID 설정 (리플렉션 사용)
+		ReflectionTestUtils.setField(existingMember, "id", 1L);
 
-        when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class))).thenReturn(Mono.just(userInfo));
+		Member updatedMember = existingMember.update("newNickname");
 
-        // MemberRepository 모킹
-        when(memberRepository.findByProviderAndProviderId(eq("kakao"), eq("12345")))
-                .thenReturn(Optional.of(existingMember));
-        when(memberRepository.save(any(Member.class))).thenReturn(updatedMember);
+		// WebClient 모킹 - 간소화된 방식
+		WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
+		WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+		WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
 
-        // when
-        Map<String, Object> result = oauthService.processKakaoUser(accessToken);
+		when(webClient.get()).thenReturn(requestHeadersUriSpec);
+		when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class))).thenReturn(Mono.just(userInfo));
 
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.get("id")).isEqualTo(1L);
-        assertThat(result.get("email")).isEqualTo("test@example.com");
-        assertThat(result.get("nickname")).isEqualTo("newNickname");
-    }
+		// MemberRepository 모킹
+		when(memberRepository.findByProviderAndProviderId(eq("kakao"), eq("12345")))
+			.thenReturn(Optional.of(existingMember));
+		when(memberRepository.save(any(Member.class))).thenReturn(updatedMember);
 
-    @Test
-    @DisplayName("ID로 회원을 찾을 수 있다")
-    void findUserById() {
-        // given
-        Long memberId = 1L;
-        Member member = Member.builder()
-                .nickname("testUser")
-                .email("test@example.com")
-                .provider("kakao")
-                .providerId("12345")
-                .build();
-        
-        // ID 설정 (리플렉션 사용)
-        ReflectionTestUtils.setField(member, "id", memberId);
+		// when
+		Map<String, Object> result = oauthService.processKakaoUser(accessToken);
 
-        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.get("id")).isEqualTo(1L);
+		assertThat(result.get("email")).isEqualTo("test@example.com");
+		assertThat(result.get("nickname")).isEqualTo("newNickname");
+	}
 
-        // when
-        Member result = oauthService.findUserById(memberId);
+	@Test
+	@DisplayName("ID로 회원을 찾을 수 있다")
+	void findUserById() {
+		// given
+		Long memberId = 1L;
+		Member member = Member.builder()
+			.nickname("testUser")
+			.email("test@example.com")
+			.provider("kakao")
+			.providerId("12345")
+			.build();
 
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(memberId);
-        assertThat(result.getNickname()).isEqualTo("testUser");
-        assertThat(result.getEmail()).isEqualTo("test@example.com");
+		// ID 설정 (리플렉션 사용)
+		ReflectionTestUtils.setField(member, "id", memberId);
 
-        // verify
-        verify(memberRepository).findById(memberId);
-    }
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
 
-    @Test
-    @DisplayName("존재하지 않는 ID로 회원을 찾으면 예외가 발생한다")
-    void findUserByIdNotFound() {
-        // given
-        Long memberId = 999L;
-        when(memberRepository.findById(memberId)).thenReturn(Optional.empty());
+		// when
+		Member result = oauthService.findUserById(memberId);
 
-        // when & then
-        assertThatThrownBy(() -> oauthService.findUserById(memberId))
-                .isInstanceOf(NoSuchElementException.class)
-                .hasMessageContaining("User not found for id: " + memberId);
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getId()).isEqualTo(memberId);
+		assertThat(result.getNickname()).isEqualTo("testUser");
+		assertThat(result.getEmail()).isEqualTo("test@example.com");
 
-        // verify
-        verify(memberRepository).findById(memberId);
-    }
+		// verify
+		verify(memberRepository).findById(memberId);
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 ID로 회원을 찾으면 예외가 발생한다")
+	void findUserByIdNotFound() {
+		// given
+		Long memberId = 999L;
+		when(memberRepository.findById(memberId)).thenReturn(Optional.empty());
+
+		// when & then
+		assertThatThrownBy(() -> oauthService.findUserById(memberId))
+			.isInstanceOf(NoSuchElementException.class)
+			.hasMessageContaining("User not found for id: " + memberId);
+
+		// verify
+		verify(memberRepository).findById(memberId);
+	}
 }

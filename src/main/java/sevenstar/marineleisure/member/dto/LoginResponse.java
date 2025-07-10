@@ -13,9 +13,9 @@ import lombok.Builder;
  */
 @Builder
 public record LoginResponse(
-        String accessToken,
-        Long userId,
-        String email,
-        String nickname
+	String accessToken,
+	Long userId,
+	String email,
+	String nickname
 ) {
 }

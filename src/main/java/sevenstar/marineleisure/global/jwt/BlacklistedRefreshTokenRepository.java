@@ -11,11 +11,11 @@ import java.util.Optional;
 
 @Repository
 public interface BlacklistedRefreshTokenRepository extends JpaRepository<BlacklistedRefreshToken, Long> {
-    Optional<BlacklistedRefreshToken> findByJti(String jti);
+	Optional<BlacklistedRefreshToken> findByJti(String jti);
 
-    boolean existsByJti(String jti);
+	boolean existsByJti(String jti);
 
-    @Modifying
-    @Query("DELETE FROM BlacklistedRefreshToken b WHERE b.expiryDate < :now")
-    void deleteExpiredTokens(@Param("now") LocalDateTime now);
+	@Modifying
+	@Query("DELETE FROM BlacklistedRefreshToken b WHERE b.expiryDate < :now")
+	void deleteExpiredTokens(@Param("now") LocalDateTime now);
 }
