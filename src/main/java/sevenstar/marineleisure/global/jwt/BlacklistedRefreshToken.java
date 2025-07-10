@@ -13,23 +13,23 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 public class BlacklistedRefreshToken extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String jti;
+	@Column(nullable = false, unique = true)
+	private String jti;
 
-    @Column(nullable = false)
-    private Long memberId;
+	@Column(nullable = false)
+	private Long memberId;
 
-    @Column(nullable = false)
-    private LocalDateTime expiryDate;
+	@Column(nullable = false)
+	private LocalDateTime expiryDate;
 
-    @Builder
-    public BlacklistedRefreshToken(String jti, Long memberId, LocalDateTime expiryDate) {
-        this.jti = jti;
-        this.memberId = memberId;
-        this.expiryDate = expiryDate;
-    }
+	@Builder
+	public BlacklistedRefreshToken(String jti, Long memberId, LocalDateTime expiryDate) {
+		this.jti = jti;
+		this.memberId = memberId;
+		this.expiryDate = expiryDate;
+	}
 }

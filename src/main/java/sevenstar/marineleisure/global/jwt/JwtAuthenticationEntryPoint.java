@@ -1,11 +1,13 @@
 package sevenstar.marineleisure.global.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -25,23 +27,24 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper;
+	private final ObjectMapper objectMapper;
 
-    @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
-            throws IOException, ServletException {
-        
-        log.error("Unauthorized error: {}", authException.getMessage());
-        
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        
-        Map<String, Object> errorDetails = new HashMap<>();
-        errorDetails.put("status", HttpStatus.UNAUTHORIZED.value());
-        errorDetails.put("error", "Unauthorized");
-        errorDetails.put("message", "인증이 필요합니다. 로그인 후 이용해주세요.");
-        errorDetails.put("path", request.getRequestURI());
-        
-        objectMapper.writeValue(response.getOutputStream(), errorDetails);
-    }
+	@Override
+	public void commence(HttpServletRequest request, HttpServletResponse response,
+		AuthenticationException authException)
+		throws IOException, ServletException {
+
+		log.error("Unauthorized error: {}", authException.getMessage());
+
+		response.setStatus(HttpStatus.UNAUTHORIZED.value());
+		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+		Map<String, Object> errorDetails = new HashMap<>();
+		errorDetails.put("status", HttpStatus.UNAUTHORIZED.value());
+		errorDetails.put("error", "Unauthorized");
+		errorDetails.put("message", "인증이 필요합니다. 로그인 후 이용해주세요.");
+		errorDetails.put("path", request.getRequestURI());
+
+		objectMapper.writeValue(response.getOutputStream(), errorDetails);
+	}
 }

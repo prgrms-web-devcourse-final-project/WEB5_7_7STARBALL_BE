@@ -12,10 +12,10 @@ import java.math.BigDecimal;
 @Getter
 @Builder
 public class MemberDetailResponse {
-    private Long id;
-    private String email;
-    private String nickname;
-    private MemberStatus status;
-    private BigDecimal latitude;
-    private BigDecimal longitude;
+	private Long id;
+	private String email;
+	private String nickname;
+	private MemberStatus status;
+	private BigDecimal latitude;
+	private BigDecimal longitude;
 }
