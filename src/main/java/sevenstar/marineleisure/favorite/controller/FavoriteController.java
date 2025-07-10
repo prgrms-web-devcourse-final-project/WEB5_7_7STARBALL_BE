@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import sevenstar.marineleisure.favorite.domain.FavoriteSpot;
 import sevenstar.marineleisure.favorite.dto.response.FavoriteGetListDto;
 import sevenstar.marineleisure.favorite.dto.response.FavoritePatchDto;
+import sevenstar.marineleisure.favorite.mapper.FavoriteMapper;
 import sevenstar.marineleisure.favorite.service.FavoriteServiceImpl;
 import sevenstar.marineleisure.global.domain.BaseResponse;
 import sevenstar.marineleisure.global.exception.CustomException;
@@ -23,6 +25,7 @@ import sevenstar.marineleisure.global.exception.enums.FavoriteErrorCode;
 public class FavoriteController {
 
 	private final FavoriteServiceImpl service;
+	private final FavoriteMapper mapper;
 
 	/**
 	 * 현재 로그인 유저의 즐겨찾기 목록 반환
@@ -53,8 +56,11 @@ public class FavoriteController {
 	 */
 	@PatchMapping("/{id}")
 	public ResponseEntity<BaseResponse<FavoritePatchDto>> updateFavorites(@PathVariable Long id) {
-
-		return null;
+		if (id == null || id <= 0) {
+			throw new CustomException(FavoriteErrorCode.INVALID_FAVORITE_PARAMETER);
+		}
+		FavoriteSpot updatedSpot = service.updateNotification(id);
+		return BaseResponse.success(mapper.toPatchDto(updatedSpot));
 	}
 
 	/**
@@ -64,7 +70,6 @@ public class FavoriteController {
 	 */
 	@DeleteMapping("/{id}")
 	public ResponseEntity<BaseResponse<Void>> removeFavorites(@PathVariable Long id) {
-		//TODO : 현재 유저 받아오기
 		if (id == null || id <= 0) {
 			throw new CustomException(FavoriteErrorCode.INVALID_FAVORITE_PARAMETER);
 		}

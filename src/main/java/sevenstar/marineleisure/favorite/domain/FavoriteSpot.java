@@ -37,4 +37,8 @@ public class FavoriteSpot extends BaseEntity {
 		this.spotId = spotId;
 	}
 
+	public void toggleNotification() {
+		this.notification = !this.notification;
+	}
+
 }

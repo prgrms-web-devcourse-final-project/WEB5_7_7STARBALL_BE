@@ -1,4 +1,7 @@
 package sevenstar.marineleisure.favorite.dto.response;
 
-public record FavoritePatchDto() {
+import lombok.Builder;
+
+@Builder
+public record FavoritePatchDto(Long favoriteId, boolean notification) {
 }

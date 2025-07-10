@@ -45,6 +45,14 @@ public class FavoriteServiceImpl implements FavoriteService {
 	@Override
 	@Transactional
 	public FavoriteSpot updateNotification(Long id) {
-		return null;
+		FavoriteSpot favorite = favoriteRepository.findById(id)
+			.orElseThrow(() -> new CustomException(FavoriteErrorCode.FAVORITE_NOT_FOUND));
+		//TODO : 현재 유저 받아오기
+		Long currentMemberId = 1L;
+		if (!favorite.getMemberId().equals(currentMemberId)) {
+			throw new CustomException(FavoriteErrorCode.FORBIDDEN_FAVORITE_ACCESS);
+		}
+		favorite.toggleNotification();
+		return favorite;
 	}
 }
