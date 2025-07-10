@@ -1,0 +1,20 @@
+package sevenstar.marineleisure.global.utils;
+
+import java.math.BigDecimal;
+
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class GeoUtils {
+	private final GeometryFactory geometryFactory;
+
+	public Point createPoint(BigDecimal latitude, BigDecimal longitude) {
+		return geometryFactory.createPoint(new Coordinate(longitude.doubleValue(), latitude.doubleValue()));
+	}
+}
