@@ -52,6 +52,7 @@ public class Surfing extends BaseEntity {
 	private Float seaTemp;
 
 	@Column(name = "total_index")
+	@Enumerated(EnumType.STRING)
 	private TotalIndex totalIndex;
 
 	@Column(name = "uv_index")

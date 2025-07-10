@@ -13,6 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +27,8 @@ import sevenstar.marineleisure.global.enums.FishingType;
 @Table(name = "outdoor_spots", indexes = {
 	@Index(name = "idx_lat_lon", columnList = "latitude, longitude"),
 	@Index(name = "idx_point", columnList = "geo_point")
+}, uniqueConstraints = {
+	@UniqueConstraint(name = "uk_lat_lon_category", columnNames = {"latitude", "longitude", "category"})
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OutdoorSpot extends BaseEntity {

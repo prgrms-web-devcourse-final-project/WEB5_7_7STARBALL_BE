@@ -14,4 +14,5 @@ public interface SpotService {
 
 	void createOutdoorSpot(SpotCreateRequest spotCreateRequest);
 
+	void upsertSpotViewStats(Long spotId);
 }

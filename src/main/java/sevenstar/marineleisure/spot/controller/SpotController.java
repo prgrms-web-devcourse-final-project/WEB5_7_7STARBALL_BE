@@ -41,10 +41,12 @@ public class SpotController {
 
 	@GetMapping("/{id}")
 	ResponseEntity<BaseResponse<SpotDetailReadResponse>> getSpotsByCategory(@PathVariable Long id) {
+		spotService.upsertSpotViewStats(id);
 		return BaseResponse.success(spotService.searchSpotDetail(id));
 	}
 
 	@PostMapping
+	// TODO : 수정 무조건 필요 (중복)
 	ResponseEntity createSpot(@RequestBody SpotCreateRequest request) {
 		spotService.createOutdoorSpot(request);
 		return BaseResponse.success("success");

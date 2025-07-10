@@ -12,16 +12,15 @@ import sevenstar.marineleisure.global.api.openmeteo.dto.service.OpenMeteoService
 @Service
 @RequiredArgsConstructor
 public class SchedulerService {
-	private static final int MAX_EXPECT_DAY = 3;
+	public static final int MAX_EXPECT_DAY = 3;
 	private final KhoaApiService khoaApiService;
 	private final OpenMeteoService openMeteoService;
 
 	/**
 	 * 앞으로의 스케줄링 전략에 의해 수정될 부분입니다.
-	 * 스케줄링 예제 ) 초 분 시 일 월 요일
 	 * @author guwnoong
 	 */
-	@Scheduled(cron = "0 0 1 * * MON")
+	@Scheduled(initialDelay = 0, fixedDelay = 259200000)
 	public void scheduler() {
 		LocalDate today = LocalDate.now();
 

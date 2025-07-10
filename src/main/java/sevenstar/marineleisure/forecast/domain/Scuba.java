@@ -49,6 +49,7 @@ public class Scuba extends BaseEntity {
 	private TidePhase tide;
 
 	@Column(name = "total_index")
+	@Enumerated(EnumType.STRING)
 	private TotalIndex totalIndex;
 
 	@Column(name = "wave_height_min")

@@ -33,7 +33,7 @@ public class Fishing extends BaseEntity {
 	@Column(name = "spot_id", nullable = false)
 	private Long spotId;
 
-	@Column(name = "target_id", nullable = false)
+	@Column(name = "target_id")
 	private Long targetId;
 
 	@Column(name = "forecast_date", nullable = false)
@@ -48,6 +48,7 @@ public class Fishing extends BaseEntity {
 	private TidePhase tide;
 
 	@Column(name = "total_index")
+	@Enumerated(EnumType.STRING)
 	private TotalIndex totalIndex;
 
 	@Column(name = "wave_height_min")
