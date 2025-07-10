@@ -7,4 +7,5 @@ import sevenstar.marineleisure.favorite.domain.FavoriteSpot;
 
 @Repository
 public interface FavoriteRepository extends JpaRepository<FavoriteSpot, Long> {
+	void deleteFavoriteSpotById(Long id);
 }
