@@ -6,9 +6,9 @@ import sevenstar.marineleisure.spot.dto.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
 
 public interface SpotService {
-	SpotReadResponse searchSpot(Long userId, float latitude, float longitude, ActivityCategory category);
+	SpotReadResponse searchSpot(float latitude, float longitude, ActivityCategory category);
 
-	SpotReadResponse searchAllSpot(Long userId, float latitude, float longitude);
+	SpotReadResponse searchAllSpot(float latitude, float longitude);
 
 	<T> SpotDetailReadResponse<T> searchSpotDetail(Long spotId);
 

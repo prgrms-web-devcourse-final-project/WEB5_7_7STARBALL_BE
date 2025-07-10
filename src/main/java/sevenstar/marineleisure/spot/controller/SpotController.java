@@ -26,16 +26,13 @@ public class SpotController {
 
 	@GetMapping
 	ResponseEntity<BaseResponse<SpotReadResponse>> getSpots(@RequestBody @Valid SpotReadRequest request) {
-		// TODO: userId를 받아
-		Long userId = 0L;
-
 		if (request.getCategory() == null) {
 			return BaseResponse.success(
-				spotService.searchAllSpot(userId, request.getLatitude(), request.getLongitude()));
+				spotService.searchAllSpot(request.getLatitude(), request.getLongitude()));
 		}
 
 		return BaseResponse.success(
-			spotService.searchSpot(userId, request.getLatitude(), request.getLongitude(),
+			spotService.searchSpot(request.getLatitude(), request.getLongitude(),
 				ActivityCategory.valueOf(request.getCategory())));
 	}
 
@@ -45,8 +42,14 @@ public class SpotController {
 		return BaseResponse.success(spotService.searchSpotDetail(id));
 	}
 
+	// @GetMapping("/preview")
+	// ResponseEntity<> getSpotPreview(@RequestBody @Valid SpotReadRequest request) {
+	//
+	// 	return BaseResponse.success();
+	// }
+
 	@PostMapping
-	// TODO : 수정 무조건 필요 (중복)
+		// TODO : 수정 무조건 필요 (중복)
 	ResponseEntity createSpot(@RequestBody SpotCreateRequest request) {
 		spotService.createOutdoorSpot(request);
 		return BaseResponse.success("success");

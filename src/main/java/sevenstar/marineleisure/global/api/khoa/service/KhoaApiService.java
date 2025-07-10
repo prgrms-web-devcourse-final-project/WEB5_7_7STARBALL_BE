@@ -58,8 +58,6 @@ public class KhoaApiService {
 	// TODO : 리팩토링 필요
 	@Transactional
 	public void updateApi(LocalDate startDate, LocalDate endDate) {
-		FishingTarget emptyFishTarget = fishingTargetRepository.findByName("EMPTY")
-			.orElseGet(() -> fishingTargetRepository.save(KhoaMapper.toEntity("EMPTY")));
 		for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
 			String reqDate = DateUtils.parseDate(date);
 			// scuba
@@ -82,10 +80,6 @@ public class KhoaApiService {
 				}, reqDate, fishingType.getDescription());
 				for (FishingItem item : fishingItems) {
 					OutdoorSpot outdoorSpot = createOutdoorSpot(item, fishingType);
-					if (item.getSeafsTgfshNm() == null) {
-						fishingRepository.save(KhoaMapper.toEntity(item, outdoorSpot.getId(), emptyFishTarget.getId()));
-						continue;
-					}
 					Long targetId = item.getSeafsTgfshNm() == null ? null :
 						fishingTargetRepository.findByName(item.getSeafsTgfshNm())
 							.orElseGet(() -> fishingTargetRepository.save(KhoaMapper.toEntity(item.getSeafsTgfshNm())))
