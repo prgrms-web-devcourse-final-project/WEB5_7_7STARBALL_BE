@@ -34,6 +34,17 @@ public class FavoriteController {
 	private final FavoriteMapper mapper;
 
 	/**
+	 * 스팟id로 로그인 유저의 즐겨찾기 목록에 추가
+	 * @param id : 즐겨찾기에 추가할 spotId
+	 * @return 즐겨찾기 추가된 스팟 id
+	 */
+	@PostMapping("/{id}")
+	public ResponseEntity<BaseResponse<Long>> addFavorite(@PathVariable Long id) {
+		service.createFavorite(id);
+		return BaseResponse.success(id);
+	}
+
+	/**
 	 * 현재 로그인 유저의 즐겨찾기 목록 반환
 	 * @return 즐겨찾기 목록
 	 */
@@ -45,18 +56,8 @@ public class FavoriteController {
 
 		boolean hasNext = result.size() > size;
 		List<FavoriteItemVO> items = hasNext ? result.subList(0, size) : result;
-
+		
 		return BaseResponse.success(new FavoriteGetListDto(items, cursorId, size, hasNext));
-	}
-
-	/**
-	 * 스팟id로 로그인 유저의 즐겨찾기 목록에 추가
-	 * @param id : 즐겨찾기에 추가할 spotId
-	 * @return 추가된 스팟 id
-	 */
-	@PostMapping("/{id}")
-	public ResponseEntity<BaseResponse<Long>> addFavorite(@PathVariable Long id) {
-		return null;
 	}
 
 	/**
@@ -70,9 +71,7 @@ public class FavoriteController {
 		if (id == null || id <= 0) {
 			throw new CustomException(FavoriteErrorCode.INVALID_FAVORITE_PARAMETER);
 		}
-
 		service.removeFavorite(id);
-		
 		return ResponseEntity.noContent().build();
 	}
 

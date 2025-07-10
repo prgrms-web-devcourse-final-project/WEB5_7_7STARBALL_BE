@@ -16,6 +16,7 @@ import sevenstar.marineleisure.favorite.dto.vo.FavoriteItemVO;
 import sevenstar.marineleisure.favorite.repository.FavoriteRepository;
 import sevenstar.marineleisure.global.exception.CustomException;
 import sevenstar.marineleisure.global.exception.enums.FavoriteErrorCode;
+import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @Slf4j
@@ -25,35 +26,65 @@ public class FavoriteServiceImpl implements FavoriteService {
 	private final FavoriteRepository favoriteRepository;
 	private final OutdoorSpotRepository spotRepository;
 
+	/**
+	 * id로 즐겨찾기 추출 및 유효성 검사
+	 * @param id : 즐겨찾기 id
+	 * @return 즐겨찾기 객체
+	 */
+	public FavoriteSpot searchFavoriteById(Long id) {
+		return favoriteRepository.findById(id)
+			.orElseThrow(() -> new CustomException(FavoriteErrorCode.FAVORITE_NOT_FOUND));
+	}
+
+	/**
+	 * 스팟id로 즐겨찾기 추가입니다.
+	 * @param id : 스팟 id
+	 * @return 즐겨찾기한 스팟 id
+	 */
 	@Override
 	@Transactional
 	public Long createFavorite(Long id) {
+		Long currentMemberId = getCurrentUserId();
+		// 우선 즐겨찾기를 못찾았다고 넣었지만, 나중에 Spot에러코드 추가되면 그걸로 교체 예정입니다.
+		OutdoorSpot outdoorSpot = spotRepository.findById(id)
+			.orElseThrow(() -> new CustomException(FavoriteErrorCode.FAVORITE_NOT_FOUND));
 
-		return 0L;
+		FavoriteSpot createdFavoriteSpot = FavoriteSpot.builder()
+			.memberId(currentMemberId)
+			.spotId(outdoorSpot.getId())
+			.build();
+
+		favoriteRepository.save(createdFavoriteSpot);
+		return id;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public List<FavoriteItemVO> searchFavorite(Long cursorId, int size) {
-		//TODO : 현재 유저 받아오기
+		Long currentMemberId = getCurrentUserId();
 
-		Long currentMemberId = 1L;
 		Pageable pageable = PageRequest.of(0, size + 1);
-		List<FavoriteItemVO> result = favoriteRepository.findFavoritesByMemberIdAndCursorId(1L,
+		List<FavoriteItemVO> result = favoriteRepository.findFavoritesByMemberIdAndCursorId(currentMemberId,
 			cursorId, pageable);
+
 		return result;
 	}
 
+	/**
+	 * 즐겨찾기 목록에서 삭제
+	 * @param id : 즐겨찾기 id
+	 */
 	@Override
 	@Transactional
 	public void removeFavorite(Long id) {
-		FavoriteSpot favorite = favoriteRepository.findById(id)
-			.orElseThrow(() -> new CustomException(FavoriteErrorCode.FAVORITE_NOT_FOUND));
-		//TODO : 현재 유저 받아오기
-		Long currentMemberId = 1L;
-		if (!favorite.getMemberId().equals(currentMemberId)) {
+		FavoriteSpot favoriteSpot = searchFavoriteById(id);
+
+		//유저 권한 검사
+		Long currentMemberId = getCurrentUserId();
+		if (!favoriteSpot.getMemberId().equals(currentMemberId)) {
 			throw new CustomException(FavoriteErrorCode.FORBIDDEN_FAVORITE_ACCESS);
 		}
+
 		favoriteRepository.deleteFavoriteSpotById(id);
 	}
 
@@ -65,15 +96,15 @@ public class FavoriteServiceImpl implements FavoriteService {
 	@Override
 	@Transactional
 	public FavoriteSpot updateNotification(Long id) {
-		// 즐겨찾기한 장소 유효성 검사
-		FavoriteSpot favorite = favoriteRepository.findById(id)
-			.orElseThrow(() -> new CustomException(FavoriteErrorCode.FAVORITE_NOT_FOUND));
+		FavoriteSpot favoriteSpot = searchFavoriteById(id);
+
 		//유저 권한 검사
 		Long currentMemberId = getCurrentUserId();
-		if (!favorite.getMemberId().equals(currentMemberId)) {
+		if (!favoriteSpot.getMemberId().equals(currentMemberId)) {
 			throw new CustomException(FavoriteErrorCode.FORBIDDEN_FAVORITE_ACCESS);
 		}
-		favorite.toggleNotification();
-		return favorite;
+
+		favoriteSpot.toggleNotification();
+		return favoriteSpot;
 	}
 }
