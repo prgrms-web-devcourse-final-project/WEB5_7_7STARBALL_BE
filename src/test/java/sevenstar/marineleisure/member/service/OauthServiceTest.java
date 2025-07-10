@@ -32,6 +32,9 @@ class OauthServiceTest {
 	private MemberRepository memberRepository;
 
 	@Mock
+	private MemberService memberService;
+
+	@Mock
 	private WebClient webClient;
 
 	@InjectMocks
@@ -190,7 +193,13 @@ class OauthServiceTest {
 		// ID 설정 (리플렉션 사용)
 		ReflectionTestUtils.setField(existingMember, "id", 1L);
 
-		Member updatedMember = existingMember.update("newNickname");
+		Member updatedMember = Member.builder()
+			.nickname("newNickname")
+			.email("test@example.com")
+			.provider("kakao")
+			.providerId("12345")
+			.build();
+		ReflectionTestUtils.setField(updatedMember, "id", 1L);
 
 		// WebClient 모킹 - 간소화된 방식
 		WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
@@ -206,7 +215,10 @@ class OauthServiceTest {
 		// MemberRepository 모킹
 		when(memberRepository.findByProviderAndProviderId(eq("kakao"), eq("12345")))
 			.thenReturn(Optional.of(existingMember));
-		when(memberRepository.save(any(Member.class))).thenReturn(updatedMember);
+
+		// MemberService 모킹
+		when(memberService.updateMemberNickname(eq(1L), eq("newNickname")))
+			.thenReturn(updatedMember);
 
 		// when
 		Map<String, Object> result = oauthService.processKakaoUser(accessToken);
@@ -216,6 +228,9 @@ class OauthServiceTest {
 		assertThat(result.get("id")).isEqualTo(1L);
 		assertThat(result.get("email")).isEqualTo("test@example.com");
 		assertThat(result.get("nickname")).isEqualTo("newNickname");
+
+		// verify
+		verify(memberService).updateMemberNickname(eq(1L), eq("newNickname"));
 	}
 
 	@Test

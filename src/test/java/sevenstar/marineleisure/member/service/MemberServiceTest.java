@@ -32,7 +32,7 @@ class MemberServiceTest {
 	private MemberService memberService;
 
 	private Member testMember;
-	private Long memberId = 1L;
+	private final Long memberId = 1L;
 
 	@BeforeEach
 	void setUp() {
@@ -111,6 +111,32 @@ class MemberServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> memberService.getCurrentMemberDetail(nonExistentMemberId))
+			.isInstanceOf(NoSuchElementException.class)
+			.hasMessageContaining("회원을 찾을 수 없습니다");
+	}
+
+	@Test
+	@DisplayName("회원을 소프트 삭제할 수 있다 (상태를 EXPIRED로 변경)")
+	void deleteMember() {
+		// given
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
+
+		// when
+		memberService.deleteMember(memberId);
+
+		// then
+		assertThat(testMember.getStatus()).isEqualTo(MemberStatus.EXPIRED);
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 회원 ID로 삭제 시 예외가 발생한다")
+	void deleteMember_memberNotFound() {
+		// given
+		Long nonExistentMemberId = 999L;
+		when(memberRepository.findById(nonExistentMemberId)).thenReturn(Optional.empty());
+
+		// when & then
+		assertThatThrownBy(() -> memberService.deleteMember(nonExistentMemberId))
 			.isInstanceOf(NoSuchElementException.class)
 			.hasMessageContaining("회원을 찾을 수 없습니다");
 	}

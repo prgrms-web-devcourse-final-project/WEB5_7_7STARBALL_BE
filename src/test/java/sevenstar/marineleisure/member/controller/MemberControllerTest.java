@@ -23,8 +23,10 @@ import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -104,5 +106,55 @@ class MemberControllerTest {
 			assertThat(cause).isInstanceOf(NoSuchElementException.class);
 			assertThat(cause.getMessage()).isEqualTo("회원을 찾을 수 없습니다: 999");
 		}
+	}
+
+	@Test
+	@DisplayName("현재 로그인한 회원을 소프트 삭제할 수 있다")
+	@WithMockUser
+	void deleteMember() throws Exception {
+		// given
+		Long currentUserId = 1L;
+		try (MockedStatic<CurrentUserUtil> mockedStatic = Mockito.mockStatic(CurrentUserUtil.class)) {
+			mockedStatic.when(CurrentUserUtil::getCurrentUserId).thenReturn(currentUserId);
+			doNothing().when(memberService).deleteMember(currentUserId);
+
+			// when & then
+			mockMvc.perform(post("/members/delete"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.code").value(200))
+				.andExpect(jsonPath("$.body").value("회원이 성공적으로 삭제되었습니다."));
+		}
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 회원 ID로 삭제 시 예외가 발생한다")
+	@WithMockUser
+	void deleteMember_memberNotFound() {
+		// given
+		Long nonExistentMemberId = 999L;
+		try (MockedStatic<CurrentUserUtil> mockedStatic = Mockito.mockStatic(CurrentUserUtil.class)) {
+			mockedStatic.when(CurrentUserUtil::getCurrentUserId).thenReturn(nonExistentMemberId);
+			Mockito.doThrow(new NoSuchElementException("회원을 찾을 수 없습니다: " + nonExistentMemberId))
+				.when(memberService).deleteMember(nonExistentMemberId);
+
+			// when & then
+			ServletException ex = assertThrows(
+				ServletException.class,
+				() -> mockMvc.perform(post("/members/delete"))
+			);
+
+			// 그리고 그 원인이 NoSuchElementException인지, 메시지는 맞는지 추가 검증
+			Throwable cause = ex.getCause();
+			assertThat(cause).isInstanceOf(NoSuchElementException.class);
+			assertThat(cause.getMessage()).isEqualTo("회원을 찾을 수 없습니다: 999");
+		}
+	}
+
+	@Test
+	@DisplayName("인증되지 않은 사용자가 회원 삭제 시 401 이 발생한다")
+	void deleteMember_notAuthenticated() throws Exception {
+		// given
+		mockMvc.perform(post("/members/delete"))
+			.andExpect(status().isUnauthorized());
 	}
 }
