@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import sevenstar.marineleisure.global.domain.BaseResponse;
+import sevenstar.marineleisure.global.exception.enums.CommonErrorCode;
+import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.member.dto.AuthCodeRequest;
 import sevenstar.marineleisure.member.dto.LoginResponse;
 import sevenstar.marineleisure.member.service.AuthService;
@@ -82,10 +84,10 @@ public class AuthController {
 			return BaseResponse.success(loginResponse);
 		} catch (SecurityException e) {
 			log.error("Security validation failed: {}", e.getMessage(), e);
-			return BaseResponse.error(403, 403, "보안 검증에 실패했습니다: " + e.getMessage());
+			return BaseResponse.error(MemberErrorCode.SECURITY_VALIDATION_FAILED);
 		} catch (Exception e) {
 			log.error("Kakao login failed: {}", e.getMessage(), e);
-			return BaseResponse.error(500, 500, "카카오 로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
+			return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR);
 		}
 	}
 
@@ -107,17 +109,17 @@ public class AuthController {
 			// 리프레시 토큰이 없는 경우
 			if (refreshToken == null || refreshToken.isEmpty()) {
 				log.error("Empty refresh token");
-				return BaseResponse.error(401, 401, "리프레시 토큰이 없습니다.");
+				return BaseResponse.error(MemberErrorCode.REFRESH_TOKEN_MISSING);
 			}
 
 			LoginResponse loginResponse = authService.refreshToken(refreshToken, response);
 			return BaseResponse.success(loginResponse);
 		} catch (IllegalArgumentException e) {
 			log.info("Invalid refresh token: {}", e.getMessage());
-			return BaseResponse.error(401, 401, e.getMessage());
+			return BaseResponse.error(MemberErrorCode.REFRESH_TOKEN_INVALID);
 		} catch (Exception e) {
 			log.error("Token refresh failed: {}", e.getMessage(), e);
-			return BaseResponse.error(500, 500, "토큰 재발급 중 오류가 발생했습니다: " + e.getMessage());
+			return BaseResponse.error(MemberErrorCode.TOKEN_REFRESH_ERROR);
 		}
 	}
 
@@ -140,7 +142,7 @@ public class AuthController {
 			return BaseResponse.success(null);
 		} catch (Exception e) {
 			log.error("Logout failed: {}", e.getMessage(), e);
-			return BaseResponse.error(500, 500, "로그아웃 중 오류가 발생했습니다: " + e.getMessage());
+			return BaseResponse.error(MemberErrorCode.LOGOUT_ERROR);
 		}
 	}
 }

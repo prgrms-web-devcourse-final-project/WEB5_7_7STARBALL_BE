@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import sevenstar.marineleisure.global.domain.BaseResponse;
+import sevenstar.marineleisure.global.exception.enums.CommonErrorCode;
+import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.member.dto.AuthCodeRequest;
 import sevenstar.marineleisure.member.dto.LoginResponse;
 import sevenstar.marineleisure.member.service.AuthService;
@@ -51,10 +53,10 @@ public class OauthCallbackController {
 			return BaseResponse.success(loginResponse);
 		} catch (SecurityException e) {
 			log.error("Security validation failed: {}", e.getMessage(), e);
-			return BaseResponse.error(403, 403, "보안 검증에 실패했습니다: " + e.getMessage());
+			return BaseResponse.error(MemberErrorCode.SECURITY_VALIDATION_FAILED);
 		} catch (Exception e) {
 			log.error("Kakao login failed: {}", e.getMessage(), e);
-			return BaseResponse.error(500, 500, "카카오 로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
+			return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR);
 		}
 	}
 }
