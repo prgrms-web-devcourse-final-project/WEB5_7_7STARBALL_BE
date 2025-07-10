@@ -54,8 +54,21 @@ public class Member extends BaseEntity {
 		this.longitude = longitude;
 	}
 
+	/**
+	 * 회원의 닉네임을 업데이트합니다.
+	 * 
+	 * @deprecated 도메인 객체에서 직접 상태를 변경하는 대신 MemberService.updateMemberNickname을 사용하세요.
+	 * @param nickname 새 닉네임
+	 * @return 업데이트된 회원
+	 */
+	@Deprecated
 	public Member update(String nickname) {
 		this.nickname = nickname;
+		return this;
+	}
+
+	public Member updateStatus(MemberStatus status) {
+		this.status = status;
 		return this;
 	}
 }

@@ -33,6 +33,7 @@ import java.util.UUID;
 public class OauthService {
 
 	private final MemberRepository memberRepository;
+	private final MemberService memberService;
 	private final WebClient webClient;
 
 	@Value("${kakao.login.api_key}")
@@ -180,19 +181,17 @@ public class OauthService {
 		String nickname = (String)profile.get("nickname");
 
 		// 좌표 설정을 어떻게 하는가? update 시에 해줘야 할듯 한데.
-		Member member = memberRepository.findByProviderAndProviderId("kakao", String.valueOf(id))
-			.map(e -> e.update(nickname))
-			.orElse(Member.builder()
+		return memberRepository.findByProviderAndProviderId("kakao", String.valueOf(id))
+			.map(existingMember -> memberService.updateMemberNickname(existingMember.getId(), nickname))
+			.orElse(memberRepository.save(Member.builder()
 				.email(email)
 				.nickname(nickname)
 				.provider("kakao")
 				.providerId(String.valueOf(id))
 				.latitude(BigDecimal.valueOf(0))
 				.longitude(BigDecimal.valueOf(0))
-				.build()
+				.build())
 			);
-
-		return memberRepository.save(member);
 	}
 
 	public Member findUserById(Long id) {

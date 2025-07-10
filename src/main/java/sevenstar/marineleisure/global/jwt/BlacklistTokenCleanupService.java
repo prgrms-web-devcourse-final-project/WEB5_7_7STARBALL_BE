@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BlacklistTokenCleanupService {
 	private final BlacklistedRefreshTokenRepository repository;
 
-	@Scheduled(cron = "0 0 0 * * ?")
+	@Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Seoul")
 	@Transactional
 	public void cleanupExpiredTokens() {
 		LocalDateTime now = LocalDateTime.now();

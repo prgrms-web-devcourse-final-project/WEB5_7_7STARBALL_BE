@@ -4,12 +4,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import sevenstar.marineleisure.global.api.config.properties.KhoaProperties;
 import sevenstar.marineleisure.global.api.config.properties.OpenMeteoProperties;
 
 @SpringBootApplication
 @EnableJpaAuditing
+@EnableScheduling
 @EnableConfigurationProperties({KhoaProperties.class, OpenMeteoProperties.class})
 public class MarineLeisureApplication {
 
