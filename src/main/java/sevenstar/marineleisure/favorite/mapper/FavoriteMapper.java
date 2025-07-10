@@ -16,4 +16,5 @@ public class FavoriteMapper {
 			.notification(fav.getNotification())
 			.build();
 	}
+
 }

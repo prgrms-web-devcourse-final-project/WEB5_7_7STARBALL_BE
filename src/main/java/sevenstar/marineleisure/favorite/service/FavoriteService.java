@@ -3,27 +3,25 @@ package sevenstar.marineleisure.favorite.service;
 import java.util.List;
 
 import sevenstar.marineleisure.favorite.domain.FavoriteSpot;
-import sevenstar.marineleisure.member.domain.Member;
+import sevenstar.marineleisure.favorite.dto.vo.FavoriteItemVO;
 
 public interface FavoriteService {
 
 	/**
 	 * [POST] /favorites
-	 * @param member : 현재 로그인된 사용자
 	 * @param id : 스팟 id
 	 * @return 즐겨찾기 추가된 스팟 id
 	 * 즐겨찾기 추가후 해당 스팟 id 반환
 	 */
-	public Long createFavorite(Member member, Long id);
+	public Long createFavorite(Long id);
 
 	/**
 	 * [GET] /favorites
-	 * @param member : 현재 로그인된 사용자
 	 * @param cursorId : 커서 위치
 	 * @param size : 한번에 보여줄 아이템 크기
 	 * @return 즐겨찾기 목록
 	 */
-	public List<FavoriteSpot> searchFavorite(Member member, Long cursorId, int size);
+	public List<FavoriteItemVO> searchFavorite(Long cursorId, int size);
 
 	/**
 	 * [DELETE] /favorites/{id}

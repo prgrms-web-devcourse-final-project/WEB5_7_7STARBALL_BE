@@ -3,7 +3,7 @@ package sevenstar.marineleisure.favorite.dto.response;
 import java.util.List;
 
 import lombok.Builder;
-import sevenstar.marineleisure.favorite.dto.vo.FavoriteItem;
+import sevenstar.marineleisure.favorite.dto.vo.FavoriteItemVO;
 
 /**
  *
@@ -13,5 +13,5 @@ import sevenstar.marineleisure.favorite.dto.vo.FavoriteItem;
  * @param hasNext : 다음 내용 존재여부
  */
 @Builder
-public record FavoriteGetListDto(List<FavoriteItem> favorites, Long cursorId, int size, boolean hasNext) {
+public record FavoriteGetListDto(List<FavoriteItemVO> favorites, Long cursorId, int size, boolean hasNext) {
 }

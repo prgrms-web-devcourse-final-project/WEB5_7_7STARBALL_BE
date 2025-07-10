@@ -1,5 +1,7 @@
 package sevenstar.marineleisure.favorite.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,12 +9,16 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.favorite.domain.FavoriteSpot;
 import sevenstar.marineleisure.favorite.dto.response.FavoriteGetListDto;
 import sevenstar.marineleisure.favorite.dto.response.FavoritePatchDto;
+import sevenstar.marineleisure.favorite.dto.vo.FavoriteItemVO;
 import sevenstar.marineleisure.favorite.mapper.FavoriteMapper;
 import sevenstar.marineleisure.favorite.service.FavoriteServiceImpl;
 import sevenstar.marineleisure.global.domain.BaseResponse;
@@ -32,10 +38,15 @@ public class FavoriteController {
 	 * @return 즐겨찾기 목록
 	 */
 	@GetMapping
-	public ResponseEntity<BaseResponse<FavoriteGetListDto>> searchFavorites() {
-		//TODO : 현재 유저 받아오기
+	public ResponseEntity<BaseResponse<FavoriteGetListDto>> searchFavorites(
+		@RequestParam(defaultValue = "0") Long cursorId,
+		@RequestParam(defaultValue = "20") @Min(1) @Max(10) int size) {
+		List<FavoriteItemVO> result = service.searchFavorite(cursorId, size);
 
-		return null;
+		boolean hasNext = result.size() > size;
+		List<FavoriteItemVO> items = hasNext ? result.subList(0, size) : result;
+
+		return BaseResponse.success(new FavoriteGetListDto(items, cursorId, size, hasNext));
 	}
 
 	/**
@@ -45,7 +56,6 @@ public class FavoriteController {
 	 */
 	@PostMapping("/{id}")
 	public ResponseEntity<BaseResponse<Long>> addFavorite(@PathVariable Long id) {
-		//TODO : 현재 유저 받아오기
 		return null;
 	}
 
