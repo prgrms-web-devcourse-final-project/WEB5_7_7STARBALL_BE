@@ -60,31 +60,35 @@ public class FavoriteController {
 	}
 
 	/**
-	 * 즐겨찾기 id로 해당 스팟에 대한 알림 기능 활성화 비활성화
-	 * @param id : 즐겨찾기 id
-	 * @return 즐겨찾기 id,현재 알림 상태
-	 */
-	@PatchMapping("/{id}")
-	public ResponseEntity<BaseResponse<FavoritePatchDto>> updateFavorites(@PathVariable Long id) {
-		if (id == null || id <= 0) {
-			throw new CustomException(FavoriteErrorCode.INVALID_FAVORITE_PARAMETER);
-		}
-		FavoriteSpot updatedSpot = service.updateNotification(id);
-		return BaseResponse.success(mapper.toPatchDto(updatedSpot));
-	}
-
-	/**
 	 * 즐겨찾기 id로 삭제
 	 * @param id : 즐겨찾기 id
 	 * @return body가 없음
 	 */
 	@DeleteMapping("/{id}")
 	public ResponseEntity<BaseResponse<Void>> removeFavorites(@PathVariable Long id) {
+		// 즐겨찾기 id 형식 검사
 		if (id == null || id <= 0) {
 			throw new CustomException(FavoriteErrorCode.INVALID_FAVORITE_PARAMETER);
 		}
+
 		service.removeFavorite(id);
+		
 		return ResponseEntity.noContent().build();
+	}
+
+	/**
+	 * 즐겨찾기 id로 해당 스팟에 대한 알림 기능 활성화 비활성화
+	 * @param id : 즐겨찾기 id
+	 * @return 즐겨찾기 id,현재 알림 상태
+	 */
+	@PatchMapping("/{id}")
+	public ResponseEntity<BaseResponse<FavoritePatchDto>> updateFavorites(@PathVariable Long id) {
+		// 즐겨찾기 id 형식 검사
+		if (id == null || id <= 0) {
+			throw new CustomException(FavoriteErrorCode.INVALID_FAVORITE_PARAMETER);
+		}
+		FavoriteSpot updatedSpot = service.updateNotification(id);
+		return BaseResponse.success(mapper.toPatchDto(updatedSpot));
 	}
 
 }

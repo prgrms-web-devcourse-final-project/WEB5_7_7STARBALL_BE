@@ -1,5 +1,7 @@
 package sevenstar.marineleisure.favorite.service;
 
+import static sevenstar.marineleisure.global.util.CurrentUserUtil.*;
+
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
@@ -55,13 +57,19 @@ public class FavoriteServiceImpl implements FavoriteService {
 		favoriteRepository.deleteFavoriteSpotById(id);
 	}
 
+	/**
+	 * 즐겨찾기 업데이트
+	 * @param id : 즐겨찾기 id
+	 * @return 업데이트한 즐겨찾기 객체
+	 */
 	@Override
 	@Transactional
 	public FavoriteSpot updateNotification(Long id) {
+		// 즐겨찾기한 장소 유효성 검사
 		FavoriteSpot favorite = favoriteRepository.findById(id)
 			.orElseThrow(() -> new CustomException(FavoriteErrorCode.FAVORITE_NOT_FOUND));
-		//TODO : 현재 유저 받아오기
-		Long currentMemberId = 1L;
+		//유저 권한 검사
+		Long currentMemberId = getCurrentUserId();
 		if (!favorite.getMemberId().equals(currentMemberId)) {
 			throw new CustomException(FavoriteErrorCode.FORBIDDEN_FAVORITE_ACCESS);
 		}
