@@ -2,10 +2,12 @@ package sevenstar.marineleisure.spot.dto;
 
 import java.util.List;
 
+import sevenstar.marineleisure.global.enums.ActivityCategory;
+
 public record SpotDetailReadResponse<T>(
 	Long id,
 	String name,
-	String category,
+	ActivityCategory category,
 	String location,
 	float latitude,
 	float longitude,
@@ -16,7 +18,7 @@ public record SpotDetailReadResponse<T>(
 	public record FishingSpotDetail(
 		String forecastDate,
 		String timePeriod,
-		int tide,
+		String tide,
 		String totalIndex,
 		RangeDetail waveHeight,
 		RangeDetail seaTemp,
