@@ -46,7 +46,7 @@ public class SpotServiceImpl implements SpotService {
 	private final SpotViewQuartileRepository spotViewQuartileRepository;
 
 	@Override
-	public SpotReadResponse searchSpot(Long userId, float latitude, float longitude, ActivityCategory category) {
+	public SpotReadResponse searchSpot(float latitude, float longitude, ActivityCategory category) {
 		return search(
 			outdoorSpotRepository.findBySpotDistanceInstanceByLatitudeAndLongitudeAndCategory(latitude, longitude,
 				category.name()));
@@ -54,7 +54,7 @@ public class SpotServiceImpl implements SpotService {
 
 	// TODO : exception, 조회도, favorite 여부 확인
 	@Override
-	public SpotReadResponse searchAllSpot(Long userId, float latitude, float longitude) {
+	public SpotReadResponse searchAllSpot(float latitude, float longitude) {
 		return search(outdoorSpotRepository.findBySpotDistanceInstanceByLatitudeAndLongitude(latitude, longitude));
 	}
 
