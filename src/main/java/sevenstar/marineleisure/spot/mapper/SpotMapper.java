@@ -11,6 +11,7 @@ import sevenstar.marineleisure.forecast.domain.Scuba;
 import sevenstar.marineleisure.forecast.domain.Surfing;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.domain.SpotViewQuartile;
 import sevenstar.marineleisure.spot.dto.SpotCreateRequest;
 import sevenstar.marineleisure.spot.dto.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotDistanceProjection;
@@ -19,11 +20,12 @@ import sevenstar.marineleisure.spot.dto.SpotReadResponse;
 @UtilityClass
 public class SpotMapper {
 	public static SpotReadResponse.SpotInfo toDto(SpotDistanceProjection spotDistanceProjection, String currentStatus,
-		String crowdLevel, boolean isFavorite) {
+		SpotViewQuartile spotViewQuartile, boolean isFavorite) {
 		return new SpotReadResponse.SpotInfo(spotDistanceProjection.getId(), spotDistanceProjection.getName(),
 			ActivityCategory.valueOf(spotDistanceProjection.getCategory()),
 			spotDistanceProjection.getLatitude().floatValue(), spotDistanceProjection.getLongitude().floatValue(),
-			spotDistanceProjection.getDistance().floatValue(), currentStatus, crowdLevel, isFavorite);
+			spotDistanceProjection.getDistance().floatValue(), currentStatus, spotViewQuartile.getMonthQuartile(),
+			spotViewQuartile.getWeekQuartile(), isFavorite);
 	}
 
 	public static <T> SpotDetailReadResponse toDto(OutdoorSpot outdoorSpot, boolean isFavorite, List<T> detail) {

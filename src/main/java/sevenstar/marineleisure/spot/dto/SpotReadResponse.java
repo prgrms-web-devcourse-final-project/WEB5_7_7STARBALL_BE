@@ -15,7 +15,8 @@ public record SpotReadResponse(
 		Float longitude,
 		Float distance,
 		String currentStatus,
-		String crowdLevel,
+		Integer monthView,
+		Integer weekView,
 		boolean isFavorite
 	) {
 

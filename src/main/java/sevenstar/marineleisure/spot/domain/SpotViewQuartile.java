@@ -6,9 +6,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "spot_view_quartile")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class SpotViewQuartile {
 	@Id
 	private Long spotId;
@@ -20,4 +25,9 @@ public class SpotViewQuartile {
 
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
+
+	public SpotViewQuartile(Integer monthQuartile, Integer weekQuartile) {
+		this.monthQuartile = monthQuartile;
+		this.weekQuartile = weekQuartile;
+	}
 }

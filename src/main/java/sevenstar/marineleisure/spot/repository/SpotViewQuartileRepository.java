@@ -1,5 +1,7 @@
 package sevenstar.marineleisure.spot.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +10,8 @@ import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.spot.domain.SpotViewQuartile;
 
 public interface SpotViewQuartileRepository extends JpaRepository<SpotViewQuartile, Long> {
+	Optional<SpotViewQuartile> findBySpotId(Long spotId);
+
 	@Modifying
 	@Transactional
 	@Query(value = """

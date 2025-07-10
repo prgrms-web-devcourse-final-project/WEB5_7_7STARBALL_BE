@@ -22,12 +22,14 @@ import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.domain.SpotViewQuartile;
 import sevenstar.marineleisure.spot.dto.SpotCreateRequest;
 import sevenstar.marineleisure.spot.dto.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotDistanceProjection;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
 import sevenstar.marineleisure.spot.mapper.SpotMapper;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
+import sevenstar.marineleisure.spot.repository.SpotViewQuartileRepository;
 import sevenstar.marineleisure.spot.repository.SpotViewStatsRepository;
 
 @Service
@@ -41,6 +43,7 @@ public class SpotServiceImpl implements SpotService {
 	private final MudflatRepository mudflatRepository;
 	private final SurfingRepository surfingRepository;
 	private final SpotViewStatsRepository spotViewStatsRepository;
+	private final SpotViewQuartileRepository spotViewQuartileRepository;
 
 	@Override
 	public SpotReadResponse searchSpot(Long userId, float latitude, float longitude, ActivityCategory category) {
@@ -77,10 +80,12 @@ public class SpotServiceImpl implements SpotService {
 						.getTotalIndex();
 			};
 
-			String crowedLevel = "임시 데이터";
+			SpotViewQuartile spotViewQuartile = spotViewQuartileRepository.findBySpotId(spotDistanceProjection.getId())
+				.orElseGet(() -> new SpotViewQuartile(1, 1));
 			boolean isFavorite = false;
 
-			infos.add(SpotMapper.toDto(spotDistanceProjection, totalIndex.getDescription(), crowedLevel, isFavorite));
+			infos.add(
+				SpotMapper.toDto(spotDistanceProjection, totalIndex.getDescription(), spotViewQuartile, isFavorite));
 		}
 
 		return new SpotReadResponse(infos);
