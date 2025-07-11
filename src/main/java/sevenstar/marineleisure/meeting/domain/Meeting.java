@@ -55,7 +55,7 @@ public class Meeting extends BaseEntity {
 
 	@Builder
 	public Meeting(LocalDateTime meetingTime, ActivityCategory category, int capacity, Long hostId, String title,
-		Long spotId, String description) {
+		Long spotId, String description, MeetingStatus status) {
 		this.meetingTime = meetingTime;
 		this.category = category;
 		this.capacity = capacity;
@@ -63,6 +63,7 @@ public class Meeting extends BaseEntity {
 		this.title = title;
 		this.spotId = spotId;
 		this.description = description;
+		this.status = status;
 	}
 
 }
