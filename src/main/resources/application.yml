@@ -2,6 +2,7 @@ spring:
   application:
     name: MarineLeisure
   profiles:
+<<<<<<< HEAD
     active: local
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -30,3 +31,6 @@ badanuri:
     key: ${BADANURI_KEY}
 
 
+=======
+    active: dev
+>>>>>>> eb1c1bc (fix: error fix)

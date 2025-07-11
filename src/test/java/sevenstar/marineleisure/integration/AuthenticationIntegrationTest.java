@@ -20,11 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.service.OauthService;
 
-@SpringBootTest(properties = {
-	"spring.data.redis.host=",
-	"spring.data.redis.port=",
-	"spring.data.redis.password="
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 public class AuthenticationIntegrationTest {
 

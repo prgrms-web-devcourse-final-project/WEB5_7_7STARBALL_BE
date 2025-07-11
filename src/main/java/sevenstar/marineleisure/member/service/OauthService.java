@@ -29,7 +29,6 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@PropertySource("classpath:application-auth.properties")
 public class OauthService {
 
 	private final MemberRepository memberRepository;
