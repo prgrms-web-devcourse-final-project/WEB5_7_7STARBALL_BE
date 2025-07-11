@@ -59,6 +59,8 @@ dependencies {
     implementation 'org.hibernate:hibernate-spatial:6.5.2.Final'
     implementation 'org.locationtech.jts:jts-core:1.19.0'
 
+    // mock-inline
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
 
 tasks.named('test') {
