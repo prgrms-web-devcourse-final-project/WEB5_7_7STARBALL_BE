@@ -2,17 +2,16 @@ package sevenstar.marineleisure.global.exception.enums;
 
 import org.springframework.http.HttpStatus;
 
-public enum CommonErrorCode implements ErrorCode {
-
-	// 9XXX: 공통
-	INTERNET_SERVER_ERROR(9500, HttpStatus.INTERNAL_SERVER_ERROR, "서버에 문제가 발생했습니다."),
-	INVALID_PARAMETER(9400, HttpStatus.BAD_REQUEST, "잘못된 파라미터 전송되었습니다.");
+public enum SpotErrorCode implements ErrorCode {
+	// 3XXX: spot
+	SPOT_NOT_FOUND(3404, HttpStatus.NOT_FOUND, "스팟을 찾을 수 없음"),
+	DUPLICATE_FAVORITE(3409, HttpStatus.CONFLICT, "이미 즐겨찾기한 스팟");
 
 	private final int code;
 	private final HttpStatus httpStatus;
 	private final String message;
 
-	CommonErrorCode(int code, HttpStatus httpStatus, String message) {
+	SpotErrorCode(int code, HttpStatus httpStatus, String message) {
 		this.code = code;
 		this.httpStatus = httpStatus;
 		this.message = message;

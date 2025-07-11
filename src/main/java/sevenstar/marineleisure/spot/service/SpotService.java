@@ -3,16 +3,17 @@ package sevenstar.marineleisure.spot.service;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.spot.dto.SpotCreateRequest;
 import sevenstar.marineleisure.spot.dto.SpotDetailReadResponse;
+import sevenstar.marineleisure.spot.dto.SpotPreviewReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
 
 public interface SpotService {
-	SpotReadResponse searchSpot(float latitude, float longitude, ActivityCategory category);
+	SpotReadResponse searchSpot(float latitude, float longitude, Integer radius, ActivityCategory category);
 
-	SpotReadResponse searchAllSpot(float latitude, float longitude);
+	SpotReadResponse searchAllSpot(float latitude, float longitude, Integer radius);
 
 	<T> SpotDetailReadResponse<T> searchSpotDetail(Long spotId);
 
-	void createOutdoorSpot(SpotCreateRequest spotCreateRequest);
+	SpotPreviewReadResponse preview(float latitude, float longitude);
 
 	void upsertSpotViewStats(Long spotId);
 }

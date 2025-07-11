@@ -1,4 +1,4 @@
-package sevenstar.marineleisure.spot.dto;
+package sevenstar.marineleisure.spot.dto.projection;
 
 import java.math.BigDecimal;
 
