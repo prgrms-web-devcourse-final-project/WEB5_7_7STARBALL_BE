@@ -11,6 +11,7 @@ import sevenstar.marineleisure.member.dto.MemberDetailResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
 
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * 회원 관련 비즈니스 로직을 처리하는 서비스
@@ -59,23 +60,4 @@ public class MemberService {
 		return getMemberDetail(memberId);
 	}
 
-
-	/**
-	 * 회원의 닉네임을 업데이트합니다.
-	 *
-	 * @param memberId 업데이트할 회원 ID
-	 * @param nickname 새 닉네임
-	 * @return 업데이트된 회원
-	 * @throws NoSuchElementException 회원을 찾을 수 없는 경우
-	 */
-	@Transactional
-	public Member updateMemberNickname(Long memberId, String nickname) {
-		log.info("회원 닉네임 업데이트: memberId={}, nickname={}", memberId, nickname);
-
-		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new NoSuchElementException("회원을 찾을 수 없습니다: " + memberId));
-
-		member.update(nickname);
-		return memberRepository.save(member);
-	}
 }

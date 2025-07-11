@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.member.domain;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -57,5 +58,10 @@ public class Member extends BaseEntity {
 	public Member update(String nickname) {
 		this.nickname = nickname;
 		return this;
+	}
+	public void updateNickname(String newNickname) {
+		if (!Objects.equals(this.nickname, newNickname)) {
+			this.nickname = newNickname;
+		}
 	}
 }
