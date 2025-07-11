@@ -18,31 +18,20 @@ import sevenstar.marineleisure.meeting.domain.Participant;
 @Repository
 public interface ParticipantRepository extends JpaRepository<Participant, Long> {
 
-	@Query(
-		"SELECT  p.meetingId "
-			+ "FROM Participant  p "
-			+ "WHERE p.userId = :memberId "
-			+ "ORDER BY p.createdAt , p.id DESC "
+	// Temporarily disabled for testing
+	// @Query(...)
+	// Slice<Long> findAllOrderByStatusAllFirst(Pageable pageable, @Param("memberId") Long memberId);
 
-	)
-	Slice<Long> findAllOrderByStatusAllFirst(Pageable pageable,@Param("memberId") Long memberId);
-
-	@Query("SELECT p.meetingId FROM Participant p JOIN Meeting m ON p.meetingId = m.id " +
-		            "WHERE p.userId = :userId " +
-		            "AND m.status = :status " +
-		            "AND m.id < :cursorId " +
-		            "ORDER BY m.id DESC")
-	List<Long> findMeetingIdsByUserIdAndStatusWithCursor(
-            @Param("userId") Long userId,
-            @Param("status") MeetingStatus status,
-            @Param("cursorId") Long cursorId,
-            Pageable pageable
-        );
+	// Temporarily disabled for testing
+	// List<Long> findMeetingIdsByUserIdAndStatusWithCursor(...);
 
 	@Query("SELECT count(*) FROM Participant p WHERE p.meetingId = :meetingId")
 	Optional<Integer> countMeetingIdMember(@Param("meetingId") Long meetingId);
 
 	Optional<Participant> findByMeetingIdAndUserId(Long meetingId, Long userId);
 
-	List<ParticipantResponse> findByMeetingId(Long meetingId);
+	@Query("SELECT p FROM Participant p WHERE p.meetingId = :meetingId")
+	List<Participant> findParticipantsByMeetingId(@Param("meetingId") Long meetingId);
+
+	boolean existsByUserId(Long userId);
 }

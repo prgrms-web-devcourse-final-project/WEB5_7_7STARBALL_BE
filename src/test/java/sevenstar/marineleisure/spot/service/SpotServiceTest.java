@@ -56,7 +56,6 @@ class SpotServiceTest {
 	@Autowired
 	private GeoUtils geoUtils;
 
-	private Long userId = 1L;
 	private float baseLat = 37.5503f;
 	private float baseLon = 126.9971f;
 	@BeforeEach
@@ -138,13 +137,13 @@ class SpotServiceTest {
 	@Test
 	void should_searchSpot_when_givenLatitudeAndLongitudeAndActivityCategory() {
 		// when
-		SpotReadResponse fishingResponse = spotService.searchSpot(userId, baseLat, baseLon,
+		SpotReadResponse fishingResponse = spotService.searchSpot(baseLat, baseLon,
 			ActivityCategory.FISHING);
-		SpotReadResponse scubaResponse = spotService.searchSpot(userId, baseLat, baseLon,
+		SpotReadResponse scubaResponse = spotService.searchSpot(baseLat, baseLon,
 			ActivityCategory.SCUBA);
-		SpotReadResponse surfingResponse = spotService.searchSpot(userId, baseLat, baseLon,
+		SpotReadResponse surfingResponse = spotService.searchSpot(baseLat, baseLon,
 			ActivityCategory.SURFING);
-		SpotReadResponse mudflatResponse = spotService.searchSpot(userId, baseLat, baseLon,
+		SpotReadResponse mudflatResponse = spotService.searchSpot(baseLat, baseLon,
 			ActivityCategory.MUDFLAT);
 
 		// then
@@ -161,7 +160,7 @@ class SpotServiceTest {
 		float longitude = 129.0714f;
 
 		// when
-		SpotReadResponse response = spotService.searchAllSpot(userId, latitude, longitude);
+		SpotReadResponse response = spotService.searchAllSpot(latitude, longitude);
 
 		//
 		assertThat(response.spots()).hasSize(4);

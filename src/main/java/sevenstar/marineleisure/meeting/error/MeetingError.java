@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import sevenstar.marineleisure.global.exception.enums.ErrorCode;
 
 public enum MeetingError implements ErrorCode {
+	//2XXX에러
 	MEETING_NOT_FOUND(2404, HttpStatus.NOT_FOUND, "Meeting Not Found");
 
 	private final int code;

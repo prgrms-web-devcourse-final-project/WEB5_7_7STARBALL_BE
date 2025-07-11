@@ -1,5 +1,6 @@
 package sevenstar.marineleisure.meeting.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,16 +23,17 @@ import sevenstar.marineleisure.meeting.Dto.VO.DetailSpot;
 import sevenstar.marineleisure.meeting.Dto.VO.TagList;
 import sevenstar.marineleisure.meeting.Dto.mapper.MeetingMapper;
 import sevenstar.marineleisure.meeting.Repository.MeetingRepository;
-import sevenstar.marineleisure.meeting.Repository.MemberRepository;
-import sevenstar.marineleisure.meeting.Repository.OutdoorSpotSpotRepository;
 import sevenstar.marineleisure.meeting.Repository.ParticipantRepository;
 import sevenstar.marineleisure.meeting.Repository.TagRepository;
 import sevenstar.marineleisure.meeting.domain.Meeting;
 import sevenstar.marineleisure.meeting.domain.Participant;
 import sevenstar.marineleisure.meeting.domain.Tag;
 import sevenstar.marineleisure.meeting.error.MeetingError;
+import sevenstar.marineleisure.meeting.validate.ParticipantValidate;
 import sevenstar.marineleisure.member.domain.Member;
+import sevenstar.marineleisure.member.repository.MemberRepository;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -41,9 +43,11 @@ public class MeetingServiceImpl implements MeetingService {
 	private final ParticipantRepository participantRepository;
 	private final TagRepository tagRepository;
 	private final MemberRepository memberRepository;
-	private final OutdoorSpotSpotRepository outdoorSpotSpotRepository;
+	private final OutdoorSpotRepository outdoorSpotSpotRepository;
+	private final ParticipantValidate participantValidate;
 
 	@Override
+	@Transactional(readOnly = true)
 	//TODO : 카테고리 별로 확인 하는 방법 고민하기?
 	public Slice<Meeting> getAllMeetings(Long cursorId, int size) {
 		Pageable pageable = PageRequest.of(0, size);
@@ -56,17 +60,20 @@ public class MeetingServiceImpl implements MeetingService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public MeetingDetailResponse getMeetingDetails(Long meetingId) {
-		//TODO : validate 확인
-		//TODO : errorCode 확인
 		//TODO : select 세번 해야하는것에 대한 개선점 찾기 -> JOIN 패치를 진행 하기로 맘을 먹었음
 		//TODO : 그럼에도 JPA 매핑과 JOIN에 대한 속도차이같은걸 조금 알면 좋을듯?
+		//TODO :: validate.MeetingValidate.foundMeeting
 		Meeting targetMeeting = meetingRepository.findById(meetingId)
 			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
+		//TODO :: validate.MemberValidate.foundMember
 		Member host = foundMember(targetMeeting.getHostId());
+		//TODO : validate.SpotValidate.foundOutdoorSpot
 		OutdoorSpot targetSpot = outdoorSpotSpotRepository.findById(targetMeeting.getSpotId())
 			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-		//태그가 없는 상황이 올까? 그럼 최소 태그 하나는 붙여달라하는 조건을 붙여야할까?
+		//태그가 없는 상황이 올까? 그럼 최소 태그 하나는 붙여달라하는 조건을 붙여야할까? -> 07-11 아무것도 없을때는 null을 뱉기로 결정
+		//TODO :: validate.TagValidate.foundTag
 		Tag targetTag = tagRepository.findByMeetingId(meetingId)
 			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
 
@@ -96,6 +103,7 @@ public class MeetingServiceImpl implements MeetingService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Slice<Meeting> getStatusMyMeetings(Long memberId, Long cursorId, int size, MeetingStatus meetingStatus) {
 		Pageable pageable = PageRequest.of(0, size);
 		existMember(memberId);
@@ -105,6 +113,7 @@ public class MeetingServiceImpl implements MeetingService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public MeetingDetailAndMemberResponse getMeetingDetailAndMember(Long memberId , Long meetingId){
 		Member host = foundMember(memberId);
 		Meeting targetMeeting = foundMeeting(meetingId);
@@ -114,7 +123,9 @@ public class MeetingServiceImpl implements MeetingService {
 		}
 		OutdoorSpot targetSpot = outdoorSpotSpotRepository.findById(targetMeeting.getSpotId())
 			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-		List<ParticipantResponse> participantResponseList = participantRepository.findByMeetingId(meetingId);
+		List<Participant> participants = participantRepository.findParticipantsByMeetingId(meetingId);
+		// TODO: Participant를 ParticipantResponse로 변환하는 로직 필요
+		List<ParticipantResponse> participantResponseList = Collections.emptyList();
 
 		return MeetingDetailAndMemberResponse.builder()
 			.id(targetMeeting.getId())
@@ -142,6 +153,7 @@ public class MeetingServiceImpl implements MeetingService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Long countMeetings(Long memberId) {
 		//TODO :: member가 실존한 맴버인지 검증이 필요할까?
 		return meetingRepository.countMyMeetingsByMemberId(memberId);
@@ -150,7 +162,9 @@ public class MeetingServiceImpl implements MeetingService {
 	@Override
 	//동시성을 처리해야할 문제가 있음
 	public Long joinMeeting(Long meetingId, Long memberId) {
+		//TODO :: MemberValidate.existMember
 		existMember(memberId);
+		//TODO :: MeetingValidate.foundMember
 		Meeting meeting = foundMeeting(meetingId);
 		if (meeting.getStatus() != MeetingStatus.ONGOING) {
 			//TODO : 참여할 수 없는 모임이라고 에러를 띄워야함
@@ -175,9 +189,10 @@ public class MeetingServiceImpl implements MeetingService {
 	@Override
 	public void leaveMeeting(Long meetingId, Long memberId) {
 		//TODO : member가 진짜 등록된 맴버인지 확인해야함
-		Member targetMember = foundMember(memberId);
+		//TODO :: MemberValidate.existMember
 		Meeting meeting = foundMeeting(meetingId);
-		if (targetMember.getId().equals(meeting.getHostId())) {
+		participantValidate.existParticipant(memberId);
+		if (meetingId.equals(meeting.getHostId())) {
 			//TODO :: host는 나갈수없음을 말해야합니다..
 			throw new CustomException(MeetingError.MEETING_NOT_FOUND);
 		}
