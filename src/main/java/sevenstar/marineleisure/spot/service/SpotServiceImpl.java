@@ -24,7 +24,7 @@ import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.exception.CustomException;
-import sevenstar.marineleisure.global.exception.enums.CommonErrorCode;
+import sevenstar.marineleisure.global.exception.enums.SpotErrorCode;
 import sevenstar.marineleisure.global.utils.FakeUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.domain.SpotViewQuartile;
@@ -102,7 +102,7 @@ public class SpotServiceImpl implements SpotService {
 	@Override
 	public <T> SpotDetailReadResponse<T> searchSpotDetail(Long spotId) {
 		OutdoorSpot outdoorSpot = outdoorSpotRepository.findById(spotId)
-			.orElseThrow(() -> new CustomException(CommonErrorCode.INVALID_PARAMETER));
+			.orElseThrow(() -> new CustomException(SpotErrorCode.SPOT_NOT_FOUND));
 		LocalDate now = LocalDate.now();
 
 		// TODO : 즐겨찾기 추가 필요
