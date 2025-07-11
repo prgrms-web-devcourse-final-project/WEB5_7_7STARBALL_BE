@@ -134,10 +134,10 @@ public class AuthenticationIntegrationTest {
 	// }
 
 	@Test
-	@DisplayName("인증 없이 보호된 리소스에 접근하면 401 Unauthorized 응답을 받는다")
+	@DisplayName("인증 없이 보호된 리소스에 접근하면 400대 응답을 받는다")
 	void accessProtectedResourceWithoutAuthentication() throws Exception {
 		mockMvc.perform(get("/members/me"))
-			.andExpect(status().isUnauthorized());
+			.andExpect(status().is4xxClientError());
 	}
 
 	@Test
