@@ -1,10 +1,9 @@
 package sevenstar.marineleisure.member.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -16,15 +15,14 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
-
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -32,6 +30,7 @@ import java.util.UUID;
 public class OauthService {
 
 	private final MemberRepository memberRepository;
+	private final MemberService memberService;
 	private final WebClient webClient;
 
 	@Value("${kakao.login.api_key}")
@@ -46,6 +45,8 @@ public class OauthService {
 	@Value("${kakao.login.redirect_uri}")
 	private String redirectUri;
 
+	@Value("${kakao.login.uri.code}")
+	private String kakaoPath;
 	/**
 	 * 카카오 로그인 URL 생성 (세션 저장 없음 - 테스트용)
 	 *
@@ -134,17 +135,11 @@ public class OauthService {
 	}
 
 	@Transactional
-	public Map<String, Object> processKakaoUser(String accessToken) {
+	public Member processKakaoUser(String accessToken) {
 		// 1. access token으로 사용자 정보 요청
 		Map<String, Object> memberAttributes = getUserInfo(accessToken);
 		// 2. 사용자 정보로 회원가입 or 로그인 처리
-		Member member = saveOrUpdateKakaoUser(memberAttributes);
-		// 3. 응답 데이터 구성
-		Map<String, Object> response = new HashMap<>();
-		response.put("id", member != null ? member.getId() : null);
-		response.put("email", member != null ? member.getEmail() : null);
-		response.put("nickname", member != null ? member.getNickname() : null);
-		return response;
+		return saveOrUpdateKakaoUser(memberAttributes);
 	}
 
 	/**
@@ -171,25 +166,24 @@ public class OauthService {
 	 * @return
 	 */
 	private Member saveOrUpdateKakaoUser(Map<String, Object> memberAttributes) {
-		Long id = (Long)memberAttributes.get("id");
+		Long providerId = (Long)memberAttributes.get("id");
 		Map<String, Object> kakaoAccount = (Map<String, Object>)memberAttributes.get("kakao_account");
 		Map<String, Object> profile = (Map<String, Object>)kakaoAccount.get("profile");
 
 		String email = (String)kakaoAccount.get("email");
 		String nickname = (String)profile.get("nickname");
 
-		// 좌표 설정을 어떻게 하는가? update 시에 해줘야 할듯 한데.
-		Member member = memberRepository.findByProviderAndProviderId("kakao", String.valueOf(id))
-			.map(e -> e.update(nickname))
-			.orElse(Member.builder()
-				.email(email)
-				.nickname(nickname)
+		// 기존 회원이 있으면 가져오고, 없으면 새로 생성 (Optional이 비어있을 때만 실행)
+		Member member = memberRepository.findByProviderAndProviderId("kakao", String.valueOf(providerId))
+			.orElseGet(() -> Member.builder()
 				.provider("kakao")
-				.providerId(String.valueOf(id))
-				.latitude(BigDecimal.valueOf(0))
-				.longitude(BigDecimal.valueOf(0))
-				.build()
-			);
+				.providerId(String.valueOf(providerId))
+				.email(email)  // 새 회원 생성 시 이메일 설정
+				.nickname(nickname)  // 새 회원 생성 시 닉네임 설정
+				.latitude(BigDecimal.ZERO)
+				.longitude(BigDecimal.ZERO)
+				.build());
+		member.updateNickname(nickname);
 
 		return memberRepository.save(member);
 	}

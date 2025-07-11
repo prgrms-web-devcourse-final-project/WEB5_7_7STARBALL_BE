@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
+import sevenstar.marineleisure.global.enums.MemberStatus;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -16,7 +18,12 @@ import org.springframework.test.context.ActiveProfiles;
 import sevenstar.marineleisure.annotation.H2DataJpaTest;
 import sevenstar.marineleisure.member.domain.Member;
 
+<<<<<<< HEAD
 @H2DataJpaTest
+=======
+@DataJpaTest
+@EnableJpaAuditing
+>>>>>>> c521a0a (fix: 소셜 로그인 재시도 시 닉네임 UNIQUE 제약 위반 오류 발생 (#42))
 class MemberRepositoryTest {
 
 	@Autowired
@@ -43,6 +50,11 @@ class MemberRepositoryTest {
 		assertThat(foundMember.get().getEmail()).isEqualTo("test@example.com");
 		assertThat(foundMember.get().getProvider()).isEqualTo("kakao");
 		assertThat(foundMember.get().getProviderId()).isEqualTo("12345");
+		assertThat(foundMember.get().getLatitude().compareTo(BigDecimal.valueOf(37.5665))).isEqualTo(0);
+		assertThat(foundMember.get().getLongitude().compareTo(BigDecimal.valueOf(126.9780))).isEqualTo(0);
+		assertThat(foundMember.get().getStatus()).isEqualTo(MemberStatus.ACTIVE);
+		assertThat(foundMember.get().getCreatedAt()).isNotNull();
+		assertThat(foundMember.get().getUpdatedAt()).isNotNull();
 	}
 
 	@Test
@@ -61,6 +73,11 @@ class MemberRepositoryTest {
 		assertThat(foundMember).isPresent();
 		assertThat(foundMember.get().getNickname()).isEqualTo("testUser");
 		assertThat(foundMember.get().getEmail()).isEqualTo("test@example.com");
+		assertThat(foundMember.get().getProvider()).isEqualTo("kakao");
+		assertThat(foundMember.get().getProviderId()).isEqualTo("12345");
+		assertThat(foundMember.get().getLatitude().compareTo(BigDecimal.valueOf(37.5665))).isEqualTo(0);
+		assertThat(foundMember.get().getLongitude().compareTo(BigDecimal.valueOf(126.9780))).isEqualTo(0);
+		assertThat(foundMember.get().getStatus()).isEqualTo(MemberStatus.ACTIVE);
 	}
 
 	@Test
@@ -88,6 +105,17 @@ class MemberRepositoryTest {
 		entityManager.flush();
 		entityManager.clear();
 
+		// 수정 전 상태 저장
+		Member beforeUpdate = memberRepository.findById(savedMember.getId()).orElseThrow();
+		var originalUpdatedAt = beforeUpdate.getUpdatedAt();
+
+		// 잠시 대기하여 updatedAt 변경 확인을 위한 시간차 생성
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 		// when
 		Member foundMember = memberRepository.findById(savedMember.getId()).orElseThrow();
 		foundMember.update("newNickname");
@@ -98,6 +126,10 @@ class MemberRepositoryTest {
 		// then
 		Member updatedMember = memberRepository.findById(savedMember.getId()).orElseThrow();
 		assertThat(updatedMember.getNickname()).isEqualTo("newNickname");
+		assertThat(updatedMember.getEmail()).isEqualTo("test@example.com");
+		assertThat(updatedMember.getProvider()).isEqualTo("kakao");
+		assertThat(updatedMember.getProviderId()).isEqualTo("12345");
+		assertThat(updatedMember.getUpdatedAt()).isAfter(originalUpdatedAt);
 	}
 
 	@Test
