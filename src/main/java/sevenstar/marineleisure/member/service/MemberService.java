@@ -11,6 +11,7 @@ import sevenstar.marineleisure.member.dto.MemberDetailResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
 
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * 회원 관련 비즈니스 로직을 처리하는 서비스
@@ -58,4 +59,5 @@ public class MemberService {
 		log.info("현재 로그인한 회원 상세 정보 조회: memberId={}", memberId);
 		return getMemberDetail(memberId);
 	}
+
 }

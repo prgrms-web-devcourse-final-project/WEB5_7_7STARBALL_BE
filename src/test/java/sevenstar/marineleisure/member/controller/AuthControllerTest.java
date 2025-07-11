@@ -1,12 +1,9 @@
 package sevenstar.marineleisure.member.controller;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,14 +15,21 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.servlet.http.Cookie;
-import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
+import jakarta.servlet.http.HttpServletResponse;
 import sevenstar.marineleisure.member.dto.AuthCodeRequest;
 import sevenstar.marineleisure.member.dto.LoginResponse;
 import sevenstar.marineleisure.member.service.AuthService;
 import sevenstar.marineleisure.member.service.OauthService;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -63,14 +67,16 @@ class AuthControllerTest {
 				+ "&redirect_uri=http://localhost:8080/oauth/kakao/code"
 				+ "&response_type=code&state=test-state");
 		loginUrlInfo.put("state", "test-state");
+		loginUrlInfo.put("accessToken", "test-access-token");
 
-		when(oauthService.getKakaoLoginUrl(isNull(), any())).thenReturn(loginUrlInfo);
+		when(oauthService.getKakaoLoginUrl(isNull(), any(HttpServletRequest.class))).thenReturn(loginUrlInfo);
 
 		mockMvc.perform(get("/auth/kakao/url"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
-			.andExpect(jsonPath("$.body.state").value("test-state"));
+			.andExpect(jsonPath("$.body.state").value("test-state"))
+			.andExpect(jsonPath("$.body.accessToken").value("test-access-token"));
 	}
 
 	@Test
@@ -83,21 +89,23 @@ class AuthControllerTest {
 				+ "&redirect_uri=" + customRedirectUri
 				+ "&response_type=code&state=test-state");
 		loginUrlInfo.put("state", "test-state");
+		loginUrlInfo.put("accessToken", "test-access-token");
 
-		when(oauthService.getKakaoLoginUrl(any(), any())).thenReturn(loginUrlInfo);
+		when(oauthService.getKakaoLoginUrl(eq(customRedirectUri), any(HttpServletRequest.class))).thenReturn(loginUrlInfo);
 
 		mockMvc.perform(get("/auth/kakao/url").param("redirectUri", customRedirectUri))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
-			.andExpect(jsonPath("$.body.state").value("test-state"));
+			.andExpect(jsonPath("$.body.state").value("test-state"))
+			.andExpect(jsonPath("$.body.accessToken").value("test-access-token"));
 	}
 
 	@Test
 	@DisplayName("카카오 로그인을 처리할 수 있다")
 	void kakaoLogin() throws Exception {
 		AuthCodeRequest request = new AuthCodeRequest("test-auth-code", "test-state");
-		when(authService.processKakaoLogin(eq("test-auth-code"), any(), any(), any())).thenReturn(loginResponse);
+		when(authService.processKakaoLogin(eq("test-auth-code"), eq("test-state"), any(HttpServletRequest.class), any(HttpServletResponse.class))).thenReturn(loginResponse);
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -114,15 +122,20 @@ class AuthControllerTest {
 	@DisplayName("카카오 로그인 처리 중 오류가 발생하면 에러 응답을 반환한다")
 	void kakaoLogin_error() throws Exception {
 		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state");
-		when(authService.processKakaoLogin(eq("invalid-code"), any(), any(), any()))
+		when(authService.processKakaoLogin(eq("invalid-code"), eq("test-state"), any(HttpServletRequest.class), any(HttpServletResponse.class)))
 			.thenThrow(new RuntimeException("Failed to get access token from Kakao"));
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
+			.andDo(result -> {
+				System.out.println("[DEBUG_LOG] Response status: " + result.getResponse().getStatus());
+				System.out.println("[DEBUG_LOG] Response body: " + result.getResponse().getContentAsString());
+			})
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.code").value(MemberErrorCode.KAKAO_LOGIN_ERROR.getCode()))
-			.andExpect(jsonPath("$.message").value(MemberErrorCode.KAKAO_LOGIN_ERROR.getMessage()));
+			.andExpect(jsonPath("$.code").value(1500))
+			.andExpect(jsonPath("$.message")
+				.value("카카오 로그인 처리 중 오류가 발생했습니다."));
 	}
 
 	@Test
@@ -145,7 +158,7 @@ class AuthControllerTest {
 	@DisplayName("리프레시 토큰이 없으면 400을 반환한다")
 	void refreshToken_noToken() throws Exception {
 		mockMvc.perform(post("/auth/refresh"))
-			.andExpect(status().isUnauthorized());   // 400만 검증
+			.andExpect(status().isBadRequest());   // 400만 검증
 	}
 
 	@Test
