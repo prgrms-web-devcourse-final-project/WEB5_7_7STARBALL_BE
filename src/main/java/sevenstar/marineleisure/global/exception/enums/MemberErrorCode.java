@@ -7,6 +7,7 @@ public enum MemberErrorCode implements ErrorCode {
 	SECURITY_VALIDATION_FAILED(1403, HttpStatus.FORBIDDEN, "보안 검증에 실패했습니다."),
 	REFRESH_TOKEN_MISSING(1401, HttpStatus.UNAUTHORIZED, "리프레시 토큰이 없습니다."),
 	REFRESH_TOKEN_INVALID(1402, HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
+	MEMBER_NOT_FOUND(1404, HttpStatus.NOT_FOUND, "찾을수 없는 회원입니다."),
 
 	// 15XX: Service errors
 	KAKAO_LOGIN_ERROR(1500, HttpStatus.INTERNAL_SERVER_ERROR, "카카오 로그인 처리 중 오류가 발생했습니다."),
