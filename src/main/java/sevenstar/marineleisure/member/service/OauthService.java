@@ -1,10 +1,9 @@
 package sevenstar.marineleisure.member.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -16,15 +15,14 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
-
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -33,6 +31,7 @@ import java.util.UUID;
 public class OauthService {
 
 	private final MemberRepository memberRepository;
+	private final MemberService memberService;
 	private final WebClient webClient;
 
 	@Value("${kakao.login.api_key}")
@@ -47,6 +46,8 @@ public class OauthService {
 	@Value("${kakao.login.redirect_uri}")
 	private String redirectUri;
 
+	@Value("${kakao.login.uri.code}")
+	private String kakaoPath;
 	/**
 	 * 카카오 로그인 URL 생성 (세션 저장 없음 - 테스트용)
 	 *
@@ -62,7 +63,7 @@ public class OauthService {
 		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
 
 		String kakaoAuthUrl = UriComponentsBuilder.fromUriString(kakaoBaseUri)
-			.path("/oauth/authorize")
+			.path(kakaoPath)
 			.queryParam("client_id", apiKey)
 			.queryParam("redirect_uri", finalRedirectUri)
 			.queryParam("response_type", "code")
@@ -135,17 +136,18 @@ public class OauthService {
 	}
 
 	@Transactional
-	public Map<String, Object> processKakaoUser(String accessToken) {
+	public Member processKakaoUser(String accessToken) {
 		// 1. access token으로 사용자 정보 요청
 		Map<String, Object> memberAttributes = getUserInfo(accessToken);
 		// 2. 사용자 정보로 회원가입 or 로그인 처리
 		Member member = saveOrUpdateKakaoUser(memberAttributes);
-		// 3. 응답 데이터 구성
-		Map<String, Object> response = new HashMap<>();
-		response.put("id", member != null ? member.getId() : null);
-		response.put("email", member != null ? member.getEmail() : null);
-		response.put("nickname", member != null ? member.getNickname() : null);
-		return response;
+
+		// // 3. 응답 데이터 구성
+		// Map<String, Object> response = new HashMap<>();
+		// response.put("id", member != null ? member.getId() : null);
+		// response.put("email", member != null ? member.getEmail() : null);
+		// response.put("nickname", member != null ? member.getNickname() : null);
+		return member;
 	}
 
 	/**
@@ -180,19 +182,18 @@ public class OauthService {
 		String nickname = (String)profile.get("nickname");
 
 		// 좌표 설정을 어떻게 하는가? update 시에 해줘야 할듯 한데.
-		Member member = memberRepository.findByProviderAndProviderId("kakao", String.valueOf(id))
-			.map(e -> e.update(nickname))
-			.orElse(Member.builder()
-				.email(email)
-				.nickname(nickname)
-				.provider("kakao")
-				.providerId(String.valueOf(id))
-				.latitude(BigDecimal.valueOf(0))
-				.longitude(BigDecimal.valueOf(0))
-				.build()
+		return memberRepository.findByProviderAndProviderId("kakao", String.valueOf(id))
+			.map(existingMember -> memberService.updateMemberNickname(existingMember.getId(), nickname))
+			.orElseGet( () ->
+				memberRepository.save(Member.builder()
+					.email(email)
+					.nickname(nickname)
+					.provider("kakao")
+					.providerId(String.valueOf(id))
+					.latitude(BigDecimal.valueOf(0))
+					.longitude(BigDecimal.valueOf(0))
+					.build())
 			);
-
-		return memberRepository.save(member);
 	}
 
 	public Member findUserById(Long id) {

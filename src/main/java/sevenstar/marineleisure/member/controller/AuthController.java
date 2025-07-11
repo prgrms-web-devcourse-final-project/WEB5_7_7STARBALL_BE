@@ -1,23 +1,26 @@
 package sevenstar.marineleisure.member.controller;
 
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import sevenstar.marineleisure.global.domain.BaseResponse;
-import sevenstar.marineleisure.global.exception.enums.CommonErrorCode;
 import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.member.dto.AuthCodeRequest;
 import sevenstar.marineleisure.member.dto.LoginResponse;
 import sevenstar.marineleisure.member.service.AuthService;
 import sevenstar.marineleisure.member.service.OauthService;
-
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * 인증 관련 요청을 처리하는 컨트롤러
@@ -30,22 +33,6 @@ public class AuthController {
 
 	private final OauthService oauthService;
 	private final AuthService authService;
-
-	/**
-	 * GET /auth/kakao?redirectUri=…
-	 * → 내부에서 state도 생성해서 저장하고,
-	 *    kakaAuthUrl 로 곧장 302 리다이렉트
-	 */
-	@GetMapping("/kakao")
-	public void kakaoLoginRedirect(
-		@RequestParam String redirectUri,
-		HttpServletRequest request,
-		HttpServletResponse resp
-	) throws IOException {
-		Map<String, String> info = oauthService.getKakaoLoginUrl(redirectUri, request);
-		// state는 이제 세션에 저장됨
-		resp.sendRedirect(info.get("kakaoAuthUrl"));
-	}
 
 	/**
 	 * 카카오 로그인 URL 생성

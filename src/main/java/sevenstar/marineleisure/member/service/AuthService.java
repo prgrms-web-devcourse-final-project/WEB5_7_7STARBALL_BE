@@ -49,8 +49,7 @@ public class AuthService {
 		}
 
 		// 3. 사용자 정보 처리 및 회원 조회
-		var userInfo = oauthService.processKakaoUser(accessToken);
-		Member member = oauthService.findUserById((Long)userInfo.get("id"));
+		Member member = oauthService.processKakaoUser(accessToken);
 
 		// 4. JWT 토큰 생성
 		String jwtAccessToken = jwtTokenProvider.createAccessToken(member);
@@ -101,8 +100,10 @@ public class AuthService {
 		}
 
 		// 3. 사용자 정보 처리 및 회원 조회
-		var userInfo = oauthService.processKakaoUser(accessToken);
-		Member member = oauthService.findUserById((Long)userInfo.get("id"));
+		// var userInfo = oauthService.processKakaoUser(accessToken);
+		// Member member = oauthService.findUserById((Long)userInfo.get("id"));
+		Member member = oauthService.processKakaoUser(accessToken);
+
 
 		// 4. JWT 토큰 생성
 		String jwtAccessToken = jwtTokenProvider.createAccessToken(member);
