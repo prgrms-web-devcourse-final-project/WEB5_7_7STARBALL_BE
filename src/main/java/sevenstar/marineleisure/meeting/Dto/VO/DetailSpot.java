@@ -1,14 +1,16 @@
 package sevenstar.marineleisure.meeting.Dto.VO;
 
+import java.math.BigDecimal;
+
 import lombok.Builder;
 
 @Builder
 public record DetailSpot(
     long id,
-    String title,
+    String name,
 	String location,
-    Double latitude,
-    Double longitude
+	BigDecimal latitude,
+	BigDecimal longitude
 ) {
 
 }

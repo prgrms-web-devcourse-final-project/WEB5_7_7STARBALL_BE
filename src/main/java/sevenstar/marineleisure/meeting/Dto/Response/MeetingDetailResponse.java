@@ -6,6 +6,7 @@ import lombok.Builder;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.meeting.Dto.VO.DetailSpot;
+import sevenstar.marineleisure.meeting.Dto.VO.TagList;
 
 /**
  *
@@ -35,7 +36,8 @@ public record MeetingDetailResponse(
 	DetailSpot spot,
 	LocalDateTime meetingTime,
 	MeetingStatus status,
-	LocalDateTime createdAt
+	LocalDateTime createdAt,
+	TagList tag
 ) {
 
 }

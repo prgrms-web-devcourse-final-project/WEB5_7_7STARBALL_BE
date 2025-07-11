@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import sevenstar.marineleisure.global.domain.BaseResponse;
 import sevenstar.marineleisure.global.exception.enums.CommonErrorCode;
-import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 
 /**
  * Swagger 사용 예제
@@ -66,8 +65,6 @@ public class SwaggerController {
 	public ResponseEntity<BaseResponse<SwaggerTestResponse>> deleteUser(
 		@Parameter(description = "삭제할 사용자 ID", example = "1") @PathVariable Long id
 	) {
-		return BaseResponse.error(MemberErrorCode.FEATURE_NOT_SUPPORTED);
+		return BaseResponse.error(CommonErrorCode.UNSUPPORTED_DELETE);
 	}
-
-
 }
