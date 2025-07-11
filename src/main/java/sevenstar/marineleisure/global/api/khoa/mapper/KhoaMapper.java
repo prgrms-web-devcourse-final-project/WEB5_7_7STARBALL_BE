@@ -2,6 +2,8 @@ package sevenstar.marineleisure.global.api.khoa.mapper;
 
 import java.time.LocalTime;
 
+import org.locationtech.jts.geom.Point;
+
 import lombok.experimental.UtilityClass;
 import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.FishingTarget;
@@ -15,6 +17,7 @@ import sevenstar.marineleisure.global.api.khoa.dto.item.ScubaItem;
 import sevenstar.marineleisure.global.api.khoa.dto.item.SurfingItem;
 import sevenstar.marineleisure.global.enums.FishingType;
 import sevenstar.marineleisure.global.enums.TidePhase;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.utils.DateUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
@@ -28,7 +31,7 @@ public class KhoaMapper {
 	 * @return
 	 * @param <T> FishingItem / ScubaItem / SurfingItem / MudflatItem 중 하나
 	 */
-	public static <T extends KhoaItem> OutdoorSpot toEntity(T item, FishingType fishingType) {
+	public static <T extends KhoaItem> OutdoorSpot toEntity(T item, FishingType fishingType, Point point) {
 		return OutdoorSpot.builder()
 			.name(item.getLocation())
 			.category(item.getCategory())
@@ -36,6 +39,7 @@ public class KhoaMapper {
 			.location(item.getLocation())
 			.latitude(item.getLatitude())
 			.longitude(item.getLongitude())
+			.point(point)
 			.build();
 	}
 
@@ -51,7 +55,7 @@ public class KhoaMapper {
 			.spotId(spotId)
 			.targetId(targetId)
 			.forecastDate(DateUtils.parseDate(item.getPredcYmd()))
-			.timePeriod(item.getPredcNoonSeCd())
+			.timePeriod(TimePeriod.from(item.getPredcNoonSeCd()))
 			.tide(TidePhase.parse(item.getTdlvHrScr()))
 			.totalIndex(TotalIndex.fromDescription(item.getTotalIndex()))
 			.waveHeightMin(item.getMinWvhgt())
@@ -77,7 +81,7 @@ public class KhoaMapper {
 		return Surfing.builder()
 			.spotId(spotId)
 			.forecastDate(DateUtils.parseDate(item.getPredcYmd()))
-			.timePeriod(item.getPredcNoonSeCd())
+			.timePeriod(TimePeriod.from(item.getPredcNoonSeCd()))
 			.waveHeight(Float.parseFloat(item.getAvgWvhgt()))
 			.wavePeriod(Float.parseFloat(item.getAvgWvpd()))
 			.windSpeed(Float.parseFloat(item.getAvgWspd()))
@@ -96,7 +100,7 @@ public class KhoaMapper {
 		return Scuba.builder()
 			.spotId(spotId)
 			.forecastDate(DateUtils.parseDate(item.getPredcYmd()))
-			.timePeriod(item.getPredcNoonSeCd())
+			.timePeriod(TimePeriod.from(item.getPredcNoonSeCd()))
 			.tide(TidePhase.parse(item.getTdlvHrCn()))
 			.totalIndex(TotalIndex.fromDescription(item.getTotalIndex()))
 			.waveHeightMin(Float.parseFloat(item.getMinWvhgt()))
