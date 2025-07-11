@@ -14,7 +14,7 @@ import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.domain.SpotViewQuartile;
 import sevenstar.marineleisure.spot.dto.SpotCreateRequest;
 import sevenstar.marineleisure.spot.dto.SpotDetailReadResponse;
-import sevenstar.marineleisure.spot.dto.SpotDistanceProjection;
+import sevenstar.marineleisure.spot.dto.projection.SpotDistanceProjection;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
 
 @UtilityClass
@@ -22,7 +22,7 @@ public class SpotMapper {
 	public static SpotReadResponse.SpotInfo toDto(SpotDistanceProjection spotDistanceProjection, String currentStatus,
 		SpotViewQuartile spotViewQuartile, boolean isFavorite) {
 		return new SpotReadResponse.SpotInfo(spotDistanceProjection.getId(), spotDistanceProjection.getName(),
-			ActivityCategory.valueOf(spotDistanceProjection.getCategory()),
+			ActivityCategory.parse(spotDistanceProjection.getCategory()),
 			spotDistanceProjection.getLatitude().floatValue(), spotDistanceProjection.getLongitude().floatValue(),
 			spotDistanceProjection.getDistance().floatValue(), currentStatus, spotViewQuartile.getMonthQuartile(),
 			spotViewQuartile.getWeekQuartile(), isFavorite);
