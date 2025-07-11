@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,23 +29,21 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.util.ReflectionUtils;
 
-import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.global.exception.CustomException;
 import sevenstar.marineleisure.meeting.Dto.Request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.Dto.Request.UpdateMeetingRequest;
 import sevenstar.marineleisure.meeting.Dto.Response.MeetingDetailAndMemberResponse;
 import sevenstar.marineleisure.meeting.Dto.Response.MeetingDetailResponse;
-import sevenstar.marineleisure.meeting.Dto.Response.ParticipantResponse;
 import sevenstar.marineleisure.meeting.Repository.MeetingRepository;
-import sevenstar.marineleisure.meeting.Repository.MemberRepository;
-import sevenstar.marineleisure.meeting.Repository.OutdoorSpotSpotRepository;
 import sevenstar.marineleisure.meeting.Repository.ParticipantRepository;
 import sevenstar.marineleisure.meeting.domain.Meeting;
 import sevenstar.marineleisure.meeting.domain.Participant;
 import sevenstar.marineleisure.meeting.error.MeetingError;
 import sevenstar.marineleisure.member.domain.Member;
+import sevenstar.marineleisure.member.repository.MemberRepository;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MeetingServiceImplTest {
@@ -59,7 +58,7 @@ class MeetingServiceImplTest {
     private MemberRepository memberRepository;
 
     @Mock
-    private OutdoorSpotSpotRepository outdoorSpotSpotRepository;
+    private OutdoorSpotRepository outdoorSpotSpotRepository;
 
     @Mock
     private sevenstar.marineleisure.meeting.Repository.TagRepository tagRepository;
@@ -112,15 +111,13 @@ class MeetingServiceImplTest {
         Long meetingId = testMeeting.getId();
         Long hostId = testHost.getId();
 
-        List<ParticipantResponse> participants = Arrays.asList(
-            new ParticipantResponse(hostId, MeetingRole.HOST, "host"),
-            new ParticipantResponse(testMember.getId(), MeetingRole.GUEST, "testuser")
-        );
+        // Mock empty participants list for now
+        List<Participant> participants = Collections.emptyList();
 
         when(memberRepository.findById(hostId)).thenReturn(Optional.of(testHost));
         when(meetingRepository.findById(meetingId)).thenReturn(Optional.of(testMeeting));
         when(outdoorSpotSpotRepository.findById(testMeeting.getSpotId())).thenReturn(Optional.of(testSpot));
-        when(participantRepository.findByMeetingId(meetingId)).thenReturn(participants);
+        when(participantRepository.findParticipantsByMeetingId(meetingId)).thenReturn(participants);
 
         // when
         MeetingDetailAndMemberResponse response = meetingService.getMeetingDetailAndMember(hostId, meetingId);
@@ -134,7 +131,7 @@ class MeetingServiceImplTest {
         verify(memberRepository, times(1)).findById(hostId);
         verify(meetingRepository, times(1)).findById(meetingId);
         verify(outdoorSpotSpotRepository, times(1)).findById(testMeeting.getSpotId());
-        verify(participantRepository, times(1)).findByMeetingId(meetingId);
+        verify(participantRepository, times(1)).findParticipantsByMeetingId(meetingId);
     }
 
     @Test
@@ -157,7 +154,7 @@ class MeetingServiceImplTest {
 
         assertEquals(MeetingError.MEETING_NOT_FOUND, exception.getErrorCode()); // 현재 로직은 MEETING_NOT_FOUND를 반환
         verify(outdoorSpotSpotRepository, never()).findById(anyLong());
-        verify(participantRepository, never()).findByMeetingId(anyLong());
+        verify(participantRepository, never()).findParticipantsByMeetingId(anyLong());
     }
 
     // joinMeeting Tests
@@ -338,7 +335,7 @@ class MeetingServiceImplTest {
         when(meetingRepository.findMyMeetingsByMemberIdAndStatusWithCursor(testMember.getId(), MeetingStatus.ONGOING, Long.MAX_VALUE, pageable)).thenReturn(expectedSlice);
 
         // when
-        Slice<Meeting> result = meetingService.getAllMyMeetings(testMember.getId(), null, 10, MeetingStatus.ONGOING);
+        Slice<Meeting> result = meetingService.getStatusMyMeetings(testMember.getId(), null, 10, MeetingStatus.ONGOING);
 
         // then
         assertNotNull(result);
