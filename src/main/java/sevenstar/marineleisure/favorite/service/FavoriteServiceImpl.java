@@ -62,7 +62,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 	 * 즐겨찾기 목록을 반환합니다.
 	 * @param cursorId : 커서 위치
 	 * @param size : 한번에 보여줄 아이템 크기
-	 * @return
+	 * @return : 사용자에게 보여줄 즐겨찾기 내용객체 리스트
 	 */
 	@Override
 	@Transactional(readOnly = true)
