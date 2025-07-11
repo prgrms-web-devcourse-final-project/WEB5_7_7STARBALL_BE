@@ -1,7 +1,8 @@
 package sevenstar.marineleisure.member.service;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,19 +13,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import sevenstar.marineleisure.global.jwt.JwtTokenProvider;
 import sevenstar.marineleisure.global.util.CookieUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.dto.LoginResponse;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -82,19 +77,13 @@ class AuthServiceTest {
 			.expiresIn(3600L)
 			.build();
 
-		// 사용자 정보 설정
-		Map<String, Object> userInfo = new HashMap<>();
-		userInfo.put("id", 1L);
-		userInfo.put("email", "test@example.com");
-		userInfo.put("nickname", "testUser");
-
 		// 쿠키 설정
 		when(cookieUtil.createRefreshTokenCookie(refreshToken)).thenReturn(mockCookie);
 
 		// 서비스 메서드 모킹
 		when(oauthService.exchangeCodeForToken(code)).thenReturn(tokenResponse);
-		when(oauthService.processKakaoUser(accessToken)).thenReturn(userInfo);
-		when(oauthService.findUserById(1L)).thenReturn(testMember);
+		when(oauthService.processKakaoUser(accessToken)).thenReturn(testMember);
+		// findUserById는 이제 필요 없음 (processKakaoUser가 직접 Member를 반환)
 		when(jwtTokenProvider.createAccessToken(testMember)).thenReturn(jwtAccessToken);
 		when(jwtTokenProvider.createRefreshToken(testMember)).thenReturn(refreshToken);
 
