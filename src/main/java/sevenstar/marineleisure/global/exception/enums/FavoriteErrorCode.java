@@ -18,16 +18,16 @@ public enum FavoriteErrorCode implements ErrorCode {
 
 	@Override
 	public int getCode() {
-		return 0;
+		return this.code;
 	}
 
 	@Override
 	public HttpStatus getHttpStatus() {
-		return null;
+		return this.httpStatus;
 	}
 
 	@Override
 	public String getMessage() {
-		return "";
+		return this.message;
 	}
 }
