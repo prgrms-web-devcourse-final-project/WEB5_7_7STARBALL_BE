@@ -1,17 +1,18 @@
 package sevenstar.marineleisure.member.service;
 
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.stereotype.Service;
-
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Service;
+
 import sevenstar.marineleisure.global.jwt.JwtTokenProvider;
 import sevenstar.marineleisure.global.util.CookieUtil;
-import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
-import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.dto.LoginResponse;
+import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 
 /**
  * 인증 관련 비즈니스 로직을 처리하는 서비스
@@ -24,26 +25,18 @@ public class AuthService {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final OauthService oauthService;
 	private final CookieUtil cookieUtil;
-	private final StateEncryptionUtil stateEncryptionUtil;
 
 	/**
-	 * 카카오 로그인 처리 (stateless)
+	 * 카카오 로그인 처리 (state 검증 없음 - 테스트용)
 	 *
 	 * @param code 인증 코드
-	 * @param state OAuth state 파라미터
-	 * @param encryptedState 암호화된 state 값
 	 * @param response HTTP 응답
 	 * @return 로그인 응답 DTO
+	 * @deprecated 보안을 위해 {@link #processKakaoLogin(String, String, HttpServletRequest, HttpServletResponse)} 사용
 	 */
-	public LoginResponse processKakaoLogin(String code, String state, String encryptedState,
-		HttpServletResponse response) {
-		// 0. state 검증 (stateless)
-		log.info("Validating OAuth state: received={}, encrypted={}", state, encryptedState);
-
-		if (!stateEncryptionUtil.validateState(state, encryptedState)) {
-			log.error("State validation failed: possible CSRF attack");
-			throw new BadCredentialsException("Possible CSRF attack: state parameter doesn't match");
-		}
+	@Deprecated
+	public LoginResponse processKakaoLogin(String code, HttpServletResponse response) {
+		log.warn("deprecated 되었습니다. state 검증 없이 test코드 돌리기 위한 메서드");
 
 		// 1. 인증 코드로 카카오 토큰 교환
 		KakaoTokenResponse tokenResponse = oauthService.exchangeCodeForToken(code);
@@ -57,6 +50,60 @@ public class AuthService {
 
 		// 3. 사용자 정보 처리 및 회원 조회
 		Member member = oauthService.processKakaoUser(accessToken);
+
+		// 4. JWT 토큰 생성
+		String jwtAccessToken = jwtTokenProvider.createAccessToken(member);
+		String refreshToken = jwtTokenProvider.createRefreshToken(member);
+
+		// 5. 리프레시 토큰 쿠키 설정
+		cookieUtil.addCookie(response, cookieUtil.createRefreshTokenCookie(refreshToken));
+
+		// 6. 로그인 응답 생성
+		return createLoginResponse(member, jwtAccessToken);
+	}
+
+	/**
+	 * 카카오 로그인 처리 (state 검증 포함)
+	 *
+	 * @param code 인증 코드
+	 * @param state OAuth state 파라미터
+	 * @param request HTTP 요청
+	 * @param response HTTP 응답
+	 * @return 로그인 응답 DTO
+	 */
+	public LoginResponse processKakaoLogin(String code, String state, HttpServletRequest request,
+		HttpServletResponse response) {
+		// 0. state 검증
+		HttpSession session = request.getSession(false);
+		String storedState = session != null ? (String)session.getAttribute("oauth_state") : null;
+
+		log.info("Validating OAuth state: received={}, stored={}", state, storedState);
+
+		if (storedState == null || !storedState.equals(state)) {
+			log.error("State validation failed: possible CSRF attack");
+			throw new SecurityException("Possible CSRF attack: state parameter doesn't match");
+		}
+
+		// 세션에서 state 제거 (일회용)
+		if (session != null) {
+			session.removeAttribute("oauth_state");
+		}
+
+		// 1. 인증 코드로 카카오 토큰 교환
+		KakaoTokenResponse tokenResponse = oauthService.exchangeCodeForToken(code);
+
+		// 2. 카카오 토큰으로 사용자 정보 요청 및 처리
+		String accessToken = tokenResponse != null ? tokenResponse.accessToken() : null;
+		if (accessToken == null) {
+			log.error("Failed to get access token from Kakao");
+			throw new RuntimeException("Failed to get access token from Kakao");
+		}
+
+		// 3. 사용자 정보 처리 및 회원 조회
+		// var userInfo = oauthService.processKakaoUser(accessToken);
+		// Member member = oauthService.findUserById((Long)userInfo.get("id"));
+		Member member = oauthService.processKakaoUser(accessToken);
+
 
 		// 4. JWT 토큰 생성
 		String jwtAccessToken = jwtTokenProvider.createAccessToken(member);
