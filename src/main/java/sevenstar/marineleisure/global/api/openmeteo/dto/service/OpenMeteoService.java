@@ -22,6 +22,7 @@ import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class OpenMeteoService {
 	private final OpenMeteoApiClient openMeteoApiClient;
 	private final OutdoorSpotRepository outdoorSpotRepository;
