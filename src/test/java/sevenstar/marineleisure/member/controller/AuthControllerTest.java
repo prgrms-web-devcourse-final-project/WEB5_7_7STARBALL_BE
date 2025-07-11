@@ -3,6 +3,7 @@ package sevenstar.marineleisure.member.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -66,14 +67,16 @@ class AuthControllerTest {
 				+ "&redirect_uri=http://localhost:8080/oauth/kakao/code"
 				+ "&response_type=code&state=test-state");
 		loginUrlInfo.put("state", "test-state");
+		loginUrlInfo.put("accessToken", "test-access-token");
 
-		when(oauthService.getKakaoLoginUrl(isNull())).thenReturn(loginUrlInfo);
+		when(oauthService.getKakaoLoginUrl(isNull(), any(HttpServletRequest.class))).thenReturn(loginUrlInfo);
 
 		mockMvc.perform(get("/auth/kakao/url"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
-			.andExpect(jsonPath("$.body.state").value("test-state"));
+			.andExpect(jsonPath("$.body.state").value("test-state"))
+			.andExpect(jsonPath("$.body.accessToken").value("test-access-token"));
 	}
 
 	@Test
@@ -86,21 +89,23 @@ class AuthControllerTest {
 				+ "&redirect_uri=" + customRedirectUri
 				+ "&response_type=code&state=test-state");
 		loginUrlInfo.put("state", "test-state");
+		loginUrlInfo.put("accessToken", "test-access-token");
 
-		when(oauthService.getKakaoLoginUrl(customRedirectUri)).thenReturn(loginUrlInfo);
+		when(oauthService.getKakaoLoginUrl(eq(customRedirectUri), any(HttpServletRequest.class))).thenReturn(loginUrlInfo);
 
 		mockMvc.perform(get("/auth/kakao/url").param("redirectUri", customRedirectUri))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
-			.andExpect(jsonPath("$.body.state").value("test-state"));
+			.andExpect(jsonPath("$.body.state").value("test-state"))
+			.andExpect(jsonPath("$.body.accessToken").value("test-access-token"));
 	}
 
 	@Test
 	@DisplayName("카카오 로그인을 처리할 수 있다")
 	void kakaoLogin() throws Exception {
 		AuthCodeRequest request = new AuthCodeRequest("test-auth-code", "test-state");
-		when(authService.processKakaoLogin(eq("test-auth-code"), any())).thenReturn(loginResponse);
+		when(authService.processKakaoLogin(eq("test-auth-code"), eq("test-state"), any(HttpServletRequest.class), any(HttpServletResponse.class))).thenReturn(loginResponse);
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -117,16 +122,20 @@ class AuthControllerTest {
 	@DisplayName("카카오 로그인 처리 중 오류가 발생하면 에러 응답을 반환한다")
 	void kakaoLogin_error() throws Exception {
 		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state");
-		when(authService.processKakaoLogin(eq("invalid-code"), any(HttpServletResponse.class)))
+		when(authService.processKakaoLogin(eq("invalid-code"), eq("test-state"), any(HttpServletRequest.class), any(HttpServletResponse.class)))
 			.thenThrow(new RuntimeException("Failed to get access token from Kakao"));
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
+			.andDo(result -> {
+				System.out.println("[DEBUG_LOG] Response status: " + result.getResponse().getStatus());
+				System.out.println("[DEBUG_LOG] Response body: " + result.getResponse().getContentAsString());
+			})
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.code").value(500))
+			.andExpect(jsonPath("$.code").value(1500))
 			.andExpect(jsonPath("$.message")
-				.value("카카오 로그인 처리 중 오류가 발생했습니다: Failed to get access token from Kakao"));
+				.value("카카오 로그인 처리 중 오류가 발생했습니다."));
 	}
 
 	@Test

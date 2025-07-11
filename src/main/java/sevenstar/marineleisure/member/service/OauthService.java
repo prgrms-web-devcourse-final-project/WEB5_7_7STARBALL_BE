@@ -63,7 +63,7 @@ public class OauthService {
 		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
 
 		String kakaoAuthUrl = UriComponentsBuilder.fromUriString(kakaoBaseUri)
-			.path(kakaoPath)
+			.path("/oauth/authorize")
 			.queryParam("client_id", apiKey)
 			.queryParam("redirect_uri", finalRedirectUri)
 			.queryParam("response_type", "code")
