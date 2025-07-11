@@ -32,7 +32,7 @@ import sevenstar.marineleisure.global.enums.ToxicityLevel;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class JellyfishService implements AlertService<JellyfishRegionDensity> {
+public class JellyfishService implements AlertService<JellyfishDetailVO> {
 
 	private final JellyfishRegionDensityRepository densityRepository;
 	private final JellyfishSpeciesRepository speciesRepository;
@@ -42,17 +42,12 @@ public class JellyfishService implements AlertService<JellyfishRegionDensity> {
 	private final RestTemplate restTemplate = new RestTemplate();
 
 	/**
+	 * 가장최신의 지역별 해파리 발생 리스트를 반환합니다.
 	 * [GET] /alerts/jellyfish
 	 * @return 지역별해파리 발생리스트
 	 */
 	@Override
-	@Transactional(readOnly = true)
-	public List<JellyfishRegionDensity> search() {
-		return densityRepository.findAll();
-	}
-
-	@Transactional(readOnly = true)
-	public List<JellyfishDetailVO> searchLastestDetailVO() {
+	public List<JellyfishDetailVO> search() {
 		return densityRepository.findLatestJellyfishDetails();
 	}
 

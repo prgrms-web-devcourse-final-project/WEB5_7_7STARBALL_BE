@@ -48,9 +48,19 @@ public class JellyfishExtractor {
 
 			log.info("AI Response: {}", jsonResponse);
 
-			// JSON을 DTO 리스트로 파싱
+			// AI 응답에서 JSON 배열만 추출 (간단 정규식 예시)
+			int start = jsonResponse.indexOf('[');
+			int end = jsonResponse.lastIndexOf(']');
+
+			if (start == -1 || end == -1) {
+				log.error("JSON 배열이 응답에서 발견되지 않았습니다.");
+				return List.of();
+			}
+
+			String jsonArrayOnly = jsonResponse.substring(start, end + 1);
+
 			return objectMapper.readValue(
-				jsonResponse,
+				jsonArrayOnly,
 				new TypeReference<List<ParsedJellyfishVO>>() {
 				}
 			);

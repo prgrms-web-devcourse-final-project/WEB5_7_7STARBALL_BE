@@ -21,16 +21,23 @@ public class AlertController {
 	private final JellyfishService jellyfishService;
 	private final AlertMapper alertMapper;
 
+	/**
+	 * 사용자에게 해파리출현에 관한 정보를 넘겨주기위한 메서드입니다.
+	 * @return 해파리 발생 관련 정보
+	 */
 	@GetMapping("/jellyfish")
 	public ResponseEntity<BaseResponse<JellyfishResponseDto>> getJellyfishList() {
-		List<JellyfishDetailVO> items = jellyfishService.searchLastestDetailVO();
+		List<JellyfishDetailVO> items = jellyfishService.search();
 		JellyfishResponseDto result = alertMapper.toResponseDto(items);
 		return BaseResponse.success(result);
 	}
 
-	@GetMapping("/jellyfish/crawl")
-	public ResponseEntity<String> triggerCrawl() {
-		jellyfishService.updateLatestReport();
-		return ResponseEntity.ok("해파리 리포트 크롤링 완료");
-	}
+	// 명시적으로 크롤링작업을 호출하기 위함입니다. 프론트에서 사용하지는 않습니다.
+	// 동작 테스트 완료했습니다.
+	// 쓰면 돈나가요... PO의 지갑을 지켜주세요..
+	// @GetMapping("/jellyfish/crawl")
+	// public ResponseEntity<String> triggerCrawl() {
+	// 	jellyfishService.updateLatestReport();
+	// 	return ResponseEntity.ok("해파리 리포트 크롤링 완료");
+	// }
 }
