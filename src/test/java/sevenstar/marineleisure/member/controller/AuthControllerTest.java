@@ -158,7 +158,7 @@ class AuthControllerTest {
 	@DisplayName("리프레시 토큰이 없으면 400을 반환한다")
 	void refreshToken_noToken() throws Exception {
 		mockMvc.perform(post("/auth/refresh"))
-			.andExpect(status().isBadRequest());   // 400만 검증
+			.andExpect(status().isUnauthorized());   // 400만 검증
 	}
 
 	@Test

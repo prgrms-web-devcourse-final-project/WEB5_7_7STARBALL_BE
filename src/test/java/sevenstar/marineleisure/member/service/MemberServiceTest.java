@@ -10,6 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import sevenstar.marineleisure.global.enums.MemberStatus;
+import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.MemberDetailResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
@@ -79,8 +81,8 @@ class MemberServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> memberService.getMemberDetail(nonExistentMemberId))
-			.isInstanceOf(NoSuchElementException.class)
-			.hasMessageContaining("회원을 찾을 수 없습니다");
+			.isInstanceOf(CustomException.class)
+			.hasMessageContaining(MemberErrorCode.MEMBER_NOT_FOUND.getMessage());
 	}
 
 	@Test
@@ -111,7 +113,7 @@ class MemberServiceTest {
 
 		// when & then
 		assertThatThrownBy(() -> memberService.getCurrentMemberDetail(nonExistentMemberId))
-			.isInstanceOf(NoSuchElementException.class)
-			.hasMessageContaining("회원을 찾을 수 없습니다");
+			.isInstanceOf(CustomException.class)
+			.hasMessageContaining(MemberErrorCode.MEMBER_NOT_FOUND.getMessage());
 	}
 }
