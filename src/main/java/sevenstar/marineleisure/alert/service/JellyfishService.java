@@ -10,7 +10,6 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -21,7 +20,6 @@ import sevenstar.marineleisure.alert.domain.JellyfishRegionDensity;
 import sevenstar.marineleisure.alert.domain.JellyfishSpecies;
 import sevenstar.marineleisure.alert.dto.vo.JellyfishDetailVO;
 import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVO;
-import sevenstar.marineleisure.alert.mapper.AlertMapper;
 import sevenstar.marineleisure.alert.repository.JellyfishRegionDensityRepository;
 import sevenstar.marineleisure.alert.repository.JellyfishSpeciesRepository;
 import sevenstar.marineleisure.alert.util.JellyfishCrawler;
@@ -38,7 +36,6 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 	private final JellyfishSpeciesRepository speciesRepository;
 	private final JellyfishParser parser;
 	private final JellyfishCrawler crawler;
-	private final AlertMapper mapper;
 	private final RestTemplate restTemplate = new RestTemplate();
 
 	/**
@@ -64,7 +61,8 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 	/**
 	 * 웹에서 크롤링 해 Pdf를 DB에 적재합니다.
 	 */
-	@Scheduled(cron = "0 0 9 ? * FRI")
+	// @Scheduled(cron = "0 0 0 ? * FRI")
+	// 금요일 00시에 동작합니다.
 	@Transactional
 	public void updateLatestReport() {
 		try {

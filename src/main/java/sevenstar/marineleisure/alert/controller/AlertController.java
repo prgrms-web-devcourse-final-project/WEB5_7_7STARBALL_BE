@@ -34,7 +34,7 @@ public class AlertController {
 
 	// 명시적으로 크롤링작업을 호출하기 위함입니다. 프론트에서 사용하지는 않습니다.
 	// 동작 테스트 완료했습니다.
-	// 쓰면 돈나가요... PO의 지갑을 지켜주세요..
+	// OpenAi Token발생하므로 꼭 필요할때만 사용해주세요.
 	// @GetMapping("/jellyfish/crawl")
 	// public ResponseEntity<String> triggerCrawl() {
 	// 	jellyfishService.updateLatestReport();
