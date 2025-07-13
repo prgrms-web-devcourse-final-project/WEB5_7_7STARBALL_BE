@@ -2,35 +2,4 @@ spring:
   application:
     name: MarineLeisure
   profiles:
-    active: dev, local
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/marine
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    jpa:
-      properties:
-        hibernate:
-          format_sql: true
-          show_sql: true
-    hibernate:
-      ddl-auto: create-drop
-    defer-datasource-initialization: true
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
-  ai:
-    openai:
-      api-key: ${OPENAI_KEY}
-      chat:
-        model: gpt-3.5-turbo
-dataportal:
-  api:
-    key: ${DATAPORTAL_KEY}
-
-badanuri:
-  api:
-    key: ${BADANURI_KEY}
-
+    active: dev

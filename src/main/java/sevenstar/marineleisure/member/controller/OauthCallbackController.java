@@ -26,7 +26,6 @@ import sevenstar.marineleisure.member.service.AuthService;
 @Slf4j
 @Controller
 @RequiredArgsConstructor
-@PropertySource("classpath:application-auth.properties")
 public class OauthCallbackController {
 	private final AuthService authService;
 
