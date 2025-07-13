@@ -12,5 +12,5 @@ import sevenstar.marineleisure.global.enums.ActivityCategory;
  * @param notification : 알림 여부
  */
 @Builder
-public record FavoriteItem(Long id, String name, ActivityCategory category, String location, boolean notification) {
+public record FavoriteItemVO(Long id, String name, ActivityCategory category, String location, boolean notification) {
 }

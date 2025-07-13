@@ -9,7 +9,6 @@ import sevenstar.marineleisure.global.api.config.properties.KhoaProperties;
 import sevenstar.marineleisure.global.api.config.properties.OpenMeteoProperties;
 
 @SpringBootApplication
-@EnableJpaAuditing
 @EnableConfigurationProperties({KhoaProperties.class, OpenMeteoProperties.class})
 public class MarineLeisureApplication {
 
