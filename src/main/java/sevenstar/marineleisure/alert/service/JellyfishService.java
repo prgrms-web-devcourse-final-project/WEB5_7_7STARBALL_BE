@@ -78,25 +78,25 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 
 			//Dto를 이용하여 기존 해파리 목록 검색후, 해파리 지역별 분포 DB에 적재
 			for (ParsedJellyfishVO dto : parsedJellyfishVOS) {
-				JellyfishSpecies species = searchByName(dto.getSpecies());
+				JellyfishSpecies species = searchByName(dto.species());
 
 				//기존 DB에 없는 신종일경우, 새로 등록 후 data.sql에도 구문 추가
 				if (species == null) {
 					species = JellyfishSpecies.builder()
-						.name(dto.getSpecies())
+						.name(dto.species())
 						.toxicity(ToxicityLevel.NONE)
 						.build();
 					speciesRepository.save(species);
-					log.info("신종 해파리등록 : {}", dto.getSpecies());
+					log.info("신종 해파리등록 : {}", dto.species());
 
-					appendToDataSql(dto.getSpecies(), ToxicityLevel.NONE);
+					appendToDataSql(dto.species(), ToxicityLevel.NONE);
 				}
 
-				DensityLevel densityLevel = dto.getDensityType().equals("HIGH") ? DensityLevel.HIGH : DensityLevel.LOW;
+				DensityLevel densityLevel = dto.densityType().equals("HIGH") ? DensityLevel.HIGH : DensityLevel.LOW;
 
 				//DB에 적재
 				JellyfishRegionDensity regionDensity = JellyfishRegionDensity.builder()
-					.regionName(dto.getRegion())
+					.regionName(dto.region())
 					.reportDate(reportDate)
 					.densityType(densityLevel)
 					.species(species.getId())

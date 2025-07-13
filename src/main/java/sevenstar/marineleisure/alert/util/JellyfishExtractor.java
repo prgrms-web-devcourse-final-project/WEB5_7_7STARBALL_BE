@@ -48,7 +48,7 @@ public class JellyfishExtractor {
 
 			log.info("AI Response: {}", jsonResponse);
 
-			// AI 응답에서 JSON 배열만 추출 (간단 정규식 예시)
+			//AI응답 시작점 끝점지정(JSON만 파싱)
 			int start = jsonResponse.indexOf('[');
 			int end = jsonResponse.lastIndexOf(']');
 
@@ -68,7 +68,6 @@ public class JellyfishExtractor {
 		} catch (Exception e) {
 			log.error("pdf에서 AI를 통해 JSON으로 파싱하는 도중 에러가 발생하였습니다.", e);
 
-			// 무료 모델에서 응답이 불안정할 수 있으므로 빈 리스트 반환
 			return List.of();
 		}
 	}
