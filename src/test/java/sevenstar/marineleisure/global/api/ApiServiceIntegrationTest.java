@@ -38,7 +38,7 @@ public class ApiServiceIntegrationTest {
 	void should_testKhoaApiService() {
 		int days = 3;
 		LocalDate today = LocalDate.now();
-		khoaApiService.updateApi(today);
+		khoaApiService.updateApi(today,today.plusDays(3));
 	}
 
 	@Test

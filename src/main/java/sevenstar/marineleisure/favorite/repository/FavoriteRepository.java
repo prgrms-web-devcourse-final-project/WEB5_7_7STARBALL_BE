@@ -34,4 +34,6 @@ public interface FavoriteRepository extends JpaRepository<FavoriteSpot, Long> {
 		@Param("cursorId") Long cursorId,
 		Pageable pageable
 	);
+
+	boolean existsByMemberIdAndSpotId(Long memberId, Long spotId);
 }

@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.global.api.khoa;
 
 import java.net.URI;
+import java.time.LocalDate;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -13,6 +14,8 @@ import sevenstar.marineleisure.global.api.config.properties.KhoaProperties;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.FishingItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
+import sevenstar.marineleisure.global.enums.FishingType;
+import sevenstar.marineleisure.global.utils.DateUtils;
 import sevenstar.marineleisure.global.utils.UriBuilder;
 
 @Component
@@ -31,14 +34,14 @@ public class KhoaApiClient {
 	 * @return response
 	 * @param <T>
 	 */
-	public <T> ResponseEntity<T> get(ParameterizedTypeReference<T> responseType, String reqDate, int page, int size,
+	public <T> ResponseEntity<T> get(ParameterizedTypeReference<T> responseType, LocalDate reqDate, int page, int size,
 		ActivityCategory category) {
 		if (category == ActivityCategory.FISHING) {
 			// TODO : handling exception
 			// throw new IllegalAccessException();
 		}
 		URI uri = UriBuilder.buildQueryParameter(khoaProperties.getBaseUrl(), khoaProperties.getPath(category),
-			khoaProperties.getParams(reqDate, page, size));
+			khoaProperties.getParams(DateUtils.formatTime(reqDate), page, size));
 		return restTemplate.exchange(uri, HttpMethod.GET, null, responseType);
 	}
 
@@ -52,10 +55,10 @@ public class KhoaApiClient {
 	 * @return response
 	 */
 	public ResponseEntity<ApiResponse<FishingItem>> get(
-		ParameterizedTypeReference<ApiResponse<FishingItem>> responseType, String reqDate, int page, int size,
-		String gubun) {
+		ParameterizedTypeReference<ApiResponse<FishingItem>> responseType, LocalDate reqDate, int page, int size,
+		FishingType gubun) {
 		URI uri = UriBuilder.buildQueryParameter(khoaProperties.getBaseUrl(),
-			khoaProperties.getPath(ActivityCategory.FISHING), khoaProperties.getParams(reqDate, page, size, gubun));
+			khoaProperties.getPath(ActivityCategory.FISHING), khoaProperties.getParams(DateUtils.formatTime(reqDate), page, size, gubun.getDescription()));
 		return restTemplate.exchange(uri, HttpMethod.GET, null, responseType);
 	}
 

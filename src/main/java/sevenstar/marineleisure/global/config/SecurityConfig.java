@@ -47,7 +47,9 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.POST, "/oauth/**").permitAll()
 				// (5) H2 콘솔
 				.requestMatchers("/h2-console/**").permitAll()
-				// (6) 나머지는 인증 필요
+				// (6) map 관련
+				.requestMatchers("/map/**").permitAll()
+				// (7) 나머지는 인증 필요
 				.anyRequest().authenticated()
 			)
 			.exceptionHandling(exception -> exception

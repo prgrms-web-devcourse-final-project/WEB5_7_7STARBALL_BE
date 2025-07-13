@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.spot.service;
 
 import static sevenstar.marineleisure.global.api.scheduler.SchedulerService.*;
+import static sevenstar.marineleisure.global.util.CurrentUserUtil.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import sevenstar.marineleisure.favorite.repository.FavoriteRepository;
 import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.FishingTarget;
 import sevenstar.marineleisure.forecast.domain.Mudflat;
@@ -50,6 +52,7 @@ public class SpotServiceImpl implements SpotService {
 	private final SurfingRepository surfingRepository;
 	private final SpotViewStatsRepository spotViewStatsRepository;
 	private final SpotViewQuartileRepository spotViewQuartileRepository;
+	private final FavoriteRepository favoriteRepository;
 
 	@Override
 	public SpotReadResponse searchSpot(float latitude, float longitude, Integer radius, ActivityCategory category) {
@@ -73,24 +76,23 @@ public class SpotServiceImpl implements SpotService {
 				case FISHING ->
 					fishingRepository.findFishingForecasts(spotDistanceProjection.getId(), now, TimePeriod.PM)
 						.map(Fishing::getTotalIndex)
-						.orElse(TotalIndex.IMPOSSIBLE);
+						.orElse(TotalIndex.NONE);
 				case SCUBA -> scubaRepository.findFishingForecasts(spotDistanceProjection.getId(), now, TimePeriod.PM)
 					.map(Scuba::getTotalIndex)
-					.orElse(TotalIndex.IMPOSSIBLE);
+					.orElse(TotalIndex.NONE);
 				case MUDFLAT -> mudflatRepository.findBySpotIdAndForecastDate(spotDistanceProjection.getId(), now)
 					.map(Mudflat::getTotalIndex)
-					.orElse(TotalIndex.IMPOSSIBLE);
+					.orElse(TotalIndex.NONE);
 				case SURFING ->
 					surfingRepository.findFishingForecasts(spotDistanceProjection.getId(), now, TimePeriod.PM)
 						.map(Surfing::getTotalIndex)
-						.orElse(TotalIndex.IMPOSSIBLE);
+						.orElse(TotalIndex.NONE);
 			};
 
 			SpotViewQuartile spotViewQuartile = spotViewQuartileRepository.findBySpotId(spotDistanceProjection.getId())
 				.orElseGet(() -> new SpotViewQuartile(1, 1));
 
-			// TODO : 즐겨찾기 추가 필요
-			boolean isFavorite = false;
+			boolean isFavorite = checkFavoriteSpot(spotDistanceProjection.getId());
 
 			infos.add(
 				SpotMapper.toDto(spotDistanceProjection, totalIndex.getDescription(), spotViewQuartile, isFavorite));
@@ -105,16 +107,15 @@ public class SpotServiceImpl implements SpotService {
 			.orElseThrow(() -> new CustomException(SpotErrorCode.SPOT_NOT_FOUND));
 		LocalDate now = LocalDate.now();
 
-		// TODO : 즐겨찾기 추가 필요
-		boolean isFavorite = false;
+		boolean isFavorite = checkFavoriteSpot(spotId);
 
 		return SpotMapper.toDto(outdoorSpot, isFavorite,
-			getActivityDetail(outdoorSpot, now, now.plusDays(MAX_READ_DAY)));
+			getActivityDetail(outdoorSpot, now, now.plusDays(MAX_UPDATE_DAY)));
 	}
 
 	private List<Object> getActivityDetail(OutdoorSpot outdoorSpot, LocalDate startDate, LocalDate endDate) {
 		List<Object> result = new ArrayList<>();
-		for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+		for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
 			switch (outdoorSpot.getCategory()) {
 				case FISHING -> {
 					Fishing fishing = fishingRepository.findFishingForecasts(outdoorSpot.getId(), date, TimePeriod.PM)
@@ -141,6 +142,14 @@ public class SpotServiceImpl implements SpotService {
 			}
 		}
 		return result;
+	}
+
+	private boolean checkFavoriteSpot(Long spotId) {
+		try {
+			return favoriteRepository.existsByMemberIdAndSpotId(getCurrentUserId(), spotId);
+		} catch (CustomException e) {
+			return false;
+		}
 	}
 
 	@Override
