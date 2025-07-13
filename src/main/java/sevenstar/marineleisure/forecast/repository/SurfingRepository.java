@@ -31,4 +31,5 @@ public interface SurfingRepository extends JpaRepository<Surfing, Long> {
 
 	Optional<Surfing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
+	List<Surfing> findBySpotId(Long spotId);
 }

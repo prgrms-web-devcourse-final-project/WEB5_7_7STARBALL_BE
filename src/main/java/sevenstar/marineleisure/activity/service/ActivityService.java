@@ -23,6 +23,8 @@ import sevenstar.marineleisure.forecast.repository.ScubaRepository;
 import sevenstar.marineleisure.forecast.repository.SurfingRepository;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
+import sevenstar.marineleisure.global.enums.ActivityCategory;
+import sevenstar.marineleisure.activity.dto.reponse.ActivityDetailResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +58,7 @@ public class ActivityService {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1);
 
-        List<OutdoorSpot> outdoorSpotList = outdoorSpotRepository.findByCoordinates(latitude, longitude);
+        List<OutdoorSpot> outdoorSpotList = outdoorSpotRepository.findByCoordinates(latitude, longitude, 10);
 
         while (fishingBySpot == null || mudflatBySpot == null || surfingBySpot == null || scubaBySpot == null) {
 
@@ -156,7 +158,26 @@ public class ActivityService {
         return responses;
     }
 
-    public void getForecastDetail() {
+    @Transactional(readOnly = true)
+    public ActivityDetailResponse getActivityDetail(ActivityCategory activity, BigDecimal latitude, BigDecimal longitude) {
 
+        OutdoorSpot nearSpot = outdoorSpotRepository.findByCoordinates(latitude, longitude, 1).getFirst();
+
+        List<?> listActivity;
+
+        switch (activity) {
+            case FISHING -> { listActivity = fishingRepository.findBySpotId(nearSpot.getId()); }
+            case SURFING -> { listActivity = mudflatRepository.findBySpotId(nearSpot.getId()); }
+            case MUDFLAT -> { listActivity = surfingRepository.findBySpotId(nearSpot.getId()); }
+            case SCUBA -> { listActivity = scubaRepository.findBySpotId(nearSpot.getId()); }
+            // default -> { throw new Exception(WRONG_ACTIVITY); }
+            default -> { listActivity = null; }
+        }
+
+        return ActivityDetailResponse.builder()
+            .category(activity.toString())
+            .location(nearSpot.getLocation())
+            .listActivity(listActivity)
+            .build();
     }
 }

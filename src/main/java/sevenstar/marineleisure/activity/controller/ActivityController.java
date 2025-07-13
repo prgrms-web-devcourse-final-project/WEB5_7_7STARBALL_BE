@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.activity.dto.reponse.ActivitySummaryResponse;
 import sevenstar.marineleisure.activity.dto.request.ActivityIndexRequest;
 import sevenstar.marineleisure.activity.service.ActivityService;
+import sevenstar.marineleisure.activity.dto.reponse.ActivityDetailResponse;
+import sevenstar.marineleisure.activity.dto.request.ActivityDetailRequest;
+import sevenstar.marineleisure.global.enums.ActivityCategory;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,10 +32,13 @@ public class ActivityController {
         );
     }
 
-    @GetMapping("/{activieis}/detail")
-    public void getActivityDetail(@PathVariable String activieis) {}
+    @GetMapping("/{activity}/detail")
+    public ActivityDetailResponse getActivityDetail(@PathVariable ActivityCategory activity, @RequestBody ActivityDetailRequest activityDetailRequest) {
+        return activityService.getActivityDetail(activity, activityDetailRequest.latitude(), activityDetailRequest.longitude());
+    }
 
     @GetMapping("/weather")
-    public void getActivityWeather() {}
+    public void getActivityWeather(@RequestBody ActivityDetailRequest activityDetailRequest) {
+    }
 
 }

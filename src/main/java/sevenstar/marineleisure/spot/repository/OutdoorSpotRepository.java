@@ -16,7 +16,7 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 			"SELECT *, ST_Distance_Sphere(POINT(longitude, latitude), POINT(:longitude, :latitude)) as distance_in_meters " +
 			"FROM outdoor_spot " +
 			"ORDER BY distance_in_meters ASC " +
-			"LIMIT 10"
+			"LIMIT :limit"
 		, nativeQuery = true)
-	List<OutdoorSpot> findByCoordinates(BigDecimal latitude, BigDecimal longitude);
+	List<OutdoorSpot> findByCoordinates(BigDecimal latitude, BigDecimal longitude, int limit);
 }

@@ -31,4 +31,5 @@ public interface FishingRepository extends JpaRepository<Fishing, Long> {
 
 	Optional<Fishing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
+	List<Fishing> findBySpotId(Long spotId);
 }

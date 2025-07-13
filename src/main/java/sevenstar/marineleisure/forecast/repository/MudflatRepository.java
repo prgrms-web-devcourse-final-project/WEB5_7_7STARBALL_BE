@@ -31,4 +31,5 @@ public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 
 	Optional<Mudflat> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
+	List<Mudflat> findBySpotId(Long spotId);
 }

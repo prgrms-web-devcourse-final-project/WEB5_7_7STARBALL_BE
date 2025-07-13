@@ -31,4 +31,5 @@ public interface ScubaRepository extends JpaRepository<Scuba, Long> {
 
 	Optional<Scuba> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
+	List<Scuba> findBySpotId(Long spotId);
 }
