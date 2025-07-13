@@ -1,12 +1,15 @@
 package sevenstar.marineleisure.activity.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.activity.dto.reponse.ActivitySummaryResponse;
@@ -18,47 +21,91 @@ import sevenstar.marineleisure.forecast.repository.FishingRepository;
 import sevenstar.marineleisure.forecast.repository.MudflatRepository;
 import sevenstar.marineleisure.forecast.repository.ScubaRepository;
 import sevenstar.marineleisure.forecast.repository.SurfingRepository;
+import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @Service
 @RequiredArgsConstructor
 public class ActivityService {
+
+    private final OutdoorSpotRepository outdoorSpotRepository;
 
     private final FishingRepository fishingRepository;
     private final MudflatRepository mudflatRepository;
     private final ScubaRepository scubaRepository;
     private final SurfingRepository surfingRepository;
 
-
-    public Map<String, ActivitySummaryResponse> getActivitySummary(float latitude, float longitude, boolean global) {
+    @Transactional(readOnly = true)
+    public Map<String, ActivitySummaryResponse> getActivitySummary(BigDecimal latitude, BigDecimal longitude,
+        boolean global) {
         Map<String, ActivitySummaryResponse> responses = new HashMap<>();
 
-        // List<Fishing> fishingList;
-        // List<Mudflat> mudflatList;
-        // List<Scuba> scubaList;
-        // List<Surfing> surfingList;
+        Fishing fishingBySpot = null;
+        Mudflat mudflatBySpot = null;
+        Surfing surfingBySpot = null;
+        Scuba scubaBySpot = null;
 
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        LocalDateTime nextDayStartOfDay = LocalDate.now().plusDays(1).atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
 
-        System.out.println("startOfDay: " + startOfDay);
-        System.out.println("nextDayStartOfDay: " + nextDayStartOfDay);
+        List<OutdoorSpot> outdoorSpotList = outdoorSpotRepository.findByCoordinates(latitude, longitude);
 
+        while (fishingBySpot == null || mudflatBySpot == null || surfingBySpot == null || scubaBySpot == null) {
 
-        if (global) {
-            List<Fishing> fishingDailyList = fishingRepository.findByDay(startOfDay, nextDayStartOfDay);
-            List<Mudflat> mudflatDailyList = mudflatRepository.findByDay(startOfDay, nextDayStartOfDay);
-            List<Scuba>     scubaDailyList = scubaRepository.findByDay(startOfDay, nextDayStartOfDay);
-            List<Surfing> surfingDailyList = surfingRepository.findByDay(startOfDay, nextDayStartOfDay);
+            OutdoorSpot currentSpot;
+            Long currentSpotId;
 
-            // fishingList = fishingRepository.findByDay(startOfDay, nextDayStartOfDay);
+            try {
+                currentSpot = outdoorSpotList.removeFirst();
+                currentSpotId = currentSpot.getId();
+            } catch (Exception e) {
+                break;
+            }
+
+            if (fishingBySpot == null) {
+                Optional<Fishing> fishingResult = fishingRepository.findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+                    currentSpotId, startOfDay, endOfDay);
+
+                if (fishingResult.isPresent()) {
+                    fishingBySpot = fishingResult.get();
+                    responses.put("Fishing",
+                        new ActivitySummaryResponse(currentSpot.getName(), fishingResult.get().getTotalIndex()));
+                }
+            }
+
+            if (mudflatBySpot == null) {
+                Optional<Mudflat> mudflatResult = mudflatRepository.findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+                    currentSpotId, startOfDay, endOfDay);
+
+                if (mudflatResult.isPresent()) {
+                    mudflatBySpot = mudflatResult.get();
+                    responses.put("Mudflat",
+                        new ActivitySummaryResponse(currentSpot.getName(), mudflatResult.get().getTotalIndex()));
+                }
+            }
+
+            if (surfingBySpot == null) {
+                Optional<Surfing> surfingResult = surfingRepository.findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+                    currentSpotId, startOfDay, endOfDay);
+
+                if (surfingResult.isPresent()) {
+                    surfingBySpot = surfingResult.get();
+                    responses.put("Surfing",
+                        new ActivitySummaryResponse(currentSpot.getName(), surfingResult.get().getTotalIndex()));
+                }
+            }
+
+            if (scubaBySpot == null) {
+                Optional<Scuba> scubaResult = scubaRepository.findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+                    currentSpotId, startOfDay, endOfDay);
+
+                if (scubaResult.isPresent()) {
+                    scubaBySpot = scubaResult.get();
+                    responses.put("Scuba",
+                        new ActivitySummaryResponse(currentSpot.getName(), scubaResult.get().getTotalIndex()));
+                }
+            }
         }
-        // else {
-        //
-        //     // fishingList = fishingRepository.findByRadius();
-        //     // mudflatList = mudflatRepository.findByRadius();
-        //     // scubaList = scubaRepository.findByRadius();
-        //     // surfingList = surfingRepository.findByRadius();
-        // }
 
         return responses;
     }

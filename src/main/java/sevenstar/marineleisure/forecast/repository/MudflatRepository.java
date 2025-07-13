@@ -2,6 +2,7 @@ package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +22,13 @@ public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
 	Optional<Mudflat> findBySpotIdAndForecastDate(Long spotId, LocalDate forecastDate);
+
+	Optional<Mudflat> findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+		Long spotId,
+		LocalDateTime startDateTime,
+		LocalDateTime endDateTime
+	);
+
+	Optional<Mudflat> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
+
 }
