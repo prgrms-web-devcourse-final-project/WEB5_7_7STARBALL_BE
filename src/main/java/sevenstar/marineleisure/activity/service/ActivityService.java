@@ -25,6 +25,9 @@ import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.activity.dto.reponse.ActivityDetailResponse;
+import sevenstar.marineleisure.activity.dto.reponse.ActivityWeatherResponse;
+import sevenstar.marineleisure.activity.repository.WeatherRepository;
+import sevenstar.marineleisure.activity.domain.Weather;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +39,8 @@ public class ActivityService {
     private final MudflatRepository mudflatRepository;
     private final ScubaRepository scubaRepository;
     private final SurfingRepository surfingRepository;
+
+    private final WeatherRepository weatherRepository;
 
     @Transactional(readOnly = true)
     public Map<String, ActivitySummaryResponse> getActivitySummary(BigDecimal latitude, BigDecimal longitude,
@@ -179,5 +184,20 @@ public class ActivityService {
             .location(nearSpot.getLocation())
             .listActivity(listActivity)
             .build();
+    }
+
+    @Transactional(readOnly = true)
+    public ActivityWeatherResponse getWeatherBySpot(BigDecimal latitude, BigDecimal longitude) {
+        OutdoorSpot nearSpot = outdoorSpotRepository.findByCoordinates(latitude, longitude, 1).getFirst();
+
+        Weather weather = weatherRepository.findByOutdoorSpotId(nearSpot.getId()).get();
+
+        return new ActivityWeatherResponse(
+            nearSpot.getName(),
+            weather.getWindSpeed(),
+            weather.getWaveHeight(),
+            weather.getWaterTemp(),
+            weather.getVisibility()
+            );
     }
 }

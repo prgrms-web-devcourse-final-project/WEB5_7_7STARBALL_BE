@@ -15,6 +15,7 @@ import sevenstar.marineleisure.activity.service.ActivityService;
 import sevenstar.marineleisure.activity.dto.reponse.ActivityDetailResponse;
 import sevenstar.marineleisure.activity.dto.request.ActivityDetailRequest;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
+import sevenstar.marineleisure.activity.dto.reponse.ActivityWeatherResponse;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,7 +39,8 @@ public class ActivityController {
     }
 
     @GetMapping("/weather")
-    public void getActivityWeather(@RequestBody ActivityDetailRequest activityDetailRequest) {
+    public ActivityWeatherResponse getActivityWeather(@RequestBody ActivityDetailRequest activityDetailRequest) {
+        return activityService.getWeatherBySpot(activityDetailRequest.latitude(), activityDetailRequest.longitude());
     }
 
 }
