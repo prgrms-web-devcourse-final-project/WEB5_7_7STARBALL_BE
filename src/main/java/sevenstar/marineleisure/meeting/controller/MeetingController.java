@@ -23,14 +23,14 @@ import sevenstar.marineleisure.global.domain.BaseResponse;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.global.exception.CustomException;
 import sevenstar.marineleisure.global.jwt.UserPrincipal;
-import sevenstar.marineleisure.meeting.Dto.Request.CreateMeetingRequest;
-import sevenstar.marineleisure.meeting.Dto.Request.UpdateMeetingRequest;
-import sevenstar.marineleisure.meeting.Dto.Response.MeetingDetailAndMemberResponse;
-import sevenstar.marineleisure.meeting.Dto.Response.MeetingDetailResponse;
-import sevenstar.marineleisure.meeting.Dto.Response.MeetingListResponse;
+import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
+import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
+import sevenstar.marineleisure.meeting.dto.response.MeetingListResponse;
 
-import sevenstar.marineleisure.meeting.Repository.ParticipantRepository;
-import sevenstar.marineleisure.meeting.Repository.TagRepository;
+import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
+import sevenstar.marineleisure.meeting.repository.TagRepository;
 import sevenstar.marineleisure.meeting.domain.Meeting;
 import sevenstar.marineleisure.meeting.domain.Tag;
 import sevenstar.marineleisure.meeting.error.MeetingError;
@@ -66,7 +66,7 @@ public class MeetingController {
 					.orElseThrow(() -> new RuntimeException("Spot not found for meeting id: " + meeting.getId()));
 				Tag tag = tagRepository.findByMeetingId(meeting.getId())
 					.orElseThrow(() ->  new CustomException(MeetingError.MEETING_NOT_FOUND));
-				long participantCount = participantRepository.countMeetingIdMember(meeting.getId())
+				long participantCount = participantRepository.countMeetingId(meeting.getId())
 					.map(Integer::longValue)
 					.orElse(0L);
 				return MeetingListResponse.fromEntity(meeting, host, participantCount, spot, tag);
@@ -100,7 +100,7 @@ public class MeetingController {
 					.orElseThrow(() -> new RuntimeException("Spot not found for meeting id: " + meeting.getId()));
 				Tag tag = tagRepository.findByMeetingId(meeting.getId())
 					.orElseThrow(() ->  new CustomException(MeetingError.MEETING_NOT_FOUND));
-				long participantCount = participantRepository.countMeetingIdMember(meeting.getId())
+				long participantCount = participantRepository.countMeetingId(meeting.getId())
 					.map(Integer::longValue)
 					.orElse(0L);
 				return MeetingListResponse.fromEntity(meeting, host, participantCount, spot, tag);
