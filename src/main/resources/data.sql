@@ -36,12 +36,3 @@ VALUES (1, '인천', '2025-07-03', 'LOW', NOW(), NOW()),
        (7, '경남', '2025-07-03', 'HIGH', NOW(), NOW()),
        (7, '전남', '2025-07-03', 'LOW', NOW(), NOW()),
        (7, '강원', '2025-07-03', 'LOW', NOW(), NOW());
-
-
-select *
-from jellyfish_region_density;
-select *
-from jellyfish_species;
-
-desc jellyfish_region_density;INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)
-VALUES ('보름달물해파리', 'NONE', NOW(), NOW());
