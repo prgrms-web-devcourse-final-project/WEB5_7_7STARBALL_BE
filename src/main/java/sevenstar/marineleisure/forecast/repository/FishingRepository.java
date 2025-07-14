@@ -2,20 +2,17 @@ package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Fishing;
-import sevenstar.marineleisure.global.enums.TimePeriod;
-import sevenstar.marineleisure.global.enums.TotalIndex;
-import sevenstar.marineleisure.spot.dto.FishingReadResponse;
+import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
+import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
-public interface FishingRepository extends JpaRepository<Fishing, Long> {
+public interface FishingRepository extends ActivityRepository<Fishing, Long> {
 	@Query(value = """
 					SELECT DISTINCT f.spotId FROM Fishing f
 					WHERE f.forecastDate BETWEEN :forecastDateAfter AND :forecastDateBefore
@@ -24,19 +21,13 @@ public interface FishingRepository extends JpaRepository<Fishing, Long> {
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
 	@Query("""
-		    SELECT new sevenstar.marineleisure.spot.dto.FishingReadResponse(:spotId,ft.id,ft.name,f.forecastDate,f.timePeriod,f.tide,f.totalIndex,f.waveHeightMin,f.waveHeightMax,f.seaTempMin,f.seaTempMax,f.airTempMin,f.airTempMax,f.currentSpeedMin,f.currentSpeedMax,f.windSpeedMin,f.windSpeedMax,f.uvIndex) FROM Fishing f
+		    SELECT new sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse.FishingSpotDetail(
+				    f.forecastDate,f.timePeriod,f.tide,f.totalIndex,new sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse.RangeDetail(f.waveHeightMin,f.waveHeightMax),f.seaTempMin,f.seaTempMax,f.airTempMin,f.airTempMax,f.currentSpeedMin,f.currentSpeedMax,f.windSpeedMin,f.windSpeedMax,f.uvIndex) FROM Fishing f
 		    LEFT JOIN FishingTarget ft ON f.targetId = ft.id
 		    WHERE f.spotId = :spotId
 		    	AND f.forecastDate = :date
 		""")
-	List<FishingReadResponse> findFishingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
-
-	@Query("""
-		SELECT f.totalIndex
-		FROM Fishing f
-		WHERE f.spotId = :spotId AND f.forecastDate = :date AND f.timePeriod = :timePeriod
-		""")
-	Optional<TotalIndex> findTotalIndexBySpotIdAndDate(@Param("spotId") Long spotId, @Param("date") LocalDate date,@Param("timePeriod") TimePeriod timePeriod);
+	List<SpotDetailReadResponse.FishingSpotDetail> findFishingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
 
 	@Modifying
 	@Transactional

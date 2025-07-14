@@ -22,18 +22,10 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		SELECT o.id, o.name, o.category,o.latitude,o.longitude,ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude),4326)) AS distance
 		FROM outdoor_spots o
 		WHERE ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude),4326)) <= :radius
+				AND (:category IS NULL OR o.category = :category)
 		""", nativeQuery = true)
-	List<SpotDistanceProjection> findBySpotDistanceInstanceByLatitudeAndLongitude(@Param("latitude") Float latitude,
-		@Param("longitude") Float longitude, @Param("radius") double radius);
-
-	@Query(value = """
-		SELECT o.id, o.name, o.category,o.latitude,o.longitude,ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude),4326)) as distance
-		FROM outdoor_spots o
-				WHERE o.category = :category AND ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude),4326)) <= :radius
-		""", nativeQuery = true)
-	List<SpotDistanceProjection> findBySpotDistanceInstanceByLatitudeAndLongitudeAndCategory(
-		@Param("latitude") Float latitude, @Param("longitude") Float longitude, @Param("radius") double radius,
-		@Param("category") String category);
+	List<SpotDistanceProjection> findSpots(@Param("latitude") Float latitude,
+		@Param("longitude") Float longitude, @Param("radius") double radius, @Param("category") String category);
 
 	// TODO : 리팩토링 무조건 필요 (지점 기반 프리셋 생성후 프리뷰같은)
 	@Query(value = """

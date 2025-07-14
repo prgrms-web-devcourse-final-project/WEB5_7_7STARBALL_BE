@@ -5,7 +5,6 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,8 +12,9 @@ import org.springframework.data.repository.query.Param;
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Mudflat;
 import sevenstar.marineleisure.global.enums.TotalIndex;
+import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
-public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
+public interface MudflatRepository extends ActivityRepository<Mudflat, Long> {
 	@Query(value = """
 					SELECT DISTINCT m.spotId FROM Mudflat m
 					WHERE m.forecastDate BETWEEN :forecastDateAfter AND :forecastDateBefore

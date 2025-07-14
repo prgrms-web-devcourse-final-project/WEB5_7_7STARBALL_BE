@@ -1,6 +1,5 @@
 package sevenstar.marineleisure.spot.mapper;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,9 +12,8 @@ import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.utils.DateUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.domain.SpotViewQuartile;
-import sevenstar.marineleisure.spot.dto.FishingReadResponse;
-import sevenstar.marineleisure.spot.dto.SpotCreateRequest;
-import sevenstar.marineleisure.spot.dto.SpotDetailReadResponse;
+import sevenstar.marineleisure.spot.dto.detail.FishingReadResponse;
+import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.projection.SpotDistanceProjection;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
 

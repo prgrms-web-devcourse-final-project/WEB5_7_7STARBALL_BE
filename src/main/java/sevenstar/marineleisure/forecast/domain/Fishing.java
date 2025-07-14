@@ -47,7 +47,7 @@ public class Fishing extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private TidePhase tide;
 
-	@Column(name = "total_index")
+	@Column(name = "total_index", nullable = false)
 	@Enumerated(EnumType.STRING)
 	private TotalIndex totalIndex;
 

@@ -26,7 +26,7 @@ public class SchedulerService {
 	 * 앞으로의 스케줄링 전략에 의해 수정될 부분입니다.
 	 * @author guwnoong
 	 */
-	@Scheduled(initialDelay = 0, fixedDelay = 86400000)
+	// @Scheduled(initialDelay = 0, fixedDelay = 86400000)
 	@Transactional
 	public void scheduler() {
 		LocalDate today = LocalDate.now();
