@@ -1,4 +1,4 @@
-package sevenstar.marineleisure.meeting.Dto.Response;
+package sevenstar.marineleisure.meeting.dto.response;
 
 import lombok.Builder;
 import sevenstar.marineleisure.global.enums.MeetingRole;

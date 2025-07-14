@@ -1,11 +1,11 @@
-package sevenstar.marineleisure.meeting.Dto.VO;
+package sevenstar.marineleisure.meeting.dto.vo;
 
 import java.util.List;
 
 import lombok.Builder;
 
 @Builder
-public record Tag(
+public record TagList(
     List<String> content
 ) {
 
