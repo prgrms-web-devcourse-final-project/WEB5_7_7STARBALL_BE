@@ -12,11 +12,11 @@ import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @Component
 @RequiredArgsConstructor
-@Transactional
 public class SpotValidate {
 
 	private final OutdoorSpotRepository outdoorSpotSpotRepository;
 
+	@Transactional(readOnly = true)
 	public OutdoorSpot foundOutdoorSpot(Long spotId){
 		return outdoorSpotSpotRepository.findById(spotId)
 			.orElseThrow(() -> new CustomException(SpotError.SPOT_NOT_FOUND));
