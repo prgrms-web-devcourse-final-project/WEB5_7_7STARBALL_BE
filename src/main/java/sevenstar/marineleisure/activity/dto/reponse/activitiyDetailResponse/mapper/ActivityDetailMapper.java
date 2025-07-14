@@ -16,7 +16,7 @@ public class ActivityDetailMapper {
     public static ActivityDetailFishingResponse fromFishing(Fishing fishing) {
         return ActivityDetailFishingResponse.builder()
             .forecastDate(fishing.getForecastDate())
-            .timePeriod(fishing.getTimePeriod())
+            .timePeriod(fishing.getTimePeriod().name())
             .tide(fishing.getTide())
             .totalIndex(fishing.getTotalIndex())
             .waveHeightMin(fishing.getWaveHeightMin())
@@ -51,7 +51,7 @@ public class ActivityDetailMapper {
     public static ActivityDetailSurfingResponse fromSurfing(Surfing surfing) {
         return ActivityDetailSurfingResponse.builder()
             .forecastDate(surfing.getForecastDate())
-            .timePeriod(surfing.getTimePeriod())
+            .timePeriod(surfing.getTimePeriod().name())
             .waveHeight(surfing.getWaveHeight())
             .wavePeriod(surfing.getWavePeriod())
             .windSpeed(surfing.getWindSpeed())
@@ -64,7 +64,7 @@ public class ActivityDetailMapper {
     public static ActivityDetailScubaResponse fromScuba(Scuba scuba) {
         return ActivityDetailScubaResponse.builder()
             .forecastDate(scuba.getForecastDate())
-            .timePeriod(scuba.getTimePeriod())
+            .timePeriod(scuba.getTimePeriod().name())
             .sunrise(scuba.getSunrise())
             .sunset(scuba.getSunset())
             .tide(scuba.getTide())
