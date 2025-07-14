@@ -23,7 +23,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 
 	boolean existsByUserId(Long userId);
 
-	boolean existsByMeetingIdAndMemberId(Long meetingId, Long memberId);
+	boolean existsByMeetingIdAndUserId(Long meetingId, Long memberId);
 
-	List<Participant> findByMemberId(Long memberId);
+	List<Participant> findByUserId(Long memberId);
 }
