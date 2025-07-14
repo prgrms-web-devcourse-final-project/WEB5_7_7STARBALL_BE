@@ -62,8 +62,23 @@ public class AuthController {
 		@RequestBody AuthCodeRequest request,
 		HttpServletResponse response
 	) {
-		log.info("Processing Kakao login with code: {}, state: {}, encryptedState: {}",
-			request.code(), request.state(), request.encryptedState());
+		log.info("Processing Kakao login with code: {}, state: {}, encryptedState: {}, error: {}, errorDescription: {}",
+			request.code(), request.state(), request.encryptedState(), request.error(), request.errorDescription());
+
+		// 에러 파라미터가 있는 경우 (사용자가 취소하거나 다른 에러가 발생한 경우)
+		if (request.error() != null && !request.error().isEmpty()) {
+			log.error("Kakao login error: {}, description: {}", request.error(), request.errorDescription());
+
+			// 사용자가 취소한 경우 (error=access_denied)
+			if ("access_denied".equals(request.error())) {
+				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_CANCELED);
+			} else {
+				// 다른 에러인 경우
+				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR, 
+					"카카오 로그인 오류: " + request.error() + " - " + request.errorDescription());
+			}
+		}
+
 		try {
 			LoginResponse loginResponse = authService.processKakaoLogin(
 				request.code(),
