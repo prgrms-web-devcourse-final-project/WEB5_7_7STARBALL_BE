@@ -7,6 +7,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import sevenstar.marineleisure.global.enums.MemberStatus;
+import org.springframework.stereotype.Repository;
+
 import sevenstar.marineleisure.member.domain.Member;
 
 import java.time.LocalDateTime;
@@ -24,4 +26,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 		""")
     int deleteByStatusAndUpdatedAtBefore(@Param("status") MemberStatus memberStatus,
         @Param("expired") LocalDateTime expired);
+
+    boolean existsById(Long id);
 }
