@@ -1,10 +1,10 @@
-package sevenstar.marineleisure.meeting.Dto.Request;
+package sevenstar.marineleisure.meeting.dto.request;
 
 import java.time.LocalDateTime;
 
 import lombok.Builder;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
-import sevenstar.marineleisure.meeting.Dto.VO.TagList;
+import sevenstar.marineleisure.meeting.dto.vo.TagList;
 
 @Builder
 public record UpdateMeetingRequest(

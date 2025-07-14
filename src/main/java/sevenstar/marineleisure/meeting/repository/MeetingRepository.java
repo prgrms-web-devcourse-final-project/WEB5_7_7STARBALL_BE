@@ -1,7 +1,6 @@
-package sevenstar.marineleisure.meeting.Repository;
+package sevenstar.marineleisure.meeting.repository;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -17,9 +16,7 @@ import sevenstar.marineleisure.meeting.domain.Meeting;
 public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 
 	@Query(
-		"SELECT m "
-			+ "FROM Meeting m "
-			+ "ORDER BY m.createdAt DESC, m.id DESC"
+		"SELECT m FROM Meeting m ORDER BY m.createdAt DESC, m.id DESC"
 	)
 	Slice<Meeting> findAllByOrderByCreatedAtDescIdDesc(Pageable pageable);
 

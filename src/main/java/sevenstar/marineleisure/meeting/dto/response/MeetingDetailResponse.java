@@ -1,12 +1,12 @@
-package sevenstar.marineleisure.meeting.Dto.Response;
+package sevenstar.marineleisure.meeting.dto.response;
 
 import java.time.LocalDateTime;
 
 import lombok.Builder;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
-import sevenstar.marineleisure.meeting.Dto.VO.DetailSpot;
-import sevenstar.marineleisure.meeting.Dto.VO.TagList;
+import sevenstar.marineleisure.meeting.dto.vo.DetailSpot;
+import sevenstar.marineleisure.meeting.dto.vo.TagList;
 
 /**
  *

@@ -1,4 +1,4 @@
-package sevenstar.marineleisure.meeting.Repository;
+package sevenstar.marineleisure.meeting.repository;
 
 import java.util.List;
 import java.util.Optional;
