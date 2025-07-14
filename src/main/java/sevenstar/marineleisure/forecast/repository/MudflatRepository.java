@@ -1,8 +1,8 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,5 +31,7 @@ public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 
 	Optional<Mudflat> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
-	List<Mudflat> findBySpotId(Long spotId);
+	Optional<Mudflat> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
+
+	// Optional<Mudflat> findBySpotIdOrderByCreatedAt(Long spotId);
 }

@@ -1,8 +1,8 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,5 +31,7 @@ public interface FishingRepository extends JpaRepository<Fishing, Long> {
 
 	Optional<Fishing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
-	List<Fishing> findBySpotId(Long spotId);
+	Optional<Fishing> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
+
+	Optional<Fishing> findBySpotIdOrderByCreatedAt(Long spotId);
 }

@@ -12,7 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import sevenstar.marineleisure.activity.dto.reponse.ActivityDetailResponse;
 import sevenstar.marineleisure.activity.dto.reponse.ActivitySummaryResponse;
+import sevenstar.marineleisure.activity.dto.reponse.ActivityWeatherResponse;
+import sevenstar.marineleisure.activity.dto.reponse.activitiyDetailResponse.ActivityDetail;
+import sevenstar.marineleisure.activity.dto.reponse.activitiyDetailResponse.mapper.ActivityDetailMapper;
 import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.Mudflat;
 import sevenstar.marineleisure.forecast.domain.Scuba;
@@ -21,13 +25,9 @@ import sevenstar.marineleisure.forecast.repository.FishingRepository;
 import sevenstar.marineleisure.forecast.repository.MudflatRepository;
 import sevenstar.marineleisure.forecast.repository.ScubaRepository;
 import sevenstar.marineleisure.forecast.repository.SurfingRepository;
+import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
-import sevenstar.marineleisure.global.enums.ActivityCategory;
-import sevenstar.marineleisure.activity.dto.reponse.ActivityDetailResponse;
-import sevenstar.marineleisure.activity.dto.reponse.ActivityWeatherResponse;
-import sevenstar.marineleisure.activity.repository.WeatherRepository;
-import sevenstar.marineleisure.activity.domain.Weather;
 
 @Service
 @RequiredArgsConstructor
@@ -39,8 +39,6 @@ public class ActivityService {
     private final MudflatRepository mudflatRepository;
     private final ScubaRepository scubaRepository;
     private final SurfingRepository surfingRepository;
-
-    private final WeatherRepository weatherRepository;
 
     @Transactional(readOnly = true)
     public Map<String, ActivitySummaryResponse> getActivitySummary(BigDecimal latitude, BigDecimal longitude,
@@ -131,10 +129,14 @@ public class ActivityService {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1);
 
-        Optional<Fishing> fishingResult = fishingRepository.findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(startOfDay, endOfDay);
-        Optional<Mudflat> mudflatResult = mudflatRepository.findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(startOfDay, endOfDay);
-        Optional<Surfing> surfingResult = surfingRepository.findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(startOfDay, endOfDay);
-        Optional<Scuba> scubaResult = scubaRepository.findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(startOfDay, endOfDay);
+        Optional<Fishing> fishingResult = fishingRepository.findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(
+            startOfDay, endOfDay);
+        Optional<Mudflat> mudflatResult = mudflatRepository.findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(
+            startOfDay, endOfDay);
+        Optional<Surfing> surfingResult = surfingRepository.findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(
+            startOfDay, endOfDay);
+        Optional<Scuba> scubaResult = scubaRepository.findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(
+            startOfDay, endOfDay);
 
         if (fishingResult.isPresent()) {
             Fishing fishing = fishingResult.get();
@@ -164,40 +166,70 @@ public class ActivityService {
     }
 
     @Transactional(readOnly = true)
-    public ActivityDetailResponse getActivityDetail(ActivityCategory activity, BigDecimal latitude, BigDecimal longitude) {
+    public ActivityDetailResponse getActivityDetail(ActivityCategory activity, BigDecimal latitude,
+        BigDecimal longitude) {
 
         OutdoorSpot nearSpot = outdoorSpotRepository.findByCoordinates(latitude, longitude, 1).getFirst();
 
-        List<?> listActivity;
+        LocalDateTime today = LocalDate.now().plusDays(1).atStartOfDay();
+
+        ActivityDetail result;
 
         switch (activity) {
-            case FISHING -> { listActivity = fishingRepository.findBySpotId(nearSpot.getId()); }
-            case SURFING -> { listActivity = mudflatRepository.findBySpotId(nearSpot.getId()); }
-            case MUDFLAT -> { listActivity = surfingRepository.findBySpotId(nearSpot.getId()); }
-            case SCUBA -> { listActivity = scubaRepository.findBySpotId(nearSpot.getId()); }
-            // default -> { throw new Exception(WRONG_ACTIVITY); }
-            default -> { listActivity = null; }
+            case FISHING -> {
+                Fishing resultSearch = fishingRepository.findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(
+                    nearSpot.getId(), today).get();
+                result = ActivityDetailMapper.fromFishing(resultSearch);
+            }
+            case MUDFLAT -> {
+                Mudflat resultSearch = mudflatRepository.findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(
+                    nearSpot.getId(), today).get();
+                result = ActivityDetailMapper.fromMudflat(resultSearch);
+            }
+            case SURFING -> {
+                Surfing resultSearch = surfingRepository.findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(
+                    nearSpot.getId(), today).get();
+                result = ActivityDetailMapper.fromSurfing(resultSearch);
+            }
+            case SCUBA -> {
+                Scuba resultSearch = scubaRepository.findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(
+                    nearSpot.getId(), today).get();
+                result = ActivityDetailMapper.fromScuba(resultSearch);
+            }
+            default -> {
+                throw new RuntimeException("WRONG_ACTIVITY");
+            }
         }
 
-        return ActivityDetailResponse.builder()
-            .category(activity.toString())
-            .location(nearSpot.getLocation())
-            .listActivity(listActivity)
-            .build();
+        return new ActivityDetailResponse(activity.toString(), nearSpot.getLocation(), result);
     }
 
     @Transactional(readOnly = true)
     public ActivityWeatherResponse getWeatherBySpot(BigDecimal latitude, BigDecimal longitude) {
         OutdoorSpot nearSpot = outdoorSpotRepository.findByCoordinates(latitude, longitude, 1).getFirst();
 
-        Weather weather = weatherRepository.findByOutdoorSpotId(nearSpot.getId()).get();
+        Fishing fishingSpot = fishingRepository.findBySpotIdOrderByCreatedAt(nearSpot.getId()).get();
 
-        return new ActivityWeatherResponse(
-            nearSpot.getName(),
-            weather.getWindSpeed(),
-            weather.getWaveHeight(),
-            weather.getWaterTemp(),
-            weather.getVisibility()
+        if (fishingSpot != null) {
+            return new ActivityWeatherResponse(
+                nearSpot.getName(),
+                fishingSpot.getWindSpeedMax().toString(),
+                fishingSpot.getWaveHeightMax().toString(),
+                fishingSpot.getSeaTempMax().toString()
             );
+        }
+
+        Surfing surfingSpot = surfingRepository.findBySpotIdOrderByCreatedAt(nearSpot.getId()).get();
+
+        if (surfingSpot != null) {
+            return new ActivityWeatherResponse(
+                nearSpot.getName(),
+                surfingSpot.getWindSpeed().toString(),
+                surfingSpot.getWaveHeight().toString(),
+                surfingSpot.getSeaTemp().toString()
+            );
+        } else {
+            throw new RuntimeException("Spot not found");
+        }
     }
 }
