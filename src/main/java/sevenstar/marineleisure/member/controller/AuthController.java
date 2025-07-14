@@ -3,6 +3,7 @@ package sevenstar.marineleisure.member.controller;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,26 +52,44 @@ public class AuthController {
 	}
 
 	/**
-	 * 카카오 로그인 처리
+	 * 카카오 로그인 처리 (stateless)
 	 *
 	 * @param request 인증 코드 요청 DTO
-	 * @param httpRequest HTTP 요청
 	 * @param response HTTP 응답
 	 * @return 로그인 응답 DTO
 	 */
 	@PostMapping("/kakao/code")
 	public ResponseEntity<BaseResponse<LoginResponse>> kakaoLogin(
 		@RequestBody AuthCodeRequest request,
-		HttpServletRequest httpRequest,
 		HttpServletResponse response
 	) {
-		log.info("Processing Kakao login with code: {}, state: {}", request.code(), request.state());
+		log.info("Processing Kakao login with code: {}, state: {}, encryptedState: {}, error: {}, errorDescription: {}",
+			request.code(), request.state(), request.encryptedState(), request.error(), request.errorDescription());
+
+		// 에러 파라미터가 있는 경우 (사용자가 취소하거나 다른 에러가 발생한 경우)
+		if (request.error() != null && !request.error().isEmpty()) {
+			log.error("Kakao login error: {}, description: {}", request.error(), request.errorDescription());
+
+			// 사용자가 취소한 경우 (error=access_denied)
+			if ("access_denied".equals(request.error())) {
+				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_CANCELED);
+			} else {
+				// 다른 에러인 경우
+				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR, 
+					"카카오 로그인 오류: " + request.error() + " - " + request.errorDescription());
+			}
+		}
+
 		try {
-			LoginResponse loginResponse = authService.processKakaoLogin(request.code(), request.state(), httpRequest,
-				response);
+			LoginResponse loginResponse = authService.processKakaoLogin(
+				request.code(),
+				request.state(),
+				request.encryptedState(),
+				response
+			);
 			return BaseResponse.success(loginResponse);
-		} catch (SecurityException e) {
-			log.error("Security validation failed: {}", e.getMessage(), e);
+		} catch (AuthenticationException e) {
+			log.error("Authentication failed: {}", e.getMessage(), e);
 			return BaseResponse.error(MemberErrorCode.SECURITY_VALIDATION_FAILED);
 		} catch (Exception e) {
 			log.error("Kakao login failed: {}", e.getMessage(), e);
