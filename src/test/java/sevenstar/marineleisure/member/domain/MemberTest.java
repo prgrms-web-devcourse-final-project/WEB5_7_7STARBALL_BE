@@ -44,7 +44,7 @@ class MemberTest {
 	}
 
 	@Test
-	@DisplayName("update 메서드를 사용하여 닉네임을 변경할 수 있다")
+	@DisplayName("updateNickname 메서드를 사용하여 닉네임을 변경할 수 있다")
 	void updateNickname() {
 		// given
 		Member member = Member.builder()
@@ -56,11 +56,10 @@ class MemberTest {
 		String newNickname = "newNickname";
 
 		// when
-		Member updatedMember = member.update(newNickname);
+		member.updateNickname(newNickname);
 
 		// then
-		assertThat(updatedMember).isSameAs(member); // 동일한 객체 참조 확인
-		assertThat(updatedMember.getNickname()).isEqualTo(newNickname);
+		assertThat(member.getNickname()).isEqualTo(newNickname);
 	}
 
 	@Test
