@@ -34,7 +34,8 @@ public class AuthService {
 	 * @param response HTTP 응답
 	 * @return 로그인 응답 DTO
 	 */
-	public LoginResponse processKakaoLogin(String code, String state, String encryptedState, HttpServletResponse response) {
+	public LoginResponse processKakaoLogin(String code, String state, String encryptedState,
+		HttpServletResponse response) {
 		// 0. state 검증 (stateless)
 		log.info("Validating OAuth state: received={}, encrypted={}", state, encryptedState);
 
@@ -66,42 +67,6 @@ public class AuthService {
 		// 6. 로그인 응답 생성
 		return createLoginResponse(member, jwtAccessToken);
 	}
-
-	// /**
-	//  * 카카오 로그인 처리 (리팩토링 전 세션 기반)
-	//  *
-	//  * @param code 인증 코드
-	//  * @param state OAuth state 파라미터
-	//  * @param request HTTP 요청
-	//  * @param response HTTP 응답
-	//  * @return 로그인 응답 DTO
-	//  * @deprecated 보안을 위해 {@link #processKakaoLogin(String, String, String, HttpServletResponse)} 사용
-	//  */
-	// @Deprecated
-	// public LoginResponse processKakaoLogin(String code, String state, HttpServletRequest request,
-	// 	HttpServletResponse response) {
-	// 	log.warn("세션 기반 인증은 deprecated 되었습니다. stateless 인증을 사용하세요.");
-	//
-	// 	// 세션에서 state 검증 (이전 방식)
-	// 	HttpSession session = request.getSession(false);
-	// 	String storedState = session != null ? (String)session.getAttribute("oauth_state") : null;
-	//
-	// 	log.info("Validating OAuth state (session-based): received={}, stored={}", state, storedState);
-	//
-	// 	if (storedState == null || !storedState.equals(state)) {
-	// 		log.error("State validation failed: possible CSRF attack");
-	// 		throw new SecurityException("Possible CSRF attack: state parameter doesn't match");
-	// 	}
-	//
-	// 	// 세션에서 state 제거 (일회용)
-	// 	if (session != null) {
-	// 		session.removeAttribute("oauth_state");
-	// 	}
-	//
-	// 	// 나머지 로직은 stateless 메서드와 동일하므로 코드 중복을 피하기 위해 내부적으로 처리
-	// 	// 실제 구현에서는 encryptedState가 없으므로 임시로 빈 문자열 전달
-	// 	return processKakaoLogin(code, state, "", response);
-	// }
 
 	/**
 	 * 토큰 재발급
