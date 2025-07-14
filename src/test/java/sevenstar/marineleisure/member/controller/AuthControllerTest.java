@@ -67,6 +67,7 @@ class AuthControllerTest {
 				+ "&redirect_uri=http://localhost:8080/oauth/kakao/code"
 				+ "&response_type=code&state=test-state");
 		loginUrlInfo.put("state", "test-state");
+		loginUrlInfo.put("encryptedState", "encrypted-test-state");
 		loginUrlInfo.put("accessToken", "test-access-token");
 
 		when(oauthService.getKakaoLoginUrl(isNull(), any(HttpServletRequest.class))).thenReturn(loginUrlInfo);
@@ -76,6 +77,7 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
 			.andExpect(jsonPath("$.body.state").value("test-state"))
+			.andExpect(jsonPath("$.body.encryptedState").value("encrypted-test-state"))
 			.andExpect(jsonPath("$.body.accessToken").value("test-access-token"));
 	}
 
@@ -89,6 +91,7 @@ class AuthControllerTest {
 				+ "&redirect_uri=" + customRedirectUri
 				+ "&response_type=code&state=test-state");
 		loginUrlInfo.put("state", "test-state");
+		loginUrlInfo.put("encryptedState", "encrypted-test-state");
 		loginUrlInfo.put("accessToken", "test-access-token");
 
 		when(oauthService.getKakaoLoginUrl(eq(customRedirectUri), any(HttpServletRequest.class))).thenReturn(loginUrlInfo);
@@ -98,14 +101,15 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
 			.andExpect(jsonPath("$.body.state").value("test-state"))
+			.andExpect(jsonPath("$.body.encryptedState").value("encrypted-test-state"))
 			.andExpect(jsonPath("$.body.accessToken").value("test-access-token"));
 	}
 
 	@Test
 	@DisplayName("카카오 로그인을 처리할 수 있다")
 	void kakaoLogin() throws Exception {
-		AuthCodeRequest request = new AuthCodeRequest("test-auth-code", "test-state");
-		when(authService.processKakaoLogin(eq("test-auth-code"), eq("test-state"), any(HttpServletRequest.class), any(HttpServletResponse.class))).thenReturn(loginResponse);
+		AuthCodeRequest request = new AuthCodeRequest("test-auth-code", "test-state", "encrypted-test-state");
+		when(authService.processKakaoLogin(eq("test-auth-code"), eq("test-state"), eq("encrypted-test-state"), any(HttpServletResponse.class))).thenReturn(loginResponse);
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -121,8 +125,8 @@ class AuthControllerTest {
 	@Test
 	@DisplayName("카카오 로그인 처리 중 오류가 발생하면 에러 응답을 반환한다")
 	void kakaoLogin_error() throws Exception {
-		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state");
-		when(authService.processKakaoLogin(eq("invalid-code"), eq("test-state"), any(HttpServletRequest.class), any(HttpServletResponse.class)))
+		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state", "encrypted-test-state");
+		when(authService.processKakaoLogin(eq("invalid-code"), eq("test-state"), eq("encrypted-test-state"), any(HttpServletResponse.class)))
 			.thenThrow(new RuntimeException("Failed to get access token from Kakao"));
 
 		mockMvc.perform(post("/auth/kakao/code")
