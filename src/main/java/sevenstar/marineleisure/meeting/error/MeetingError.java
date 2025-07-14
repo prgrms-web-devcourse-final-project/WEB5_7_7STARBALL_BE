@@ -5,7 +5,14 @@ import sevenstar.marineleisure.global.exception.enums.ErrorCode;
 
 public enum MeetingError implements ErrorCode {
 	//2XXX에러
-	MEETING_NOT_FOUND(2404, HttpStatus.NOT_FOUND, "Meeting Not Found");
+	MEETING_NOT_FOUND(2404, HttpStatus.NOT_FOUND, "Meeting Not Found"),
+	MEETING_ALREADY_FULL(2409, HttpStatus.CONFLICT, "Meeting is Full"),
+	MEETING_NOT_RECRUITING(2400,HttpStatus.BAD_REQUEST,"Not Recruiting"),
+	MEETING_NOT_HOST(2400,HttpStatus.BAD_REQUEST,"Not Host"),
+	MEETING_NOT_LEAVE_HOST(2409,HttpStatus.CONFLICT ,"Not LeaveHost" ),
+	CANNOT_LEAVE_COMPLETED_MEETING(2400,HttpStatus.BAD_REQUEST,"Cannot Leave"),
+	;
+
 
 	private final int code;
 	private final HttpStatus httpStatus;
