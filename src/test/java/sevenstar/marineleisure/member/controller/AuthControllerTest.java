@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.member.dto.AuthCodeRequest;
 import sevenstar.marineleisure.member.dto.LoginResponse;
@@ -65,6 +66,8 @@ class AuthControllerTest {
 				+ "&redirect_uri=http://localhost:8080/oauth/kakao/code"
 				+ "&response_type=code&state=test-state");
 		loginUrlInfo.put("state", "test-state");
+		loginUrlInfo.put("encryptedState", "encrypted-test-state");
+		loginUrlInfo.put("accessToken", "test-access-token");
 
 		when(oauthService.getKakaoLoginUrl(isNull(), any())).thenReturn(loginUrlInfo);
 
@@ -72,7 +75,9 @@ class AuthControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
-			.andExpect(jsonPath("$.body.state").value("test-state"));
+			.andExpect(jsonPath("$.body.state").value("test-state"))
+			.andExpect(jsonPath("$.body.encryptedState").value("encrypted-test-state"))
+			.andExpect(jsonPath("$.body.accessToken").value("test-access-token"));
 	}
 
 	@Test
@@ -85,6 +90,8 @@ class AuthControllerTest {
 				+ "&redirect_uri=" + customRedirectUri
 				+ "&response_type=code&state=test-state");
 		loginUrlInfo.put("state", "test-state");
+		loginUrlInfo.put("encryptedState", "encrypted-test-state");
+		loginUrlInfo.put("accessToken", "test-access-token");
 
 		when(oauthService.getKakaoLoginUrl(any(), any())).thenReturn(loginUrlInfo);
 
@@ -92,14 +99,17 @@ class AuthControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
-			.andExpect(jsonPath("$.body.state").value("test-state"));
+			.andExpect(jsonPath("$.body.state").value("test-state"))
+			.andExpect(jsonPath("$.body.encryptedState").value("encrypted-test-state"))
+			.andExpect(jsonPath("$.body.accessToken").value("test-access-token"));
 	}
 
 	@Test
 	@DisplayName("카카오 로그인을 처리할 수 있다")
 	void kakaoLogin() throws Exception {
-		AuthCodeRequest request = new AuthCodeRequest("test-auth-code", "test-state");
-		when(authService.processKakaoLogin(eq("test-auth-code"), any(), any(), any())).thenReturn(loginResponse);
+		AuthCodeRequest request = new AuthCodeRequest("test-auth-code", "test-state", "encrypted-test-state", null, null);
+		when(authService.processKakaoLogin(eq("test-auth-code"), eq("test-state"), eq("encrypted-test-state"), any(
+			HttpServletResponse.class))).thenReturn(loginResponse);
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -115,8 +125,8 @@ class AuthControllerTest {
 	@Test
 	@DisplayName("카카오 로그인 처리 중 오류가 발생하면 에러 응답을 반환한다")
 	void kakaoLogin_error() throws Exception {
-		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state");
-		when(authService.processKakaoLogin(eq("invalid-code"), any(), any(), any()))
+		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state", "encrypted-test-state", null, null);
+		when(authService.processKakaoLogin(eq("invalid-code"), eq("test-state"), eq("encrypted-test-state"), any(HttpServletResponse.class)))
 			.thenThrow(new RuntimeException("Failed to get access token from Kakao"));
 
 		mockMvc.perform(post("/auth/kakao/code")
@@ -126,6 +136,32 @@ class AuthControllerTest {
 			.andExpect(jsonPath("$.code").value(MemberErrorCode.KAKAO_LOGIN_ERROR.getCode()))
 			.andExpect(jsonPath("$.message").value(MemberErrorCode.KAKAO_LOGIN_ERROR.getMessage()));
 				.value("카카오 로그인 처리 중 오류가 발생했습니다."));
+	}
+
+	@Test
+	@DisplayName("사용자가 카카오 로그인을 취소하면 취소 응답을 반환한다")
+	void kakaoLogin_canceled() throws Exception {
+		AuthCodeRequest request = new AuthCodeRequest(null, "test-state", "encrypted-test-state", "access_denied", "User denied access");
+
+		mockMvc.perform(post("/auth/kakao/code")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.code").value(1503))
+			.andExpect(jsonPath("$.message").value("사용자가 카카오 로그인을 취소했습니다."));
+	}
+
+	@Test
+	@DisplayName("카카오 로그인 중 다른 에러가 발생하면 에러 응답을 반환한다")
+	void kakaoLogin_otherError() throws Exception {
+		AuthCodeRequest request = new AuthCodeRequest(null, "test-state", "encrypted-test-state", "server_error", "Internal server error");
+
+		mockMvc.perform(post("/auth/kakao/code")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isInternalServerError())
+			.andExpect(jsonPath("$.code").value(1500))
+			.andExpect(jsonPath("$.message").value("카카오 로그인 오류: server_error - Internal server error"));
 	}
 
 	@Test
