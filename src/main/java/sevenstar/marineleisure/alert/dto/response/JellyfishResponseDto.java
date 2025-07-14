@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import lombok.Builder;
-import sevenstar.marineleisure.alert.dto.vo.JellyfishRegion;
+import sevenstar.marineleisure.alert.dto.vo.JellyfishRegionVO;
 
 /**
  *
@@ -12,5 +12,5 @@ import sevenstar.marineleisure.alert.dto.vo.JellyfishRegion;
  * @param regions : 지역별 해파리 발생리스트
  */
 @Builder
-public record JellyfishResponseDto(LocalDate reportDate, List<JellyfishRegion> regions) {
+public record JellyfishResponseDto(LocalDate reportDate, List<JellyfishRegionVO> regions) {
 }
