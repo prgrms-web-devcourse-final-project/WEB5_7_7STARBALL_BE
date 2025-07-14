@@ -12,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.global.enums.TimePeriod;
+import sevenstar.marineleisure.global.enums.TotalIndex;
+import sevenstar.marineleisure.spot.dto.FishingReadResponse;
 
 public interface FishingRepository extends JpaRepository<Fishing, Long> {
 	@Query(value = """
@@ -22,13 +24,19 @@ public interface FishingRepository extends JpaRepository<Fishing, Long> {
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
 	@Query("""
-		    SELECT f FROM Fishing f
+		    SELECT new sevenstar.marineleisure.spot.dto.FishingReadResponse(:spotId,ft.id,ft.name,f.forecastDate,f.timePeriod,f.tide,f.totalIndex,f.waveHeightMin,f.waveHeightMax,f.seaTempMin,f.seaTempMax,f.airTempMin,f.airTempMax,f.currentSpeedMin,f.currentSpeedMax,f.windSpeedMin,f.windSpeedMax,f.uvIndex) FROM Fishing f
+		    LEFT JOIN FishingTarget ft ON f.targetId = ft.id
 		    WHERE f.spotId = :spotId
-				AND f.timePeriod != :exceptTimePeriod
 		    	AND f.forecastDate = :date
 		""")
-	Optional<Fishing> findFishingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date,
-		@Param("exceptTimePeriod") TimePeriod exceptTimePeriod);
+	List<FishingReadResponse> findFishingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
+
+	@Query("""
+		SELECT f.totalIndex
+		FROM Fishing f
+		WHERE f.spotId = :spotId AND f.forecastDate = :date AND f.timePeriod = :timePeriod
+		""")
+	Optional<TotalIndex> findTotalIndexBySpotIdAndDate(@Param("spotId") Long spotId, @Param("date") LocalDate date,@Param("timePeriod") TimePeriod timePeriod);
 
 	@Modifying
 	@Transactional

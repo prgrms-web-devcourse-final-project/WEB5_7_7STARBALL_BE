@@ -5,9 +5,7 @@ import lombok.Getter;
 @Getter
 public enum TimePeriod {
 	AM("오전"),
-	PM("오후"),
-	DAY("일");
-
+	PM("오후");
 	private String description;
 
 	TimePeriod(String description) {

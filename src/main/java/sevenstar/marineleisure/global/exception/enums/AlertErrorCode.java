@@ -21,16 +21,16 @@ public enum AlertErrorCode implements ErrorCode {
 
 	@Override
 	public int getCode() {
-		return 0;
+		return code;
 	}
 
 	@Override
 	public HttpStatus getHttpStatus() {
-		return null;
+		return httpStatus;
 	}
 
 	@Override
 	public String getMessage() {
-		return "";
+		return message;
 	}
 }

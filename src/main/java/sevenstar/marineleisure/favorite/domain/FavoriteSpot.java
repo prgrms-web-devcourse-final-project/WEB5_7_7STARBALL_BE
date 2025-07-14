@@ -22,8 +22,8 @@ public class FavoriteSpot extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "user_id", nullable = false)
-	private Long userId;
+	@Column(name = "member_id", nullable = false)
+	private Long memberId;
 
 	@Column(name = "spot_id", nullable = false)
 	private Long spotId;
@@ -32,9 +32,13 @@ public class FavoriteSpot extends BaseEntity {
 	private Boolean notification = true;
 
 	@Builder
-	public FavoriteSpot(Long userId, Long spotId) {
-		this.userId = userId;
+	public FavoriteSpot(Long memberId, Long spotId) {
+		this.memberId = memberId;
 		this.spotId = spotId;
+	}
+
+	public void toggleNotification() {
+		this.notification = !this.notification;
 	}
 
 }

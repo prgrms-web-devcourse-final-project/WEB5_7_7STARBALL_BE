@@ -1,6 +1,6 @@
 package sevenstar.marineleisure.global.config;
 
-import java.util.List;
+import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +47,10 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.POST, "/oauth/**").permitAll()
 				// (5) H2 콘솔
 				.requestMatchers("/h2-console/**").permitAll()
+				// Map에는 인증이 필수가 아닙니다
+				.requestMatchers("/map/**").permitAll()
+				// 위험경보관련 API는 인증이 필요하지 않습니다.
+				.requestMatchers("/alerts/**").permitAll()
 				// (6) 나머지는 인증 필요
 				.anyRequest().authenticated()
 			)
@@ -61,12 +65,18 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.addAllowedOriginPattern("*");  // 모든 오리진 허용 (실무에선 도메인 지정 권장)
-		//        config.setAllowedOrigins(List.of("https://react-app")); // react app 오리진 허용. test를 위해 주석 처리
-		config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-		config.addAllowedHeader("*");
-		config.addAllowedMethod("*");
+
+		// 와일드카드 대신 명시적인 오리진 목록 사용
+		config.setAllowedOrigins(Arrays.asList(
+			"https://your-frontend-domain.com",  // 프로덕션 환경 프론트엔드 도메인
+			"http://localhost:3000",             // 개발 환경 프론트엔드 도메인
+			"http://localhost:5173"              // 현재 프론트엔드 개발 환경
+		));
+
+		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
 		config.setAllowCredentials(true);
+		config.setMaxAge(3600L); // 프리플라이트 요청 캐싱 (1시간)
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);

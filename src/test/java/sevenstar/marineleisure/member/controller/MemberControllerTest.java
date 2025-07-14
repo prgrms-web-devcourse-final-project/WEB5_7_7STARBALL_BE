@@ -1,6 +1,10 @@
 package sevenstar.marineleisure.member.controller;
 
-import jakarta.servlet.ServletException;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.math.BigDecimal;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,19 +18,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import sevenstar.marineleisure.global.enums.MemberStatus;
+import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.global.util.CurrentUserUtil;
 import sevenstar.marineleisure.member.dto.MemberDetailResponse;
 import sevenstar.marineleisure.member.service.MemberService;
-
-import java.math.BigDecimal;
-import java.util.NoSuchElementException;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(MemberController.class)
 	//@AutoConfigureMockMvc(addFilters = false) // 시큐리티 필터 비활성화
@@ -86,23 +82,27 @@ class MemberControllerTest {
 	@Test
 	@DisplayName("존재하지 않는 회원 ID로 조회 시 예외가 발생한다")
 	@WithMockUser
-	void getCurrentMemberDetail_memberNotFound() {
+	void getCurrentMemberDetail_memberNotFound() throws Exception {
 		// given
 		try (MockedStatic<CurrentUserUtil> mockedStatic = Mockito.mockStatic(CurrentUserUtil.class)) {
-			mockedStatic.when(CurrentUserUtil::getCurrentUserId).thenReturn(999L);
-			when(memberService.getCurrentMemberDetail(999L))
-				.thenThrow(new NoSuchElementException("회원을 찾을 수 없습니다: 999"));
+			Long currentUserId = 999L;
+			mockedStatic.when(CurrentUserUtil::getCurrentUserId).thenReturn(currentUserId);
+			when(memberService.getCurrentMemberDetail(currentUserId))
+				.thenThrow(new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
 			// when & then
-			ServletException ex = assertThrows(
-				ServletException.class,
-				() -> mockMvc.perform(get("/members/me"))
-			);
-
-			// 그리고 그 원인이 NoSuchElementException인지, 메시지는 맞는지 추가 검증
-			Throwable cause = ex.getCause();
-			assertThat(cause).isInstanceOf(NoSuchElementException.class);
-			assertThat(cause.getMessage()).isEqualTo("회원을 찾을 수 없습니다: 999");
+			// ServletException ex = assertThrows(
+			// 	ServletException.class,
+			// 	() -> mockMvc.perform(get("/members/me"))
+			// );
+			//
+			// // 그리고 그 원인이 NoSuchElementException인지, 메시지는 맞는지 추가 검증
+			// Throwable cause = ex.getCause();
+			// assertThat(cause).isInstanceOf(NoSuchElementException.class);
+			// assertThat(cause.getMessage()).isEqualTo("회원을 찾을 수 없습니다: 999");
+			mockMvc.perform(get("/members/me"))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message").value(MemberErrorCode.MEMBER_NOT_FOUND.getMessage()));
 		}
 	}
 }

@@ -1,11 +1,12 @@
 package sevenstar.marineleisure.global.util;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.global.jwt.UserPrincipal;
 
 /**
@@ -26,7 +27,7 @@ public class CurrentUserUtil {
 
 		if (authentication == null || !authentication.isAuthenticated() ||
 			!(authentication.getPrincipal() instanceof UserPrincipal)) {
-			throw new IllegalStateException("인증된 사용자가 아닙니다.");
+			throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
 		}
 
 		UserPrincipal principal = (UserPrincipal)authentication.getPrincipal();

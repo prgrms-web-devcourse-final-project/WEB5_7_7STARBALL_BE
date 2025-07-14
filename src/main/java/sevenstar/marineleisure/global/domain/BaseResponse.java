@@ -23,4 +23,10 @@ public record BaseResponse<T>(
 			.status(errorCode.getHttpStatus())
 			.body(new BaseResponse<>(errorCode.getCode(), errorCode.getMessage(), null));
 	}
+
+	public static <T> ResponseEntity<BaseResponse<T>> error(ErrorCode errorCode,String customMessage) {
+		return ResponseEntity
+			.status(errorCode.getHttpStatus())
+			.body(new BaseResponse<>(errorCode.getCode(), customMessage, null));
+	}
 }

@@ -2,8 +2,11 @@ package sevenstar.marineleisure.spot.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Getter;
+import sevenstar.marineleisure.global.enums.ActivityCategory;
 
 @Getter
 public class SpotReadRequest {
@@ -17,11 +20,17 @@ public class SpotReadRequest {
 	@DecimalMax(value = "180.0", message = "경도는 180 이하이어야 합니다.")
 	private Float longitude;
 
-	private String category;
+	@NotNull(message = "반경은 필수입니다.")
+	@Positive(message = "반경은 양수여야 합니다.")
+	@Max(value = 1000,message = "반경은 1000km 이하여야 합니다.")
+	private Integer radius;
 
-	public SpotReadRequest(Float latitude, Float longitude, String category) {
+	private ActivityCategory category;
+
+	public SpotReadRequest(Float latitude, Float longitude, Integer radius, ActivityCategory category) {
 		this.latitude = latitude;
 		this.longitude = longitude;
+		this.radius = radius;
 		this.category = category;
 	}
 }
