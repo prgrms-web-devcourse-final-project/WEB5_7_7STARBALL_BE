@@ -1,5 +1,6 @@
 package sevenstar.marineleisure.member.service;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,7 +42,7 @@ public class AuthService {
 
 		if (!stateEncryptionUtil.validateState(state, encryptedState)) {
 			log.error("State validation failed: possible CSRF attack");
-			throw new SecurityException("Possible CSRF attack: state parameter doesn't match");
+			throw new BadCredentialsException("Possible CSRF attack: state parameter doesn't match");
 		}
 
 		// 1. 인증 코드로 카카오 토큰 교환

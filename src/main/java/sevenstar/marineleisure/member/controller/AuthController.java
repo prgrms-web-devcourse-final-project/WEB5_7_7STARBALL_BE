@@ -3,6 +3,7 @@ package sevenstar.marineleisure.member.controller;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -87,8 +88,8 @@ public class AuthController {
 				response
 			);
 			return BaseResponse.success(loginResponse);
-		} catch (SecurityException e) {
-			log.error("Security validation failed: {}", e.getMessage(), e);
+		} catch (AuthenticationException e) {
+			log.error("Authentication failed: {}", e.getMessage(), e);
 			return BaseResponse.error(MemberErrorCode.SECURITY_VALIDATION_FAILED);
 		} catch (Exception e) {
 			log.error("Kakao login failed: {}", e.getMessage(), e);
