@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.meeting.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -28,6 +29,9 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 
 	@Query("SELECT COUNT(m) FROM Meeting m WHERE m.hostId = :memberId")
 	Long countMyMeetingsByMemberId(@Param("memberId") Long memberId);
+
+	@Query("SELECT m FROM Meeting m WHERE m.hostId = :memberId")
+	List<Meeting> findByHostId(@Param("memberId") Long memberId);
 
 
 

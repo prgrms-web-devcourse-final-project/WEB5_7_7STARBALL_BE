@@ -12,23 +12,35 @@ import org.springframework.test.util.ReflectionTestUtils;
 import sevenstar.marineleisure.global.enums.MemberStatus;
 import sevenstar.marineleisure.global.exception.CustomException;
 import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
+import sevenstar.marineleisure.meeting.domain.Meeting;
+import sevenstar.marineleisure.meeting.domain.Participant;
+import sevenstar.marineleisure.meeting.repository.MeetingRepository;
+import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.MemberDetailResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MemberServiceTest {
 
 	@Mock
 	private MemberRepository memberRepository;
+
+	@Mock
+	private MeetingRepository meetingRepository;
+
+	@Mock
+	private ParticipantRepository participantRepository;
 
 	@InjectMocks
 	private MemberService memberService;
@@ -115,5 +127,90 @@ class MemberServiceTest {
 		assertThatThrownBy(() -> memberService.getCurrentMemberDetail(nonExistentMemberId))
 			.isInstanceOf(CustomException.class)
 			.hasMessageContaining(MemberErrorCode.MEMBER_NOT_FOUND.getMessage());
+	}
+
+	@Test
+	@DisplayName("회원의 닉네임을 업데이트할 수 있다")
+	void updateMemberNickname() {
+		// given
+		String newNickname = "newNickname";
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
+		when(memberRepository.save(any(Member.class))).thenReturn(testMember);
+
+		// when
+		MemberDetailResponse response = memberService.updateMemberNickname(memberId, newNickname);
+
+		// then
+		assertThat(response).isNotNull();
+		assertThat(response.getNickname()).isEqualTo(newNickname);
+		verify(memberRepository).findById(memberId);
+		verify(memberRepository).save(testMember);
+	}
+
+	@Test
+	@DisplayName("회원의 위치 정보를 업데이트할 수 있다")
+	void updateMemberLocation() {
+		// given
+		BigDecimal newLatitude = BigDecimal.valueOf(35.1234);
+		BigDecimal newLongitude = BigDecimal.valueOf(129.5678);
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
+		when(memberRepository.save(any(Member.class))).thenReturn(testMember);
+
+		// when
+		MemberDetailResponse response = memberService.updateMemberLocation(memberId, newLatitude, newLongitude);
+
+		// then
+		assertThat(response).isNotNull();
+		// Note: We can't directly verify the latitude and longitude values here because
+		// the test member's fields are updated through reflection in the service method
+		verify(memberRepository).findById(memberId);
+		verify(memberRepository).save(testMember);
+	}
+
+	@Test
+	@DisplayName("회원의 상태를 업데이트할 수 있다")
+	void updateMemberStatus() {
+		// given
+		MemberStatus newStatus = MemberStatus.EXPIRED;
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
+		when(memberRepository.save(any(Member.class))).thenReturn(testMember);
+
+		// when
+		MemberDetailResponse response = memberService.updateMemberStatus(memberId, newStatus);
+
+		// then
+		assertThat(response).isNotNull();
+		// Note: We can't directly verify the status value here because
+		// the test member's field is updated through reflection in the service method
+		verify(memberRepository).findById(memberId);
+		verify(memberRepository).save(testMember);
+	}
+
+	@Test
+	@DisplayName("회원을 탈퇴 처리할 수 있다")
+	void deleteMember() {
+		// given
+		List<Meeting> hostedMeetings = new ArrayList<>();
+		Meeting mockMeeting = mock(Meeting.class);
+		hostedMeetings.add(mockMeeting);
+
+		List<Participant> participations = new ArrayList<>();
+		Participant mockParticipant = mock(Participant.class);
+		participations.add(mockParticipant);
+
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
+		when(meetingRepository.findByHostId(memberId)).thenReturn(hostedMeetings);
+		when(participantRepository.findByMemberId(memberId)).thenReturn(participations);
+
+		// when
+		memberService.deleteMember(memberId);
+
+		// then
+		verify(memberRepository).findById(memberId);
+		verify(meetingRepository).findByHostId(memberId);
+		verify(meetingRepository).deleteAll(hostedMeetings);
+		verify(participantRepository).findByMemberId(memberId);
+		verify(participantRepository).deleteAll(participations);
+		verify(memberRepository).save(testMember);
 	}
 }

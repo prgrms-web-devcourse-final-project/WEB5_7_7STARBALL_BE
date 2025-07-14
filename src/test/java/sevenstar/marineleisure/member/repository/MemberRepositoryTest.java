@@ -111,7 +111,7 @@ class MemberRepositoryTest {
 
 		// when
 		Member foundMember = memberRepository.findById(savedMember.getId()).orElseThrow();
-		foundMember.update("newNickname");
+		foundMember.updateNickname("newNickname");
 		memberRepository.save(foundMember);
 		entityManager.flush();
 		entityManager.clear();
