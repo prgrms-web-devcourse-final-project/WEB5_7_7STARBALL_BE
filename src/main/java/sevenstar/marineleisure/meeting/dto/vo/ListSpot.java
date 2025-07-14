@@ -1,4 +1,4 @@
-package sevenstar.marineleisure.meeting.Dto.VO;
+package sevenstar.marineleisure.meeting.dto.vo;
 
 import lombok.Builder;
 

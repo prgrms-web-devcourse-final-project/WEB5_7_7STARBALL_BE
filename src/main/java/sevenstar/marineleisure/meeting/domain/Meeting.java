@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,8 @@ import sevenstar.marineleisure.global.enums.MeetingStatus;
 @Getter
 @Table(name = "meetings")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@AllArgsConstructor
 public class Meeting extends BaseEntity {
 
 	@Id
@@ -42,7 +45,7 @@ public class Meeting extends BaseEntity {
 	private LocalDateTime meetingTime;
 
 	@Column(nullable = false)
-	private MeetingStatus status = MeetingStatus.RECRUITING;
+	private MeetingStatus status;
 
 	@Column(name = "spot_id", nullable = false)
 	private Long spotId;
@@ -52,7 +55,7 @@ public class Meeting extends BaseEntity {
 
 	@Builder
 	public Meeting(LocalDateTime meetingTime, ActivityCategory category, int capacity, Long hostId, String title,
-		Long spotId, String description) {
+		Long spotId, String description, MeetingStatus status) {
 		this.meetingTime = meetingTime;
 		this.category = category;
 		this.capacity = capacity;
@@ -60,5 +63,7 @@ public class Meeting extends BaseEntity {
 		this.title = title;
 		this.spotId = spotId;
 		this.description = description;
+		this.status = status;
 	}
+
 }

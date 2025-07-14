@@ -60,8 +60,9 @@ public class OutdoorSpot extends BaseEntity {
 	private Point point;
 
 	@Builder
-	public OutdoorSpot(String name, ActivityCategory category, FishingType type, String location, BigDecimal latitude,
+	public OutdoorSpot(Long id, String name, ActivityCategory category, FishingType type, String location, BigDecimal latitude,
 		BigDecimal longitude, Point point) {
+		this.id = id;
 		this.name = name;
 		this.category = category;
 		this.type = type;
