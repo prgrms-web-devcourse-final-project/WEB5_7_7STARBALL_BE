@@ -27,7 +27,6 @@ import sevenstar.marineleisure.member.repository.MemberRepository;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@PropertySource("classpath:application-auth.properties")
 public class OauthService {
 
 	private final MemberRepository memberRepository;

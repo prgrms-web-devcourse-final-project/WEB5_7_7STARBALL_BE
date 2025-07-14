@@ -67,6 +67,6 @@ public class SwaggerController {
 	public ResponseEntity<BaseResponse<SwaggerTestResponse>> deleteUser(
 		@Parameter(description = "삭제할 사용자 ID", example = "1") @PathVariable Long id
 	) {
-		return BaseResponse.error(CommonErrorCode.UNSUPPORTED_DELETE);
+		return BaseResponse.error(CommonErrorCode.INTERNET_SERVER_ERROR);
 	}
 }
