@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Surfing;
 import sevenstar.marineleisure.global.enums.TimePeriod;
+import sevenstar.marineleisure.global.enums.TotalIndex;
 
 public interface SurfingRepository extends JpaRepository<Surfing, Long> {
 	@Query(value = """
@@ -21,14 +23,33 @@ public interface SurfingRepository extends JpaRepository<Surfing, Long> {
 	List<Long> findByForecastDateBetween(@Param("forecastDateAfter") LocalDate forecastDateAfter,
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
+	List<Surfing> findBySpotIdAndForecastDate(Long spotId, LocalDate forecastDate);
+
+	Optional<Surfing> findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+		Long spotId,
+		LocalDateTime startDateTime,
+		LocalDateTime endDateTime
+	);
+
+	Optional<Surfing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
+
+	Optional<Surfing> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
+
+	Optional<Surfing> findBySpotIdOrderByCreatedAt(Long spotId);
+         
 	@Query("""
 		    SELECT s FROM Surfing s
 		    WHERE s.spotId = :spotId
-				AND s.timePeriod != :exceptTimePeriod
 		    	AND s.forecastDate = :date
 		""")
-	Optional<Surfing> findFishingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date,
-		@Param("exceptTimePeriod") TimePeriod exceptTimePeriod);
+	List<Surfing> findSurfingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
+
+	@Query("""
+		SELECT s.totalIndex
+		FROM Surfing s
+		WHERE s.spotId = :spotId AND s.forecastDate = :date AND s.timePeriod = :timePeriod
+		""")
+	Optional<TotalIndex> findTotalIndexBySpotIdAndDate(@Param("spotId") Long spotId, @Param("date") LocalDate date,@Param("timePeriod") TimePeriod timePeriod);
 
 	@Modifying
 	@Transactional

@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,13 +20,6 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 	Optional<OutdoorSpot> findByLatitudeAndLongitudeAndCategory(BigDecimal latitude, BigDecimal longitude,
 		ActivityCategory category);
 
-	// @Query(value = """
-	// 	SELECT o.id, o.name, o.category,o.latitude,o.longitude,ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:clientLon, :clientLat),4326)) as distance
-	// 	FROM outdoor_spots o
-	// 	""", nativeQuery = true)
-	// List<SpotDistanceProjection> findBySpotDistanceInstanceByLatitudeAndLongitude(@Param("clientLat") Float clientLat,
-	// 	@Param("clientLon") Float clientLon);
-
 	@Query(value = """
 		SELECT o.id, o.name, o.category,o.latitude,o.longitude,ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude),4326)) AS distance
 		FROM outdoor_spots o
@@ -32,14 +27,6 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		""", nativeQuery = true)
 	List<SpotDistanceProjection> findBySpotDistanceInstanceByLatitudeAndLongitude(@Param("latitude") Float latitude,
 		@Param("longitude") Float longitude, @Param("radius") double radius);
-
-	// @Query(value = """
-	// 	SELECT o.id, o.name, o.category,o.latitude,o.longitude,ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:clientLon, :clientLat),4326)) as distance
-	// 	FROM outdoor_spots o
-	// 			WHERE o.category = :category
-	// 	""", nativeQuery = true)
-	// List<SpotDistanceProjection> findBySpotDistanceInstanceByLatitudeAndLongitudeAndCategory(
-	// 	@Param("clientLat") Float clientLat, @Param("clientLon") Float clientLon, @Param("category") String category);
 
 	@Query(value = """
 		SELECT o.id, o.name, o.category,o.latitude,o.longitude,ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude),4326)) as distance
@@ -139,4 +126,11 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 	SpotPreviewProjection findBestSpotInScuba(@Param("latitude") double latitude, @Param("longitude") double longitude,
 		@Param("forecastDate") LocalDate forecastDate);
 
+	@Query(value =
+			"SELECT *, ST_Distance_Sphere(POINT(longitude, latitude), POINT(:longitude, :latitude)) as distance_in_meters " +
+			"FROM outdoor_spot " +
+			"ORDER BY distance_in_meters ASC " +
+			"LIMIT :limit"
+		, nativeQuery = true)
+	List<OutdoorSpot> findByCoordinates(BigDecimal latitude, BigDecimal longitude, int limit);
 }

@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Scuba;
 import sevenstar.marineleisure.global.enums.TimePeriod;
+import sevenstar.marineleisure.global.enums.TotalIndex;
 
 public interface ScubaRepository extends JpaRepository<Scuba, Long> {
 	@Query(value = """
@@ -25,12 +27,22 @@ public interface ScubaRepository extends JpaRepository<Scuba, Long> {
 	@Query("""
 		    SELECT s FROM Scuba s
 		    WHERE s.spotId = :spotId
-				AND s.timePeriod != :exceptTimePeriod
 		    	AND s.forecastDate = :date
 		""")
-	Optional<Scuba> findFishingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date,
-		@Param("exceptTimePeriod") TimePeriod exceptTimePeriod);
+	List<Scuba> findScubaForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
 
+	@Query("""
+		SELECT s.totalIndex
+		FROM Scuba s
+		WHERE s.spotId = :spotId AND s.forecastDate = :date AND s.timePeriod = :timePeriod
+		""")
+	Optional<TotalIndex> findTotalIndexBySpotIdAndDate(@Param("spotId") Long spotId, @Param("date") LocalDate date,@Param("timePeriod") TimePeriod timePeriod);
+
+	Optional<Scuba> findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+		Long spotId,
+		LocalDateTime startDateTime,
+		LocalDateTime endDateTime);
+  
 	@Modifying
 	@Transactional
 	@Query(value = """
@@ -84,4 +96,9 @@ public interface ScubaRepository extends JpaRepository<Scuba, Long> {
 		@Param("forecastDate") LocalDate forecastDate
 	);
 
+	Optional<Scuba> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
+
+	Optional<Scuba> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
+
+	// Optional<Scuba> findBySpotIdOrderByCreatedAt(Long spotId);
 }

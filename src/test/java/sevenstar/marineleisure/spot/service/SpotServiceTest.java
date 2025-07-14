@@ -128,10 +128,12 @@ class SpotServiceTest {
 		// given
 		Integer radius = 1;
 		// when
+
 		SpotReadResponse fishingResponse = spotService.searchSpot(baseLat, baseLon, radius, ActivityCategory.FISHING);
 		SpotReadResponse scubaResponse = spotService.searchSpot(baseLat, baseLon, radius, ActivityCategory.SCUBA);
 		SpotReadResponse surfingResponse = spotService.searchSpot(baseLat, baseLon, radius, ActivityCategory.SURFING);
 		SpotReadResponse mudflatResponse = spotService.searchSpot(baseLat, baseLon, radius, ActivityCategory.MUDFLAT);
+
 
 		// then
 		assertThat(fishingResponse.spots()).hasSize(1);
@@ -146,6 +148,7 @@ class SpotServiceTest {
 		Integer radius = 1;
 
 		// when
+
 		SpotReadResponse response = spotService.searchAllSpot(baseLat, baseLon,radius);
 
 		//

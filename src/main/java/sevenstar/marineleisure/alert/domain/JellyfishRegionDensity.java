@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,9 +36,7 @@ public class JellyfishRegionDensity extends BaseEntity {
 	@Column(name = "report_date", nullable = false)
 	private LocalDate reportDate;
 
-	@Column(name = "appearance_rate", length = 10)
-	private String appearanceRate;
-
+	@Enumerated(EnumType.STRING)
 	@Column(name = "density_type", nullable = false, length = 10)
 	private DensityLevel densityType;
 
@@ -45,13 +45,11 @@ public class JellyfishRegionDensity extends BaseEntity {
 		String regionName,
 		Long species,
 		LocalDate reportDate,
-		String appearanceRate,
 		DensityLevel densityType
 	) {
 		this.regionName = regionName;
 		this.species = species;
 		this.reportDate = reportDate;
-		this.appearanceRate = appearanceRate;
 		this.densityType = densityType;
 	}
 }

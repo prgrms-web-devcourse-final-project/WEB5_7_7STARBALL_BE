@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Mudflat;
+import sevenstar.marineleisure.global.enums.TotalIndex;
 
 public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 	@Query(value = """
@@ -22,6 +24,23 @@ public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
 	Optional<Mudflat> findBySpotIdAndForecastDate(Long spotId, LocalDate forecastDate);
+
+	Optional<Mudflat> findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+		Long spotId,
+		LocalDateTime startDateTime,
+		LocalDateTime endDateTime
+	);
+
+	Optional<Mudflat> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
+
+	Optional<Mudflat> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
+
+	@Query("""
+		SELECT m.totalIndex
+		FROM Mudflat m
+		WHERE m.spotId = :spotId AND m.forecastDate = :date
+		""")
+	Optional<TotalIndex> findTotalIndexBySpotIdAndDate(@Param("spotId") Long spotId, @Param("date") LocalDate date);
 
 	@Modifying
 	@Transactional
@@ -72,5 +91,4 @@ public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 		@Param("spotId") Long spotId,
 		@Param("forecastDate") LocalDate forecastDate
 	);
-
 }

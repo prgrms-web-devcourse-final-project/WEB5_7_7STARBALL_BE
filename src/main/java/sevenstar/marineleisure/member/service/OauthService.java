@@ -16,10 +16,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
@@ -30,8 +30,8 @@ import sevenstar.marineleisure.member.repository.MemberRepository;
 public class OauthService {
 
 	private final MemberRepository memberRepository;
-	private final MemberService memberService;
 	private final WebClient webClient;
+	private final StateEncryptionUtil stateEncryptionUtil;
 
 	@Value("${kakao.login.api_key}")
 	private String apiKey;
@@ -45,19 +45,18 @@ public class OauthService {
 	@Value("${kakao.login.redirect_uri}")
 	private String redirectUri;
 
-	@Value("${kakao.login.uri.code}")
-	private String kakaoPath;
 	/**
-	 * 카카오 로그인 URL 생성 (세션 저장 없음 - 테스트용)
+	 * 카카오 로그인 URL 생성 (stateless)
 	 *
 	 * @param customRedirectUri 커스텀 리다이렉트 URI (null인 경우 기본값 사용)
-	 * @return 카카오 로그인 URL과 state 값을 포함한 Map
-	 * @deprecated 보안을 위해 {@link #getKakaoLoginUrl(String, HttpServletRequest)} 사용
+	 * @return 카카오 로그인 URL, state 값, 암호화된 state 값을 포함한 Map
 	 */
-	@Deprecated
 	public Map<String, String> getKakaoLoginUrl(String customRedirectUri) {
 		String state = UUID.randomUUID().toString();
-		log.warn("deprecated 되었습니다. state 검증 없이 test코드 돌리기 위한 메서드");
+		String encryptedState = stateEncryptionUtil.encryptState(state);
+
+		log.info("Generated OAuth state: {} (encrypted: {})", state, encryptedState);
+
 		// Use the provided redirectUri or fall back to the configured one
 		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
 
@@ -70,37 +69,23 @@ public class OauthService {
 			.build()
 			.toUriString();
 
-		return Map.of("kakaoAuthUrl", kakaoAuthUrl, "state", state);
+		return Map.of(
+			"kakaoAuthUrl", kakaoAuthUrl,
+			"state", state,
+			"encryptedState", encryptedState
+		);
 	}
 
 	/**
-	 * 카카오 로그인 URL 생성 (세션에 state 저장)
+	 * 카카오 로그인 URL 생성 (stateless - HttpServletRequest 호환용)
 	 *
 	 * @param customRedirectUri 커스텀 리다이렉트 URI (null인 경우 기본값 사용)
-	 * @param request HTTP 요청 (세션에 state 저장용)
-	 * @return 카카오 로그인 URL과 state 값을 포함한 Map
+	 * @param request HTTP 요청 (호환성을 위해 유지, 사용하지 않음)
+	 * @return 카카오 로그인 URL, state 값, 암호화된 state 값을 포함한 Map
 	 */
 	public Map<String, String> getKakaoLoginUrl(String customRedirectUri, HttpServletRequest request) {
-		String state = UUID.randomUUID().toString();
-
-		// Store state in session for later verification
-		HttpSession session = request.getSession();
-		session.setAttribute("oauth_state", state);
-		log.info("Stored OAuth state in session: {}", state);
-
-		// Use the provided redirectUri or fall back to the configured one
-		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
-
-		String kakaoAuthUrl = UriComponentsBuilder.fromUriString(kakaoBaseUri)
-			.path("/oauth/authorize")
-			.queryParam("client_id", apiKey)
-			.queryParam("redirect_uri", finalRedirectUri)
-			.queryParam("response_type", "code")
-			.queryParam("state", state)
-			.build()
-			.toUriString();
-
-		return Map.of("kakaoAuthUrl", kakaoAuthUrl, "state", state);
+		// 세션 사용하지 않고 stateless 방식으로 구현
+		return getKakaoLoginUrl(customRedirectUri);
 	}
 
 	/**

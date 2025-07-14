@@ -23,6 +23,7 @@ import sevenstar.marineleisure.global.api.openmeteo.dto.common.OpenMeteoReadResp
 import sevenstar.marineleisure.global.api.openmeteo.dto.item.SunTimeItem;
 import sevenstar.marineleisure.global.api.openmeteo.dto.item.UvIndexItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
+import sevenstar.marineleisure.global.enums.FishingType;
 
 /**
  * 외부 API 클라이언트 조회 테스트
@@ -34,12 +35,12 @@ public class ApiClientTest {
 	@Autowired
 	private OpenMeteoApiClient openMeteoApiClient;
 
-	private String reqDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+	private LocalDate reqDate = LocalDate.now();
 
 	@Test
 	void receiveFishApi() {
 		ResponseEntity<ApiResponse<FishingItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, "갯바위");
+		}, reqDate, 1, 15, FishingType.ROCK);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}

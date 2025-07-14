@@ -37,6 +37,7 @@ public class FakeUtils {
 			.currentSpeedMax(0F)
 			.windSpeedMin(0F)
 			.windSpeedMax(0F)
+			.uvIndex(0F)
 			.build();
 	}
 
@@ -54,6 +55,7 @@ public class FakeUtils {
 			.windSpeed(0F)
 			.seaTemp(0F)
 			.totalIndex(TotalIndex.NORMAL)
+			.uvIndex(0F)
 			.build();
 	}
 
@@ -70,6 +72,8 @@ public class FakeUtils {
 			.seaTempMax(0F)
 			.currentSpeedMin(0F)
 			.currentSpeedMax(0F)
+			.sunrise(LocalTime.now())
+			.sunset(LocalTime.now())
 			.build();
 	}
 
@@ -85,6 +89,7 @@ public class FakeUtils {
 			.windSpeedMax(0F)
 			.weather("")
 			.totalIndex(TotalIndex.NORMAL)
+			.uvIndex(0F)
 			.build();
 
 	}

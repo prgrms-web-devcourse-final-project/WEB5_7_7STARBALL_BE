@@ -27,9 +27,10 @@ public class SpotReadRequest {
 
 	private ActivityCategory category;
 
-	public SpotReadRequest(Float latitude, Float longitude, ActivityCategory category) {
+	public SpotReadRequest(Float latitude, Float longitude, Integer radius, ActivityCategory category) {
 		this.latitude = latitude;
 		this.longitude = longitude;
+		this.radius = radius;
 		this.category = category;
 	}
 }
