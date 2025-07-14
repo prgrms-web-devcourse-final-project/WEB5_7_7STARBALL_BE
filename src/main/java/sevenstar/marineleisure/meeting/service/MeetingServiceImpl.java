@@ -1,8 +1,5 @@
 package sevenstar.marineleisure.meeting.service;
 
-
-
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,18 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
+import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
+import sevenstar.marineleisure.meeting.domain.Meeting;
+import sevenstar.marineleisure.meeting.domain.Participant;
+import sevenstar.marineleisure.meeting.domain.Tag;
+import sevenstar.marineleisure.meeting.dto.mapper.MeetingMapper;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
 import sevenstar.marineleisure.meeting.dto.response.ParticipantResponse;
-import sevenstar.marineleisure.meeting.dto.mapper.MeetingMapper;
 import sevenstar.marineleisure.meeting.repository.MeetingRepository;
-import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 import sevenstar.marineleisure.meeting.repository.TagRepository;
-import sevenstar.marineleisure.meeting.domain.Meeting;
-import sevenstar.marineleisure.meeting.domain.Participant;
-import sevenstar.marineleisure.meeting.domain.Tag;
 import sevenstar.marineleisure.meeting.validate.MeetingValidate;
 import sevenstar.marineleisure.meeting.validate.MemberValidate;
 import sevenstar.marineleisure.meeting.validate.ParticipantValidate;

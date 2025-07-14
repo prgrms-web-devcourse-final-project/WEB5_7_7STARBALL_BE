@@ -3,6 +3,7 @@ package sevenstar.marineleisure.member.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Mono;
+import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
@@ -34,6 +36,9 @@ class OauthServiceTest {
 	@Mock
 	private WebClient webClient;
 
+	@Mock
+	private StateEncryptionUtil stateEncryptionUtil;
+
 	@InjectMocks
 	private OauthService oauthService;
 
@@ -44,6 +49,10 @@ class OauthServiceTest {
 		ReflectionTestUtils.setField(oauthService, "clientSecret", "test-client-secret");
 		ReflectionTestUtils.setField(oauthService, "kakaoBaseUri", "https://kauth.kakao.com");
 		ReflectionTestUtils.setField(oauthService, "redirectUri", "http://localhost:8080/oauth/kakao/code");
+
+		// StateEncryptionUtil 모킹 (lenient 설정으로 불필요한 stubbing 경고 방지)
+		lenient().when(stateEncryptionUtil.encryptState(anyString())).thenReturn("encrypted-state");
+		lenient().when(stateEncryptionUtil.validateState(anyString(), anyString())).thenReturn(true);
 	}
 
 	@Test
@@ -55,6 +64,8 @@ class OauthServiceTest {
 		// then
 		assertThat(result).containsKey("kakaoAuthUrl");
 		assertThat(result).containsKey("state");
+		assertThat(result).containsKey("encryptedState");
+		assertThat(result.get("encryptedState")).isEqualTo("encrypted-state");
 		assertThat(result.get("kakaoAuthUrl")).contains("https://kauth.kakao.com/oauth/authorize");
 		assertThat(result.get("kakaoAuthUrl")).contains("client_id=test-api-key");
 		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=http://localhost:8080/oauth/kakao/code");
@@ -74,6 +85,8 @@ class OauthServiceTest {
 		// then
 		assertThat(result).containsKey("kakaoAuthUrl");
 		assertThat(result).containsKey("state");
+		assertThat(result).containsKey("encryptedState");
+		assertThat(result.get("encryptedState")).isEqualTo("encrypted-state");
 		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=" + customRedirectUri);
 	}
 
@@ -190,7 +203,8 @@ class OauthServiceTest {
 		// ID 설정 (리플렉션 사용)
 		ReflectionTestUtils.setField(existingMember, "id", 1L);
 
-		Member updatedMember = existingMember.update("newNickname");
+		existingMember.updateNickname("newNickname");
+		Member updatedMember = existingMember;
 
 		// WebClient 모킹 - 간소화된 방식
 		WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
