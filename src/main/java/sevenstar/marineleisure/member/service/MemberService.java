@@ -182,7 +182,7 @@ public class MemberService {
 		}
 
 		// 2. 회원이 게스트인 경우 참가자 목록에서 삭제
-		List<Participant> participations = participantRepository.findByMemberId(memberId);
+		List<Participant> participations = participantRepository.findByUserId(memberId);
 		if (!participations.isEmpty()) {
 			log.info("참가자 목록에서 삭제: memberId={}, participationCount={}", memberId, participations.size());
 			participantRepository.deleteAll(participations);
