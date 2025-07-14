@@ -3,11 +3,10 @@ package sevenstar.marineleisure.meeting.service;
 import org.springframework.data.domain.Slice;
 
 import sevenstar.marineleisure.global.enums.MeetingStatus;
-import sevenstar.marineleisure.meeting.Dto.Request.CreateMeetingRequest;
-import sevenstar.marineleisure.meeting.Dto.Request.UpdateMeetingRequest;
-import sevenstar.marineleisure.meeting.Dto.Response.MeetingDetailAndMemberResponse;
-import sevenstar.marineleisure.meeting.Dto.Response.MeetingDetailResponse;
-import sevenstar.marineleisure.meeting.Dto.Response.MeetingListResponse;
+import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
+import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
 import sevenstar.marineleisure.meeting.domain.Meeting;
 import sevenstar.marineleisure.member.domain.Member;
 
