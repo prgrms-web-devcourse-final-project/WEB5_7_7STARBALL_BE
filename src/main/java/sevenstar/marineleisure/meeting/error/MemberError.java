@@ -7,7 +7,8 @@ import sevenstar.marineleisure.global.exception.enums.ErrorCode;
 //1XXX 에러
 public enum MemberError implements ErrorCode {
 
-	MEMBER_NOT_FOUND(1404, HttpStatus.NOT_FOUND, "Member not found");
+	MEMBER_NOT_FOUND(1404, HttpStatus.NOT_FOUND, "Member not found"),
+	MEMBER_NOT_EXIST(1404, HttpStatus.NOT_FOUND, "Member not exist"),;
 
 	private final int code;
 	private final HttpStatus httpStatus;
