@@ -36,7 +36,7 @@ public class SpotController {
 	}
 
 	@GetMapping("/{id}")
-	ResponseEntity<BaseResponse<SpotDetailReadResponse>> getSpotsByCategory(@PathVariable Long id) {
+	ResponseEntity<BaseResponse<SpotDetailReadResponse>> getSpotDetail(@PathVariable Long id) {
 		spotService.upsertSpotViewStats(id);
 		return BaseResponse.success(spotService.searchSpotDetail(id));
 	}

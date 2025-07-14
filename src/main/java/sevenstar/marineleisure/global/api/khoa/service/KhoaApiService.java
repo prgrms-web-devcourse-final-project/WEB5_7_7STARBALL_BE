@@ -56,11 +56,11 @@ public class KhoaApiService {
 	 */
 	// TODO : 리팩토링 필요
 	@Transactional
-	public void updateApi(LocalDate date) {
-		String reqDate = DateUtils.parseDate(date);
+	public void updateApi(LocalDate startDate, LocalDate endDate) {
+
 		// scuba
 		List<ScubaItem> scubaItems = getKhoaApiData(new ParameterizedTypeReference<>() {
-		}, reqDate, ActivityCategory.SCUBA);
+		}, startDate, endDate, ActivityCategory.SCUBA);
 
 		for (ScubaItem item : scubaItems) {
 			OutdoorSpot outdoorSpot = createOutdoorSpot(item, FishingType.NONE);
@@ -74,26 +74,28 @@ public class KhoaApiService {
 
 		// fishing
 		for (FishingType fishingType : FishingType.getFishingTypes()) {
-			List<FishingItem> fishingItems = getKhoaApiData(new ParameterizedTypeReference<>() {
-			}, reqDate, fishingType.getDescription());
-			for (FishingItem item : fishingItems) {
-				OutdoorSpot outdoorSpot = createOutdoorSpot(item, fishingType);
-				Long targetId = item.getSeafsTgfshNm() == null ? null :
-					fishingTargetRepository.findByName(item.getSeafsTgfshNm())
-						.orElseGet(() -> fishingTargetRepository.save(KhoaMapper.toEntity(item.getSeafsTgfshNm())))
-						.getId();
-				fishingRepository.upsertFishing(outdoorSpot.getId(), targetId,
-					DateUtils.parseDate(item.getPredcYmd()), TimePeriod.from(item.getPredcNoonSeCd()).name(),
-					TidePhase.parse(item.getTdlvHrScr()).name(),
-					TotalIndex.fromDescription(item.getTotalIndex()).name(), item.getMinWvhgt(), item.getMaxWvhgt(),
-					item.getMinWtem(), item.getMaxWtem(), item.getMinArtmp(), item.getMinArtmp(), item.getMinCrsp(),
-					item.getMaxCrsp(), item.getMinWspd(), item.getMaxWspd());
+			for (LocalDate d = startDate; d.isBefore(endDate); d = d.plusDays(1)) {
+				List<FishingItem> fishingItems = getKhoaApiData(new ParameterizedTypeReference<>() {
+				}, d, fishingType);
+				for (FishingItem item : fishingItems) {
+					OutdoorSpot outdoorSpot = createOutdoorSpot(item, fishingType);
+					Long targetId = item.getSeafsTgfshNm() == null ? null :
+						fishingTargetRepository.findByName(item.getSeafsTgfshNm())
+							.orElseGet(() -> fishingTargetRepository.save(KhoaMapper.toEntity(item.getSeafsTgfshNm())))
+							.getId();
+					fishingRepository.upsertFishing(outdoorSpot.getId(), targetId,
+						DateUtils.parseDate(item.getPredcYmd()), TimePeriod.from(item.getPredcNoonSeCd()).name(),
+						TidePhase.parse(item.getTdlvHrScr()).name(),
+						TotalIndex.fromDescription(item.getTotalIndex()).name(), item.getMinWvhgt(), item.getMaxWvhgt(),
+						item.getMinWtem(), item.getMaxWtem(), item.getMinArtmp(), item.getMinArtmp(), item.getMinCrsp(),
+						item.getMaxCrsp(), item.getMinWspd(), item.getMaxWspd());
+				}
 			}
 		}
 
 		// surfing
 		List<SurfingItem> surfingItems = getKhoaApiData(new ParameterizedTypeReference<>() {
-		}, reqDate, ActivityCategory.SURFING);
+		}, startDate, endDate, ActivityCategory.SURFING);
 
 		for (SurfingItem item : surfingItems) {
 			OutdoorSpot outdoorSpot = createOutdoorSpot(item, FishingType.NONE);
@@ -106,7 +108,7 @@ public class KhoaApiService {
 
 		// mudflat
 		List<MudflatItem> mudflatItems = getKhoaApiData(new ParameterizedTypeReference<>() {
-		}, reqDate, ActivityCategory.MUDFLAT);
+		}, startDate, endDate, ActivityCategory.MUDFLAT);
 
 		for (MudflatItem item : mudflatItems) {
 			OutdoorSpot outdoorSpot = createOutdoorSpot(item, FishingType.NONE);
@@ -127,15 +129,22 @@ public class KhoaApiService {
 				KhoaMapper.toEntity(item, fishingType, geoUtils.createPoint(item.getLatitude(), item.getLongitude()))));
 	}
 
-	private <T> List<T> getKhoaApiData(ParameterizedTypeReference<ApiResponse<T>> responseType, String reqDate,
-		ActivityCategory category) {
+	private <T extends KhoaItem> List<T> getKhoaApiData(ParameterizedTypeReference<ApiResponse<T>> responseType,
+		LocalDate startDate,
+		LocalDate endDate, ActivityCategory category) {
 		List<T> result = new ArrayList<>();
 
 		int page = 1;
 		int size = 300;
 		while (true) {
-			ResponseEntity<ApiResponse<T>> response = khoaApiClient.get(responseType, reqDate, page++, size, category);
-			result.addAll(response.getBody().getResponse().getBody().getItems().getItem());
+			ResponseEntity<ApiResponse<T>> response = khoaApiClient.get(responseType, startDate, page++, size,
+				category);
+			for (T item : response.getBody().getResponse().getBody().getItems().getItem()) {
+				if (!item.getForecastDate().isBefore(endDate)) {
+					continue;
+				}
+				result.add(item);
+			}
 			if (response.getBody().getResponse().getBody().getPageNo() * response.getBody()
 				.getResponse()
 				.getBody()
@@ -147,14 +156,15 @@ public class KhoaApiService {
 	}
 
 	private List<FishingItem> getKhoaApiData(ParameterizedTypeReference<ApiResponse<FishingItem>> responseType,
-		String reqDate, String gubun) {
+		LocalDate date, FishingType fishingType) {
 		List<FishingItem> result = new ArrayList<>();
 
 		int page = 1;
 		int size = 300;
 		while (true) {
-			ResponseEntity<ApiResponse<FishingItem>> response = khoaApiClient.get(responseType, reqDate, page++, size,
-				gubun);
+			ResponseEntity<ApiResponse<FishingItem>> response = khoaApiClient.get(responseType, date, page++,
+				size,
+				fishingType);
 			result.addAll(response.getBody().getResponse().getBody().getItems().getItem());
 			if (response.getBody().getResponse().getBody().getPageNo() * response.getBody()
 				.getResponse()
@@ -163,6 +173,7 @@ public class KhoaApiService {
 				break;
 			}
 		}
+
 		return result;
 	}
 }

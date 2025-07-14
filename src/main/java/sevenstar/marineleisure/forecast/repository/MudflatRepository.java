@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Mudflat;
+import sevenstar.marineleisure.global.enums.TotalIndex;
 
 public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 	@Query(value = """
@@ -22,6 +23,13 @@ public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
 	Optional<Mudflat> findBySpotIdAndForecastDate(Long spotId, LocalDate forecastDate);
+
+	@Query("""
+		SELECT m.totalIndex
+		FROM Mudflat m
+		WHERE m.spotId = :spotId AND m.forecastDate = :date
+		""")
+	Optional<TotalIndex> findTotalIndexBySpotIdAndDate(@Param("spotId") Long spotId, @Param("date") LocalDate date);
 
 	@Modifying
 	@Transactional

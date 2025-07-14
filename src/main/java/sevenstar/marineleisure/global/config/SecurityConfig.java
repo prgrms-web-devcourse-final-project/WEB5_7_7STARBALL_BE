@@ -47,6 +47,8 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.POST, "/oauth/**").permitAll()
 				// (5) H2 콘솔
 				.requestMatchers("/h2-console/**").permitAll()
+				// Map에는 인증이 필수가 아닙니다
+				.requestMatchers("/map/**").permitAll()
 				// 위험경보관련 API는 인증이 필요하지 않습니다.
 				.requestMatchers("/alerts/**").permitAll()
 				// (6) 나머지는 인증 필요
