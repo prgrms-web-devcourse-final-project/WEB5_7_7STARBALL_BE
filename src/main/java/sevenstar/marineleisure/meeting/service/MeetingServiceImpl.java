@@ -1,8 +1,11 @@
 package sevenstar.marineleisure.meeting.service;
 
-import java.util.Collections;
+
+
+
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,23 +16,23 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
-import sevenstar.marineleisure.global.exception.CustomException;
-import sevenstar.marineleisure.meeting.Dto.Request.CreateMeetingRequest;
-import sevenstar.marineleisure.meeting.Dto.Request.UpdateMeetingRequest;
-import sevenstar.marineleisure.meeting.Dto.Response.MeetingDetailAndMemberResponse;
-import sevenstar.marineleisure.meeting.Dto.Response.MeetingDetailResponse;
-import sevenstar.marineleisure.meeting.Dto.Response.ParticipantResponse;
-import sevenstar.marineleisure.meeting.Dto.VO.DetailSpot;
-import sevenstar.marineleisure.meeting.Dto.VO.TagList;
-import sevenstar.marineleisure.meeting.Dto.mapper.MeetingMapper;
-import sevenstar.marineleisure.meeting.Repository.MeetingRepository;
-import sevenstar.marineleisure.meeting.Repository.ParticipantRepository;
-import sevenstar.marineleisure.meeting.Repository.TagRepository;
+import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
+import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
+import sevenstar.marineleisure.meeting.dto.response.ParticipantResponse;
+import sevenstar.marineleisure.meeting.dto.mapper.MeetingMapper;
+import sevenstar.marineleisure.meeting.repository.MeetingRepository;
+import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
+import sevenstar.marineleisure.meeting.repository.TagRepository;
 import sevenstar.marineleisure.meeting.domain.Meeting;
 import sevenstar.marineleisure.meeting.domain.Participant;
 import sevenstar.marineleisure.meeting.domain.Tag;
-import sevenstar.marineleisure.meeting.error.MeetingError;
+import sevenstar.marineleisure.meeting.validate.MeetingValidate;
+import sevenstar.marineleisure.meeting.validate.MemberValidate;
 import sevenstar.marineleisure.meeting.validate.ParticipantValidate;
+import sevenstar.marineleisure.meeting.validate.SpotValidate;
+import sevenstar.marineleisure.meeting.validate.TagValidate;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.repository.MemberRepository;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
@@ -37,7 +40,6 @@ import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MeetingServiceImpl implements MeetingService {
 	private final MeetingRepository meetingRepository;
 	private final ParticipantRepository participantRepository;
@@ -45,6 +47,11 @@ public class MeetingServiceImpl implements MeetingService {
 	private final MemberRepository memberRepository;
 	private final OutdoorSpotRepository outdoorSpotSpotRepository;
 	private final ParticipantValidate participantValidate;
+	private final MeetingMapper meetingMapper;
+	private final MeetingValidate meetingValidate;
+	private final MemberValidate memberValidate;
+	private final TagValidate tagValidate;
+	private final SpotValidate spotValidate;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -54,7 +61,7 @@ public class MeetingServiceImpl implements MeetingService {
 		if (cursorId == 0L) {
 			return meetingRepository.findAllByOrderByCreatedAtDescIdDesc(pageable);
 		} else {
-			Meeting meeting = foundMeeting(cursorId);
+			Meeting meeting = meetingValidate.foundMeeting(cursorId);
 			return meetingRepository.findAllOrderByCreatedAt(meeting.getCreatedAt(), meeting.getId(), pageable);
 		}
 	}
@@ -64,49 +71,19 @@ public class MeetingServiceImpl implements MeetingService {
 	public MeetingDetailResponse getMeetingDetails(Long meetingId) {
 		//TODO : select 세번 해야하는것에 대한 개선점 찾기 -> JOIN 패치를 진행 하기로 맘을 먹었음
 		//TODO : 그럼에도 JPA 매핑과 JOIN에 대한 속도차이같은걸 조금 알면 좋을듯?
-		//TODO :: validate.MeetingValidate.foundMeeting
-		Meeting targetMeeting = meetingRepository.findById(meetingId)
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-		//TODO :: validate.MemberValidate.foundMember
-		Member host = foundMember(targetMeeting.getHostId());
-		//TODO : validate.SpotValidate.foundOutdoorSpot
-		OutdoorSpot targetSpot = outdoorSpotSpotRepository.findById(targetMeeting.getSpotId())
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-		//태그가 없는 상황이 올까? 그럼 최소 태그 하나는 붙여달라하는 조건을 붙여야할까? -> 07-11 아무것도 없을때는 null을 뱉기로 결정
-		//TODO :: validate.TagValidate.foundTag
-		Tag targetTag = tagRepository.findByMeetingId(meetingId)
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
+		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
+		Member host = memberValidate.foundMember(targetMeeting.getHostId());
+		OutdoorSpot targetSpot = spotValidate.foundOutdoorSpot(targetMeeting.getSpotId());
+		Tag targetTag = tagValidate.findByMeetingId(meetingId).orElse(null);
 
-
-		//TODO : Mapper 설정
-		return MeetingDetailResponse.builder()
-			.id(targetMeeting.getId())
-			.title(targetMeeting.getTitle())
-			.category(targetMeeting.getCategory())
-			.capacity(targetMeeting.getCapacity())
-			.hostId(targetMeeting.getHostId())
-			.hostNickName(host.getNickname())
-			.hostEmail(host.getEmail())
-			.description(targetMeeting.getDescription())
-			.spot(DetailSpot.builder()
-				.id(targetSpot.getId())
-				.name(targetSpot.getName())
-				.location(targetSpot.getLocation())
-				.build())
-			.meetingTime(targetMeeting.getMeetingTime())
-			.status(targetMeeting.getStatus())
-			.createdAt(targetMeeting.getCreatedAt())
-			.tag(TagList.builder()
-				.content(targetTag.getContent())
-				.build())
-			.build();
+		return meetingMapper.MeetingDetailResponseMapper(targetMeeting, host, targetSpot, targetTag);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Slice<Meeting> getStatusMyMeetings(Long memberId, Long cursorId, int size, MeetingStatus meetingStatus) {
 		Pageable pageable = PageRequest.of(0, size);
-		existMember(memberId);
+		memberValidate.existMember(memberId);
 		Long currentCursorId = (cursorId == null || cursorId == 0L) ? Long.MAX_VALUE : cursorId;
 		return meetingRepository.findMyMeetingsByMemberIdAndStatusWithCursor(memberId, meetingStatus,
 			currentCursorId, pageable);
@@ -115,121 +92,70 @@ public class MeetingServiceImpl implements MeetingService {
 	@Override
 	@Transactional(readOnly = true)
 	public MeetingDetailAndMemberResponse getMeetingDetailAndMember(Long memberId , Long meetingId){
-		Member host = foundMember(memberId);
-		Meeting targetMeeting = foundMeeting(meetingId);
-		if(!Objects.equals(host.getId(), targetMeeting.getHostId())){
-			//일치하지 않는다 잘못된 접근이다. 라는 오류 발생
-			throw new CustomException(MeetingError.MEETING_NOT_FOUND);
-		}
-		OutdoorSpot targetSpot = outdoorSpotSpotRepository.findById(targetMeeting.getSpotId())
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
+		Member host = memberValidate.foundMember(memberId);
+		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
+		meetingValidate.verifyIsHost(host.getId(), meetingId);
+		OutdoorSpot targetSpot = spotValidate.foundOutdoorSpot(targetMeeting.getSpotId());
 		List<Participant> participants = participantRepository.findParticipantsByMeetingId(meetingId);
-		// TODO: Participant를 ParticipantResponse로 변환하는 로직 필요
-		List<ParticipantResponse> participantResponseList = Collections.emptyList();
-
-		return MeetingDetailAndMemberResponse.builder()
-			.id(targetMeeting.getId())
-			.title(targetMeeting.getTitle())
-			.category(targetMeeting.getCategory())
-			.capacity(targetMeeting.getCapacity())
-			.hostId(targetMeeting.getHostId())
-			.hostNickName(host.getNickname())
-			.spot(
-				DetailSpot.builder()
-					.id(targetMeeting.getSpotId())
-					.name(targetSpot.getName())
-					.location(targetSpot.getLocation())
-					.latitude(targetSpot.getLatitude())
-					.longitude(targetSpot.getLongitude())
-					.build()
-			)
-			.meetingTime(targetMeeting.getMeetingTime())
-			.status(targetMeeting.getStatus())
-			.participants(
-				participantResponseList
-			)
-			.createdAt(targetMeeting.getCreatedAt())
-			.build();
+		participantValidate.existParticipant(memberId);
+		List<Long> participantUserIds = participants.stream()
+			.map(Participant::getUserId)
+			.toList();
+		Map<Long,String> participantNicknames = memberRepository.findAllById(participantUserIds).stream()
+			.collect(Collectors.toMap(Member::getId, Member::getNickname));
+		List<ParticipantResponse> participantResponseList = meetingMapper.toParticipantResponseList(participants,participantNicknames);
+		return meetingMapper.meetingDetailAndMemberResponseMapper(targetMeeting,host,targetSpot,participantResponseList);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Long countMeetings(Long memberId) {
-		//TODO :: member가 실존한 맴버인지 검증이 필요할까?
+		memberValidate.existMember(memberId);
 		return meetingRepository.countMyMeetingsByMemberId(memberId);
 	}
 
 	@Override
+	@Transactional
 	//동시성을 처리해야할 문제가 있음
 	public Long joinMeeting(Long meetingId, Long memberId) {
-		//TODO :: MemberValidate.existMember
-		existMember(memberId);
-		//TODO :: MeetingValidate.foundMember
-		Meeting meeting = foundMeeting(meetingId);
-		if (meeting.getStatus() != MeetingStatus.ONGOING) {
-			//TODO : 참여할 수 없는 모임이라고 에러를 띄워야함
-			throw new CustomException(MeetingError.MEETING_NOT_FOUND);
-		}
-		int targetCount = participantRepository.countMeetingIdMember(meetingId)
-			//TODO : 참여자수 가 오류났다는걸 말해줘야합니다.
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-		if (targetCount >= meeting.getCapacity()) {
-			throw new CustomException(MeetingError.MEETING_NOT_FOUND);
-		}
+		memberValidate.existMember(memberId);
+		Meeting meeting = meetingValidate.foundMeeting(meetingId);
+		meetingValidate.verifyRecruiting(meeting);
+		participantValidate.verifyNotAlreadyParticipant(memberId, meetingId);
+		int targetCount = participantValidate.getParticipantCount(meetingId);
+		meetingValidate.verifyMeetingCount(targetCount,meeting);
 		participantRepository.save(
-			Participant.builder()
-				.meetingId(meetingId)
-				.userId(memberId)
-				.role(MeetingRole.GUEST)
-				.build()
+			meetingMapper.saveParticipant(memberId , meetingId , MeetingRole.GUEST)
 		);
 		return meetingId;
 	}
 
 	@Override
+	@Transactional
 	public void leaveMeeting(Long meetingId, Long memberId) {
-		//TODO : member가 진짜 등록된 맴버인지 확인해야함
-		//TODO :: MemberValidate.existMember
-		Meeting meeting = foundMeeting(meetingId);
+		memberValidate.existMember(memberId);
+		Meeting meeting = meetingValidate.foundMeeting(meetingId);
 		participantValidate.existParticipant(memberId);
-		if (meetingId.equals(meeting.getHostId())) {
-			//TODO :: host는 나갈수없음을 말해야합니다..
-			throw new CustomException(MeetingError.MEETING_NOT_FOUND);
-		}
-
-		if (meeting.getStatus() == MeetingStatus.COMPLETED || meeting.getStatus() == MeetingStatus.ONGOING) {
-			// TODO: 취소 처리를 할 수 없는 상태라고 해야 함 (더 적절한 에러 코드 필요)
-			throw new CustomException(MeetingError.MEETING_NOT_FOUND);
-		}
-
-		Participant targetParticipant = participantRepository.findByMeetingIdAndUserId(meetingId, memberId)
-			//TODO  :: Participant Not_FOUND 를 해야함
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-
+		meetingValidate.verifyNotHost(memberId,meeting);
+		meetingValidate.verifyLeave(meeting);
+		Participant targetParticipant = participantValidate.foundParticipantMeetingIdAndUserId(meetingId, memberId);
 		participantRepository.delete(targetParticipant);
 		if (meeting.getStatus() == MeetingStatus.FULL) {
-			meetingRepository.save(MeetingMapper.UpdateStatus(meeting, MeetingStatus.RECRUITING));
+			meetingRepository.save(meetingMapper.UpdateStatus(meeting, MeetingStatus.RECRUITING));
 		}
 
 	}
 
 	@Override
+	@Transactional
 	public Long createMeeting(Long memberId, CreateMeetingRequest request) {
-		Member host = foundMember(memberId);
-		Meeting saveMeeting = meetingRepository.save(MeetingMapper.CreateMeeting(request, host.getId()));
-		//Mapper 두개 추개
+		Member host = memberValidate.foundMember(memberId);
+		Meeting saveMeeting = meetingRepository.save(meetingMapper.CreateMeeting(request, host.getId()));
 		participantRepository.save(
-			Participant.builder()
-				.meetingId(saveMeeting.getId())
-				.userId(host.getId())
-				.role(MeetingRole.HOST)
-				.build()
+			meetingMapper.saveParticipant(saveMeeting.getId(),host.getId(),MeetingRole.HOST)
 		);
 		tagRepository.save(
-			Tag.builder()
-				.meetingId(saveMeeting.getId())
-				.content(request.tags())
-				.build()
+			meetingMapper.saveTag(saveMeeting.getId(), request)
 		);
 
 		return saveMeeting.getId();
@@ -237,22 +163,15 @@ public class MeetingServiceImpl implements MeetingService {
 
 	//어떻게 해야할지 고민을 해야할 것 같습니다.
 	@Override
+	@Transactional
 	public Long updateMeeting(Long meetingId, Long memberId, UpdateMeetingRequest request) {
-		Member host = foundMember(memberId);
-		Meeting targetMeeting = foundMeeting(meetingId);
-		if (!Objects.equals(targetMeeting.getHostId(), host.getId())) {
-			//TODO :: 에러 세분화 ->  호스트만 수정할수있음
-			throw new CustomException(MeetingError.MEETING_NOT_FOUND);
-		}
-		Tag targetTag = tagRepository.findByMeetingId(meetingId)
-			//Tag가 없는게 말이 되나? (ㅇㅁㅇ?
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-
-
-		Meeting updateMeeting = meetingRepository.save(MeetingMapper.UpdateMeeting(request, targetMeeting));
-		//mapper을 고민
+		Member host = memberValidate.foundMember(memberId);
+		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
+		meetingValidate.verifyIsHost(targetMeeting.getId(), host.getId());
+		Tag targetTag = tagValidate.findByMeetingId(meetingId).orElse(null);
+		Meeting updateMeeting = meetingRepository.save(meetingMapper.UpdateMeeting(request, targetMeeting));
 		tagRepository.save(
-			MeetingMapper.UpdateTag(request, targetTag)
+			meetingMapper.UpdateTag(request, targetTag)
 		);
 		return updateMeeting.getId();
 
@@ -261,23 +180,6 @@ public class MeetingServiceImpl implements MeetingService {
 	//삭제 할 필요가 있을까? 고민해봐야할것같음.
 	@Override
 	public void deleteMeeting(Member member, Long meetingId) {
-
-	}
-
-	//TODO : validate 설정
-	public Meeting foundMeeting(Long meetingId) {
-		return meetingRepository.findById(meetingId)
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-	}
-	public Member foundMember(Long memberId) {
-		return memberRepository.findById(memberId)
-			.orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
-	}
-
-	public void existMember(Long memberId) {
-		if (!memberRepository.existsById(memberId)) {
-			throw new CustomException(MeetingError.MEETING_NOT_FOUND);
-		}
 
 	}
 }
