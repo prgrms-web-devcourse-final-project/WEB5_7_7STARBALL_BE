@@ -2,6 +2,7 @@ package sevenstar.marineleisure.member.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,6 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.global.enums.MemberStatus;
 import sevenstar.marineleisure.global.exception.CustomException;
 import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
+import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
+import sevenstar.marineleisure.meeting.domain.Meeting;
+import sevenstar.marineleisure.meeting.domain.Participant;
+import sevenstar.marineleisure.meeting.repository.MeetingRepository;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.MemberDetailResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
@@ -27,6 +32,8 @@ import sevenstar.marineleisure.member.repository.MemberRepository;
 public class MemberService {
 
 	private final MemberRepository memberRepository;
+	private final MeetingRepository meetingRepository;
+	private final ParticipantRepository participantRepository;
 
 	/**
 	 * 회원 ID로 회원 상세 정보를 조회합니다.
@@ -153,6 +160,9 @@ public class MemberService {
 
 	/**
 	 * 회원을 탈퇴 처리합니다.
+	 * 1. 회원이 호스트인 경우 해당 미팅을 삭제합니다.
+	 * 2. 회원이 게스트인 경우 참가자 목록에서 삭제합니다.
+	 * 3. 회원 상태를 EXPIRED로 변경합니다 (소프트 삭제).
 	 *
 	 * @param memberId 회원 ID
 	 * @throws NoSuchElementException 회원을 찾을 수 없는 경우
@@ -164,9 +174,25 @@ public class MemberService {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-		// 회원 상태를 EXPIRED로 변경 (실제 삭제 대신 소프트 삭제 방식 사용)
+		// 1. 회원이 호스트인 경우 해당 미팅을 삭제
+		List<Meeting> hostedMeetings = meetingRepository.findByHostId(memberId);
+		if (!hostedMeetings.isEmpty()) {
+			log.info("호스트로 등록된 미팅 삭제: memberId={}, meetingCount={}", memberId, hostedMeetings.size());
+			meetingRepository.deleteAll(hostedMeetings);
+		}
+
+		// 2. 회원이 게스트인 경우 참가자 목록에서 삭제
+		List<Participant> participations = participantRepository.findByMemberId(memberId);
+		if (!participations.isEmpty()) {
+			log.info("참가자 목록에서 삭제: memberId={}, participationCount={}", memberId, participations.size());
+			participantRepository.deleteAll(participations);
+		}
+
+		// 3. 회원 상태를 EXPIRED로 변경 (실제 삭제 대신 소프트 삭제 방식 사용)
 		updateMemberStatusField(member, MemberStatus.EXPIRED);
 		memberRepository.save(member);
+
+		log.info("회원 탈퇴 처리 완료: memberId={}", memberId);
 	}
 
 	@Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Seoul")
@@ -181,53 +207,25 @@ public class MemberService {
 		}
 	}
 	/**
-	 * 회원의 위치 정보 필드를 업데이트합니다.
-	 * 이 메서드는 Member 엔티티에 직접 접근하여 필드를 수정합니다.
+	 * 회원의 위치 정보를 업데이트합니다.
+	 * 이 메서드는 Member 엔티티의 updateLocation 메서드를 사용합니다.
 	 *
 	 * @param member 회원 엔티티
 	 * @param latitude 위도
 	 * @param longitude 경도
 	 */
 	private void updateMemberLocationFields(Member member, BigDecimal latitude, BigDecimal longitude) {
-		// Member 클래스에 setter가 없으므로 리플렉션 또는 별도의 메서드 필요
-		// 현재는 직접 필드에 접근하는 방식으로 구현
-		try {
-			java.lang.reflect.Field latField = Member.class.getDeclaredField("latitude");
-			java.lang.reflect.Field longField = Member.class.getDeclaredField("longitude");
-
-			latField.setAccessible(true);
-			longField.setAccessible(true);
-
-			latField.set(member, latitude);
-			longField.set(member, longitude);
-
-			latField.setAccessible(false);
-			longField.setAccessible(false);
-		} catch (Exception e) {
-			log.error("회원 위치 정보 업데이트 중 오류 발생", e);
-			throw new RuntimeException("회원 위치 정보 업데이트 실패", e);
-		}
+		member.updateLocation(latitude, longitude);
 	}
 
 	/**
-	 * 회원의 상태 필드를 업데이트합니다.
-	 * 이 메서드는 Member 엔티티에 직접 접근하여 필드를 수정합니다.
+	 * 회원의 상태를 업데이트합니다.
+	 * 이 메서드는 Member 엔티티의 updateStatus 메서드를 사용합니다.
 	 *
 	 * @param member 회원 엔티티
 	 * @param status 새 상태
 	 */
 	private void updateMemberStatusField(Member member, MemberStatus status) {
-		// Member 클래스에 setter가 없으므로 리플렉션 또는 별도의 메서드 필요
-		// 현재는 직접 필드에 접근하는 방식으로 구현
-		try {
-			java.lang.reflect.Field statusField = Member.class.getDeclaredField("status");
-
-			statusField.setAccessible(true);
-			statusField.set(member, status);
-			statusField.setAccessible(false);
-		} catch (Exception e) {
-			log.error("회원 상태 업데이트 중 오류 발생", e);
-			throw new RuntimeException("회원 상태 업데이트 실패", e);
-		}
+		member.updateStatus(status);
 	}
 }

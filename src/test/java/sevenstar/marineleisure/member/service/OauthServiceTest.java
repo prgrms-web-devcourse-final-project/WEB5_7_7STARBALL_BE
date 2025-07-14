@@ -190,7 +190,8 @@ class OauthServiceTest {
 		// ID 설정 (리플렉션 사용)
 		ReflectionTestUtils.setField(existingMember, "id", 1L);
 
-		Member updatedMember = existingMember.update("newNickname");
+		existingMember.updateNickname("newNickname");
+		Member updatedMember = existingMember;
 
 		// WebClient 모킹 - 간소화된 방식
 		WebClient.RequestHeadersUriSpec requestHeadersUriSpec = mock(WebClient.RequestHeadersUriSpec.class);
