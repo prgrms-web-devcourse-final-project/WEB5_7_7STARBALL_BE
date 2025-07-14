@@ -35,7 +35,7 @@ public class ParticipantValidate {
 
 	@Transactional(readOnly = true)
 	public void verifyNotAlreadyParticipant(Long meetingId, Long memberId){
-		if(participantRepository.existsByMeetingIdAndMeetingId(meetingId, memberId)){
+		if(participantRepository.existsByMeetingIdAndUserId(meetingId, memberId)){
 			throw new CustomException(ParticipantError.ALREADY_PARTICIPATING);
 		}
 	}
