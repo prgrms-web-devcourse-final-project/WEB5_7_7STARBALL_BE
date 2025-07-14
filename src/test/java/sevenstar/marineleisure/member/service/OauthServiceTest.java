@@ -156,13 +156,13 @@ class OauthServiceTest {
 		when(memberRepository.save(any(Member.class))).thenReturn(member);
 
 		// when
-		Map<String, Object> result = oauthService.processKakaoUser(accessToken);
+		Member result = oauthService.processKakaoUser(accessToken);
 
 		// then
 		assertThat(result).isNotNull();
-		assertThat(result.get("id")).isEqualTo(1L);
-		assertThat(result.get("email")).isEqualTo("test@example.com");
-		assertThat(result.get("nickname")).isEqualTo("testUser");
+		assertThat(result.getId()).isEqualTo(1L);
+		assertThat(result.getEmail()).isEqualTo("test@example.com");
+		assertThat(result.getNickname()).isEqualTo("testUser");
 	}
 
 	@Test
@@ -209,13 +209,13 @@ class OauthServiceTest {
 		when(memberRepository.save(any(Member.class))).thenReturn(updatedMember);
 
 		// when
-		Map<String, Object> result = oauthService.processKakaoUser(accessToken);
+		Member result = oauthService.processKakaoUser(accessToken);
 
 		// then
 		assertThat(result).isNotNull();
-		assertThat(result.get("id")).isEqualTo(1L);
-		assertThat(result.get("email")).isEqualTo("test@example.com");
-		assertThat(result.get("nickname")).isEqualTo("newNickname");
+		assertThat(result.getId()).isEqualTo(1L);
+		assertThat(result.getEmail()).isEqualTo("test@example.com");
+		assertThat(result.getNickname()).isEqualTo("newNickname");
 	}
 
 	@Test

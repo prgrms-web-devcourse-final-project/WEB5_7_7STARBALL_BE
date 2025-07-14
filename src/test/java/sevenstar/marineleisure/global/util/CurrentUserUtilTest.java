@@ -12,6 +12,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 
+import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.global.jwt.UserPrincipal;
 
 import java.util.List;
@@ -58,8 +60,8 @@ class CurrentUserUtilTest {
 			securityContextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
 
 			assertThatThrownBy(() -> CurrentUserUtil.getCurrentUserId())
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("인증된 사용자가 아닙니다");
+				.isInstanceOf(CustomException.class)
+				.hasMessageContaining(MemberErrorCode.MEMBER_NOT_FOUND.getMessage());
 		}
 	}
 

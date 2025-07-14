@@ -1,10 +1,9 @@
 package sevenstar.marineleisure.member.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -16,15 +15,14 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
-
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -34,6 +32,7 @@ public class OauthService {
 
 	private final MemberRepository memberRepository;
 	private final WebClient webClient;
+	private final StateEncryptionUtil stateEncryptionUtil;
 
 	@Value("${kakao.login.api_key}")
 	private String apiKey;
@@ -48,16 +47,17 @@ public class OauthService {
 	private String redirectUri;
 
 	/**
-	 * 카카오 로그인 URL 생성 (세션 저장 없음 - 테스트용)
+	 * 카카오 로그인 URL 생성 (stateless)
 	 *
 	 * @param customRedirectUri 커스텀 리다이렉트 URI (null인 경우 기본값 사용)
-	 * @return 카카오 로그인 URL과 state 값을 포함한 Map
-	 * @deprecated 보안을 위해 {@link #getKakaoLoginUrl(String, HttpServletRequest)} 사용
+	 * @return 카카오 로그인 URL, state 값, 암호화된 state 값을 포함한 Map
 	 */
-	@Deprecated
 	public Map<String, String> getKakaoLoginUrl(String customRedirectUri) {
 		String state = UUID.randomUUID().toString();
-		log.warn("deprecated 되었습니다. state 검증 없이 test코드 돌리기 위한 메서드");
+		String encryptedState = stateEncryptionUtil.encryptState(state);
+
+		log.info("Generated OAuth state: {} (encrypted: {})", state, encryptedState);
+
 		// Use the provided redirectUri or fall back to the configured one
 		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
 
@@ -70,37 +70,23 @@ public class OauthService {
 			.build()
 			.toUriString();
 
-		return Map.of("kakaoAuthUrl", kakaoAuthUrl, "state", state);
+		return Map.of(
+			"kakaoAuthUrl", kakaoAuthUrl,
+			"state", state,
+			"encryptedState", encryptedState
+		);
 	}
 
 	/**
-	 * 카카오 로그인 URL 생성 (세션에 state 저장)
+	 * 카카오 로그인 URL 생성 (stateless - HttpServletRequest 호환용)
 	 *
 	 * @param customRedirectUri 커스텀 리다이렉트 URI (null인 경우 기본값 사용)
-	 * @param request HTTP 요청 (세션에 state 저장용)
-	 * @return 카카오 로그인 URL과 state 값을 포함한 Map
+	 * @param request HTTP 요청 (호환성을 위해 유지, 사용하지 않음)
+	 * @return 카카오 로그인 URL, state 값, 암호화된 state 값을 포함한 Map
 	 */
 	public Map<String, String> getKakaoLoginUrl(String customRedirectUri, HttpServletRequest request) {
-		String state = UUID.randomUUID().toString();
-
-		// Store state in session for later verification
-		HttpSession session = request.getSession();
-		session.setAttribute("oauth_state", state);
-		log.info("Stored OAuth state in session: {}", state);
-
-		// Use the provided redirectUri or fall back to the configured one
-		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
-
-		String kakaoAuthUrl = UriComponentsBuilder.fromUriString(kakaoBaseUri)
-			.path("/oauth/authorize")
-			.queryParam("client_id", apiKey)
-			.queryParam("redirect_uri", finalRedirectUri)
-			.queryParam("response_type", "code")
-			.queryParam("state", state)
-			.build()
-			.toUriString();
-
-		return Map.of("kakaoAuthUrl", kakaoAuthUrl, "state", state);
+		// 세션 사용하지 않고 stateless 방식으로 구현
+		return getKakaoLoginUrl(customRedirectUri);
 	}
 
 	/**
@@ -135,17 +121,11 @@ public class OauthService {
 	}
 
 	@Transactional
-	public Map<String, Object> processKakaoUser(String accessToken) {
+	public Member processKakaoUser(String accessToken) {
 		// 1. access token으로 사용자 정보 요청
 		Map<String, Object> memberAttributes = getUserInfo(accessToken);
 		// 2. 사용자 정보로 회원가입 or 로그인 처리
-		Member member = saveOrUpdateKakaoUser(memberAttributes);
-		// 3. 응답 데이터 구성
-		Map<String, Object> response = new HashMap<>();
-		response.put("id", member != null ? member.getId() : null);
-		response.put("email", member != null ? member.getEmail() : null);
-		response.put("nickname", member != null ? member.getNickname() : null);
-		return response;
+		return saveOrUpdateKakaoUser(memberAttributes);
 	}
 
 	/**
@@ -172,25 +152,24 @@ public class OauthService {
 	 * @return
 	 */
 	private Member saveOrUpdateKakaoUser(Map<String, Object> memberAttributes) {
-		Long id = (Long)memberAttributes.get("id");
+		Long providerId = (Long)memberAttributes.get("id");
 		Map<String, Object> kakaoAccount = (Map<String, Object>)memberAttributes.get("kakao_account");
 		Map<String, Object> profile = (Map<String, Object>)kakaoAccount.get("profile");
 
 		String email = (String)kakaoAccount.get("email");
 		String nickname = (String)profile.get("nickname");
 
-		// 좌표 설정을 어떻게 하는가? update 시에 해줘야 할듯 한데.
-		Member member = memberRepository.findByProviderAndProviderId("kakao", String.valueOf(id))
-			.map(e -> e.update(nickname))
-			.orElse(Member.builder()
-				.email(email)
-				.nickname(nickname)
+		// 기존 회원이 있으면 가져오고, 없으면 새로 생성 (Optional이 비어있을 때만 실행)
+		Member member = memberRepository.findByProviderAndProviderId("kakao", String.valueOf(providerId))
+			.orElseGet(() -> Member.builder()
 				.provider("kakao")
-				.providerId(String.valueOf(id))
-				.latitude(BigDecimal.valueOf(0))
-				.longitude(BigDecimal.valueOf(0))
-				.build()
-			);
+				.providerId(String.valueOf(providerId))
+				.email(email)  // 새 회원 생성 시 이메일 설정
+				.nickname(nickname)  // 새 회원 생성 시 닉네임 설정
+				.latitude(BigDecimal.ZERO)
+				.longitude(BigDecimal.ZERO)
+				.build());
+		member.updateNickname(nickname);
 
 		return memberRepository.save(member);
 	}

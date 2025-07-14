@@ -1,16 +1,17 @@
 package sevenstar.marineleisure.member.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.MemberDetailResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
-
-import java.util.NoSuchElementException;
 
 /**
  * 회원 관련 비즈니스 로직을 처리하는 서비스
@@ -34,7 +35,7 @@ public class MemberService {
 		log.info("회원 상세 정보 조회: memberId={}", memberId);
 
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new NoSuchElementException("회원을 찾을 수 없습니다: " + memberId));
+			.orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
 		return MemberDetailResponse.builder()
 			.id(member.getId())
@@ -58,4 +59,5 @@ public class MemberService {
 		log.info("현재 로그인한 회원 상세 정보 조회: memberId={}", memberId);
 		return getMemberDetail(memberId);
 	}
+
 }

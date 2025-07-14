@@ -30,7 +30,7 @@ import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
 public class SwaggerController {
 
 	@Operation(summary = "Swagger get test", description = "Swagger의 GET 요청 테스트 (No Parameter)")
-	@ApiResponse(responseCode = "200", description = "성공",content =  @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+	@ApiResponse(responseCode = "200", description = "성공", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
 	@GetMapping("/get")
 	public ResponseEntity<BaseResponse<SwaggerTestResponse>> testGet() {
 		return BaseResponse.success(new SwaggerTestResponse("swagger username", "swagger password"));
@@ -58,7 +58,8 @@ public class SwaggerController {
 	public ResponseEntity<BaseResponse<SwaggerTestResponse>> uploadProfile(
 		@ModelAttribute SwaggerTestRequest swaggerTestRequest
 	) {
-		return BaseResponse.success(new SwaggerTestResponse(swaggerTestRequest.getUsername(), swaggerTestRequest.getPassword()));
+		return BaseResponse.success(
+			new SwaggerTestResponse(swaggerTestRequest.getUsername(), swaggerTestRequest.getPassword()));
 	}
 
 	@Operation(summary = "사용자 삭제")
@@ -66,8 +67,6 @@ public class SwaggerController {
 	public ResponseEntity<BaseResponse<SwaggerTestResponse>> deleteUser(
 		@Parameter(description = "삭제할 사용자 ID", example = "1") @PathVariable Long id
 	) {
-		return BaseResponse.error(MemberErrorCode.FEATURE_NOT_SUPPORTED);
+		return BaseResponse.error(CommonErrorCode.UNSUPPORTED_DELETE);
 	}
-
-
 }

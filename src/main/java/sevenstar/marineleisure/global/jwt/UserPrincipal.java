@@ -4,10 +4,12 @@ import java.util.Collection;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import lombok.Builder;
 
 /**
  * Custom UserDetails implementation to hold authenticated user's ID, email, and authorities.
  */
+@Builder
 public class UserPrincipal implements UserDetails {
 	private final Long id;
 	private final String email;

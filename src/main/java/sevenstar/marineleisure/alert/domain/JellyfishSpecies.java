@@ -2,6 +2,8 @@ package sevenstar.marineleisure.alert.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,6 +28,7 @@ public class JellyfishSpecies extends BaseEntity {
 	@Column(nullable = false, unique = true, length = 20)
 	private String name;
 
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private ToxicityLevel toxicity;
 

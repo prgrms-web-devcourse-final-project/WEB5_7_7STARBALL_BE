@@ -29,6 +29,7 @@ public class Participant extends BaseEntity {
 	@Column(name = "user_id", nullable = false)
 	private Long userId;
 
+
 	@Column(length = 20, nullable = false)
 	private MeetingRole role;
 

@@ -3,6 +3,7 @@ package sevenstar.marineleisure.favorite.service;
 import java.util.List;
 
 import sevenstar.marineleisure.favorite.domain.FavoriteSpot;
+import sevenstar.marineleisure.favorite.dto.vo.FavoriteItemVO;
 
 public interface FavoriteService {
 
@@ -20,7 +21,7 @@ public interface FavoriteService {
 	 * @param size : 한번에 보여줄 아이템 크기
 	 * @return 즐겨찾기 목록
 	 */
-	public List<FavoriteSpot> searchFavorite(Long cursorId, int size);
+	public List<FavoriteItemVO> searchFavorite(Long cursorId, int size);
 
 	/**
 	 * [DELETE] /favorites/{id}
