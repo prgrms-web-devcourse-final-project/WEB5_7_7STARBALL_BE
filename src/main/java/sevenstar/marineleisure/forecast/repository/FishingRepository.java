@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -99,5 +100,17 @@ public interface FishingRepository extends JpaRepository<Fishing, Long> {
 		@Param("spotId") Long spotId,
 		@Param("forecastDate") LocalDate forecastDate
 	);
+
+	Optional<Fishing> findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+		Long spotId,
+		LocalDateTime startDateTime,
+		LocalDateTime endDateTime
+	);
+
+	Optional<Fishing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
+
+	Optional<Fishing> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
+
+	Optional<Fishing> findBySpotIdOrderByCreatedAt(Long spotId);
 
 }
