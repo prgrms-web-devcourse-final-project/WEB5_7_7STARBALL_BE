@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -90,4 +91,14 @@ public interface ScubaRepository extends JpaRepository<Scuba, Long> {
 		@Param("forecastDate") LocalDate forecastDate
 	);
 
+	Optional<Scuba> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
+
+	Optional<Scuba> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
+
+	Optional<Scuba> findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
+		Long spotId,
+		LocalDateTime startDateTime,
+		LocalDateTime endDateTime);
+
+	// Optional<Scuba> findBySpotIdOrderByCreatedAt(Long spotId);
 }
