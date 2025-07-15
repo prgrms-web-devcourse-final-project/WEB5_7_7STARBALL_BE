@@ -5,17 +5,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Surfing;
-import sevenstar.marineleisure.global.enums.TimePeriod;
-import sevenstar.marineleisure.global.enums.TotalIndex;
+import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
-public interface SurfingRepository extends JpaRepository<Surfing, Long> {
+public interface SurfingRepository extends ActivityRepository<Surfing, Long> {
 	@Query(value = """
 					SELECT DISTINCT s.spotId FROM Surfing s
 					WHERE s.forecastDate BETWEEN :forecastDateAfter AND :forecastDateBefore
@@ -29,13 +27,6 @@ public interface SurfingRepository extends JpaRepository<Surfing, Long> {
 		    	AND s.forecastDate = :date
 		""")
 	List<Surfing> findSurfingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
-
-	@Query("""
-		SELECT s.totalIndex
-		FROM Surfing s
-		WHERE s.spotId = :spotId AND s.forecastDate = :date AND s.timePeriod = :timePeriod
-		""")
-	Optional<TotalIndex> findTotalIndexBySpotIdAndDate(@Param("spotId") Long spotId, @Param("date") LocalDate date,@Param("timePeriod") TimePeriod timePeriod);
 
 	@Modifying
 	@Transactional

@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseEntity;
 import sevenstar.marineleisure.global.enums.TidePhase;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 
 @Entity
@@ -37,7 +38,8 @@ public class Scuba extends BaseEntity {
 	private LocalDate forecastDate;
 
 	@Column(name = "time_period", length = 10, nullable = false)
-	private String timePeriod;
+	@Enumerated(EnumType.STRING)
+	private TimePeriod timePeriod;
 
 	private LocalTime sunrise;
 	private LocalTime sunset;
@@ -47,6 +49,7 @@ public class Scuba extends BaseEntity {
 	private TidePhase tide;
 
 	@Column(name = "total_index")
+	@Enumerated(EnumType.STRING)
 	private TotalIndex totalIndex;
 
 	@Column(name = "wave_height_min")
@@ -68,7 +71,7 @@ public class Scuba extends BaseEntity {
 	private Float currentSpeedMax;
 
 	@Builder
-	public Scuba(Long spotId, LocalDate forecastDate, String timePeriod, LocalTime sunrise, LocalTime sunset,
+	public Scuba(Long spotId, LocalDate forecastDate, TimePeriod timePeriod, LocalTime sunrise, LocalTime sunset,
 		TidePhase tide, TotalIndex totalIndex, Float waveHeightMin, Float waveHeightMax, Float seaTempMin,
 		Float seaTempMax, Float currentSpeedMin, Float currentSpeedMax) {
 		this.spotId = spotId;

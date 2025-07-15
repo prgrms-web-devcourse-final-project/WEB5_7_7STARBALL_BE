@@ -22,6 +22,7 @@ import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class OpenMeteoService {
 	private final OpenMeteoApiClient openMeteoApiClient;
 	private final OutdoorSpotRepository outdoorSpotRepository;
@@ -40,8 +41,8 @@ public class OpenMeteoService {
 				outdoorSpot.getLongitude().doubleValue());
 			for (int i = 0; i < uvIndex.getTime().size(); i++) {
 				Float uvIndexValue = uvIndex.getUvIndexMax().get(i);
-				fishingRepository.findBySpotIdAndForecastDate(spotId, uvIndex.getTime().get(i))
-					.forEach(fishing -> fishing.updateUvIndex(uvIndexValue));
+				LocalDate date = uvIndex.getTime().get(i);
+				fishingRepository.updateUvIndex(uvIndexValue, spotId, date);
 			}
 		}
 
@@ -52,8 +53,8 @@ public class OpenMeteoService {
 				outdoorSpot.getLongitude().doubleValue());
 			for (int i = 0; i < uvIndex.getTime().size(); i++) {
 				Float uvIndexValue = uvIndex.getUvIndexMax().get(i);
-				mudflatRepository.findBySpotIdAndForecastDate(spotId, uvIndex.getTime().get(i))
-					.ifPresent(mudflat -> mudflat.updateUvIndex(uvIndexValue));
+				LocalDate date = uvIndex.getTime().get(i);
+				mudflatRepository.updateUvIndex(uvIndexValue, spotId, date);
 			}
 		}
 
@@ -65,8 +66,8 @@ public class OpenMeteoService {
 			for (int i = 0; i < sunTimeItem.getTime().size(); i++) {
 				LocalDateTime sunrise = sunTimeItem.getSunrise().get(i);
 				LocalDateTime sunset = sunTimeItem.getSunset().get(i);
-				scubaRepository.findBySpotIdAndForecastDate(spotId, sunTimeItem.getTime().get(i))
-					.forEach(scuba -> scuba.updateSunriseAndSunset(sunrise.toLocalTime(), sunset.toLocalTime()));
+				LocalDate date = sunTimeItem.getTime().get(i);
+				scubaRepository.updateSunriseAndSunset(sunrise.toLocalTime(), sunset.toLocalTime(), spotId, date);
 			}
 		}
 
@@ -77,8 +78,8 @@ public class OpenMeteoService {
 				outdoorSpot.getLongitude().doubleValue());
 			for (int i = 0; i < uvIndex.getTime().size(); i++) {
 				Float uvIndexValue = uvIndex.getUvIndexMax().get(i);
-				surfingRepository.findBySpotIdAndForecastDate(spotId, uvIndex.getTime().get(i))
-					.forEach(surfing -> surfing.updateUvIndex(uvIndexValue));
+				LocalDate date = uvIndex.getTime().get(i);
+				surfingRepository.updateUvIndex(uvIndexValue, spotId, date);
 			}
 		}
 

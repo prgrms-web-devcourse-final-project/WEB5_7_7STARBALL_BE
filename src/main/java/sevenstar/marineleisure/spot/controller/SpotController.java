@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseResponse;
-import sevenstar.marineleisure.spot.dto.SpotDetailReadResponse;
+import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotPreviewReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotPreviewRequest;
 import sevenstar.marineleisure.spot.dto.SpotReadRequest;
@@ -25,11 +25,6 @@ public class SpotController {
 
 	@GetMapping
 	ResponseEntity<BaseResponse<SpotReadResponse>> getSpots(@ModelAttribute @Valid SpotReadRequest request) {
-		if (request.getCategory() == null) {
-			return BaseResponse.success(
-				spotService.searchAllSpot(request.getLatitude(), request.getLongitude(), request.getRadius()));
-		}
-
 		return BaseResponse.success(
 			spotService.searchSpot(request.getLatitude(), request.getLongitude(), request.getRadius(),
 				request.getCategory()));
