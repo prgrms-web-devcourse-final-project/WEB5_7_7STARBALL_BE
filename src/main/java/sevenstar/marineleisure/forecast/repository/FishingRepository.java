@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Fishing;
-import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
+import sevenstar.marineleisure.spot.dto.projection.FishingReadProjection;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 public interface FishingRepository extends ActivityRepository<Fishing, Long> {
@@ -21,13 +21,31 @@ public interface FishingRepository extends ActivityRepository<Fishing, Long> {
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
 	@Query("""
-		    SELECT new sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse.FishingSpotDetail(
-				    f.forecastDate,f.timePeriod,f.tide,f.totalIndex,new sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse.RangeDetail(f.waveHeightMin,f.waveHeightMax),f.seaTempMin,f.seaTempMax,f.airTempMin,f.airTempMax,f.currentSpeedMin,f.currentSpeedMax,f.windSpeedMin,f.windSpeedMax,f.uvIndex) FROM Fishing f
+		    SELECT
+		        f.forecastDate AS forecastDate,
+		        f.timePeriod AS timePeriod,
+		        f.tide AS tide,
+		        f.totalIndex AS totalIndex,
+		        f.waveHeightMin AS waveHeightMin,
+		        f.waveHeightMax AS waveHeightMax,
+		        f.seaTempMin AS seaTempMin,
+		        f.seaTempMax AS seaTempMax,
+		        f.airTempMin AS airTempMin,
+		        f.airTempMax AS airTempMax,
+		        f.currentSpeedMin AS currentSpeedMin,
+		        f.currentSpeedMax AS currentSpeedMax,
+		        f.windSpeedMin AS windSpeedMin,
+		        f.windSpeedMax AS windSpeedMax,
+		        f.uvIndex AS uvIndex,
+				ft.id AS targetId,
+				ft.name AS targetName
+		
+		    FROM Fishing f
 		    LEFT JOIN FishingTarget ft ON f.targetId = ft.id
 		    WHERE f.spotId = :spotId
-		    	AND f.forecastDate = :date
+		      AND f.forecastDate = :date
 		""")
-	List<SpotDetailReadResponse.FishingSpotDetail> findFishingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
+	List<FishingReadProjection> findForecastsWithFish(@Param("spotId") Long spotId, @Param("date") LocalDate date);
 
 	@Modifying
 	@Transactional
