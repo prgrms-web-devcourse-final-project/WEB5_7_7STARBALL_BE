@@ -78,8 +78,7 @@ public class AuthController {
 				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_CANCELED);
 			} else {
 				// 다른 에러인 경우
-				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR, 
-					"카카오 로그인 오류: " + request.error() + " - " + request.errorDescription());
+				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR);
 			}
 		}
 
@@ -187,8 +186,7 @@ public class AuthController {
 			return BaseResponse.success(loginResponse);
 		} catch (Exception e) {
 			log.error("Failed to create test JWT token: {}", e.getMessage(), e);
-			return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR, 
-				"테스트 JWT 토큰 생성 오류: " + e.getMessage());
+			return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR);
 		}
 	}
 }
