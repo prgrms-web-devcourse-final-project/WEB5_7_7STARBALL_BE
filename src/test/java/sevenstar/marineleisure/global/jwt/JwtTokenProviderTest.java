@@ -42,7 +42,8 @@ class JwtTokenProviderTest {
 	void setUp() {
 		// 필요한 프로퍼티 설정
 		ReflectionTestUtils.setField(jwtTokenProvider, "secretKey", secretKey);
-		ReflectionTestUtils.setField(jwtTokenProvider, "accessTokenValidityInSeconds", 300L); // 5분
+		ReflectionTestUtils.setField(jwtTokenProvider, "accessTokenValidityInSeconds", 3600L); // 1시간
+		ReflectionTestUtils.setField(jwtTokenProvider, "refreshTokenValidityInSeconds", 86400L); // 24시간
 
 		// init 메서드 호출
 		jwtTokenProvider.init();
@@ -82,13 +83,13 @@ class JwtTokenProviderTest {
 		assertThat(claims.get("memberId")).isEqualTo(1);
 		assertThat(claims.get("email")).isEqualTo("test@example.com");
 
-		// 만료 시간 검증 (현재 시간 + 5분 이내)
+		// 만료 시간 검증 (현재 시간 + 1시간 이내)
 		long expirationTime = claims.getExpiration().getTime();
 		long currentTime = System.currentTimeMillis();
-		long fiveMinutesInMillis = 5 * 60 * 1000;
+		long oneHourInMillis = 60 * 60 * 1000;
 
 		assertThat(expirationTime).isGreaterThan(currentTime);
-		assertThat(expirationTime).isLessThanOrEqualTo(currentTime + fiveMinutesInMillis);
+		assertThat(expirationTime).isLessThanOrEqualTo(currentTime + oneHourInMillis);
 	}
 
 	@Test
@@ -113,13 +114,13 @@ class JwtTokenProviderTest {
 		assertThat(claims.get("email")).isEqualTo("test@example.com");
 		assertThat(claims.get("jti")).isNotNull(); // JTI 존재 확인
 
-		// 만료 시간 검증 (현재 시간 + 5분 이내)
+		// 만료 시간 검증 (현재 시간 + 24시간 이내)
 		long expirationTime = claims.getExpiration().getTime();
 		long currentTime = System.currentTimeMillis();
-		long fiveMinutesInMillis = 5 * 60 * 1000;
+		long twentyFourHoursInMillis = 24 * 60 * 60 * 1000;
 
 		assertThat(expirationTime).isGreaterThan(currentTime);
-		assertThat(expirationTime).isLessThanOrEqualTo(currentTime + fiveMinutesInMillis);
+		assertThat(expirationTime).isLessThanOrEqualTo(currentTime + twentyFourHoursInMillis);
 	}
 
 	@Test

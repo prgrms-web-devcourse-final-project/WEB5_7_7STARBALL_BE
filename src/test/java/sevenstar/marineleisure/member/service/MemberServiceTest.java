@@ -1,5 +1,13 @@
 package sevenstar.marineleisure.member.service;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,16 +27,6 @@ import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.MemberDetailResponse;
 import sevenstar.marineleisure.member.repository.MemberRepository;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MemberServiceTest {
@@ -200,7 +198,7 @@ class MemberServiceTest {
 
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
 		when(meetingRepository.findByHostId(memberId)).thenReturn(hostedMeetings);
-		when(participantRepository.findByMemberId(memberId)).thenReturn(participations);
+		when(participantRepository.findByUserId(memberId)).thenReturn(participations);
 
 		// when
 		memberService.deleteMember(memberId);
@@ -209,7 +207,7 @@ class MemberServiceTest {
 		verify(memberRepository).findById(memberId);
 		verify(meetingRepository).findByHostId(memberId);
 		verify(meetingRepository).deleteAll(hostedMeetings);
-		verify(participantRepository).findByMemberId(memberId);
+		verify(participantRepository).findByUserId(memberId);
 		verify(participantRepository).deleteAll(participations);
 		verify(memberRepository).save(testMember);
 	}
