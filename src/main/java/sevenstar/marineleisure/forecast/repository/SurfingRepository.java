@@ -1,7 +1,6 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,20 +22,6 @@ public interface SurfingRepository extends JpaRepository<Surfing, Long> {
 	List<Long> findByForecastDateBetween(@Param("forecastDateAfter") LocalDate forecastDateAfter,
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
-	List<Surfing> findBySpotIdAndForecastDate(Long spotId, LocalDate forecastDate);
-
-	Optional<Surfing> findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
-		Long spotId,
-		LocalDateTime startDateTime,
-		LocalDateTime endDateTime
-	);
-
-	Optional<Surfing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
-
-	Optional<Surfing> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
-
-	Optional<Surfing> findBySpotIdOrderByCreatedAt(Long spotId);
-         
 	@Query("""
 		    SELECT s FROM Surfing s
 		    WHERE s.spotId = :spotId

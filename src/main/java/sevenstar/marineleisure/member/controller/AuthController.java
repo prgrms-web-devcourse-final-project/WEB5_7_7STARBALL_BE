@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.global.domain.BaseResponse;
 import sevenstar.marineleisure.global.exception.enums.MemberErrorCode;
+import sevenstar.marineleisure.global.jwt.JwtTokenProvider;
+import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.AuthCodeRequest;
 import sevenstar.marineleisure.member.dto.LoginResponse;
 import sevenstar.marineleisure.member.service.AuthService;
@@ -34,6 +36,7 @@ public class AuthController {
 
 	private final OauthService oauthService;
 	private final AuthService authService;
+	private final JwtTokenProvider jwtTokenProvider;
 
 	/**
 	 * 카카오 로그인 URL 생성
@@ -75,8 +78,7 @@ public class AuthController {
 				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_CANCELED);
 			} else {
 				// 다른 에러인 경우
-				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR, 
-					"카카오 로그인 오류: " + request.error() + " - " + request.errorDescription());
+				return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR);
 			}
 		}
 
@@ -106,7 +108,7 @@ public class AuthController {
 	 */
 	@PostMapping("/refresh")
 	public ResponseEntity<BaseResponse<LoginResponse>> refreshToken(
-		@CookieValue(value = "refresh_token",required = false) String refreshToken,
+		@CookieValue("refresh_token") String refreshToken,
 		HttpServletResponse response
 	) {
 		log.info("Refreshing token with refresh token: {}", refreshToken);
@@ -149,6 +151,42 @@ public class AuthController {
 		} catch (Exception e) {
 			log.error("Logout failed: {}", e.getMessage(), e);
 			return BaseResponse.error(MemberErrorCode.LOGOUT_ERROR);
+		}
+	}
+
+
+	/**
+	 * 테스트용 JWT 액세스 토큰 생성
+	 * 카카오 웹사이트에서 직접 발급받은 액세스 토큰으로 JWT 토큰 생성
+	 * 
+	 * @param kakaoAccessToken 카카오 액세스 토큰
+	 * @return JWT 액세스 토큰과 사용자 정보
+	 */
+	@PostMapping("/kakao/test-jwt")
+	public ResponseEntity<BaseResponse<LoginResponse>> createTestJwtToken(
+		@RequestParam String kakaoAccessToken
+	) {
+		log.info("Creating test JWT token with Kakao access token");
+
+		try {
+			// 카카오 액세스 토큰으로 사용자 정보 조회 및 Member 객체 생성/조회
+			Member member = oauthService.processKakaoUser(kakaoAccessToken);
+
+			// JWT 액세스 토큰 생성
+			String jwtAccessToken = jwtTokenProvider.createAccessToken(member);
+
+			// 로그인 응답 생성
+			LoginResponse loginResponse = LoginResponse.builder()
+				.accessToken(jwtAccessToken)
+				.email(member.getEmail())
+				.userId(member.getId())
+				.nickname(member.getNickname())
+				.build();
+
+			return BaseResponse.success(loginResponse);
+		} catch (Exception e) {
+			log.error("Failed to create test JWT token: {}", e.getMessage(), e);
+			return BaseResponse.error(MemberErrorCode.KAKAO_LOGIN_ERROR);
 		}
 	}
 }

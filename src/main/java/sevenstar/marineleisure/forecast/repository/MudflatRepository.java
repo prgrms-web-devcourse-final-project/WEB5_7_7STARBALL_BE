@@ -1,7 +1,6 @@
 package sevenstar.marineleisure.forecast.repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,16 +23,6 @@ public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
 	Optional<Mudflat> findBySpotIdAndForecastDate(Long spotId, LocalDate forecastDate);
-
-	Optional<Mudflat> findFirstBySpotIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtDesc(
-		Long spotId,
-		LocalDateTime startDateTime,
-		LocalDateTime endDateTime
-	);
-
-	Optional<Mudflat> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
-
-	Optional<Mudflat> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
 
 	@Query("""
 		SELECT m.totalIndex
@@ -91,4 +80,5 @@ public interface MudflatRepository extends JpaRepository<Mudflat, Long> {
 		@Param("spotId") Long spotId,
 		@Param("forecastDate") LocalDate forecastDate
 	);
+
 }

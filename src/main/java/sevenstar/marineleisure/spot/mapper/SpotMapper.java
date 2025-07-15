@@ -83,4 +83,3 @@ public class SpotMapper {
 		return detail;
 	}
 }
-

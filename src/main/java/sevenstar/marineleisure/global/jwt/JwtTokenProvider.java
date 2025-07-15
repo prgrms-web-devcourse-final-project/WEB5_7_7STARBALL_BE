@@ -39,6 +39,9 @@ public class JwtTokenProvider {
 	@Value("${jwt.access-token-validity-in-seconds:300}") // 5분
 	private long accessTokenValidityInSeconds;
 
+	@Value("${jwt.refresh-token-validity-in-seconds:86400}") // 24시간
+	private long refreshTokenValidityInSeconds;
+
 	private SecretKey key;
 
 	@PostConstruct
@@ -67,7 +70,7 @@ public class JwtTokenProvider {
 	public String createRefreshToken(Member member) {
 		String jti = UUID.randomUUID().toString();
 		Date now = new Date();
-		Date validity = new Date(now.getTime() + accessTokenValidityInSeconds * 1000);
+		Date validity = new Date(now.getTime() + refreshTokenValidityInSeconds * 1000);
 
 		String refreshToken = Jwts.builder()
 			.subject(member.getId().toString())
@@ -115,11 +118,19 @@ public class JwtTokenProvider {
 	}
 
 	public Long getMemberId(String refreshToken) {
-		Jws<Claims> jwt = Jwts.parser()
-			.verifyWith(key)
-			.build()
-			.parseSignedClaims(refreshToken);
-		return jwt.getPayload().get("memberId", Long.class);
+		try {
+			Jws<Claims> jwt = Jwts.parser()
+				.verifyWith(key)
+				.build()
+				.parseSignedClaims(refreshToken);
+			return jwt.getPayload().get("memberId", Long.class);
+		} catch (ExpiredJwtException e) {
+			log.error("Expired JWT token while getting memberId: {}", e.getMessage());
+			throw new IllegalArgumentException("Refresh token has expired");
+		} catch (Exception e) {
+			log.error("Error getting memberId from refresh token: {}", e.getMessage());
+			throw new IllegalArgumentException("Invalid refresh token");
+		}
 	}
 
 	/**
@@ -129,13 +140,23 @@ public class JwtTokenProvider {
 	 */
 	public void blacklistRefreshToken(String refreshToken) {
 		try {
-			String jti = getJti(refreshToken);
-			Long memberId = getMemberId(refreshToken);
-			Claims claims = Jwts.parser().verifyWith(key)
-				.build()
-				.parseSignedClaims(refreshToken)
-				.getPayload();
+			// 토큰 파싱을 한 번만 수행하여 예외 처리 간소화
+			Claims claims;
+			try {
+				claims = Jwts.parser().verifyWith(key)
+					.build()
+					.parseSignedClaims(refreshToken)
+					.getPayload();
+			} catch (ExpiredJwtException e) {
+				log.info("Expired refresh token, no need to blacklist: {}", e.getMessage());
+				return; // 이미 만료된 토큰은 블랙리스트에 추가할 필요 없음
+			} catch (Exception e) {
+				log.error("Invalid refresh token, cannot blacklist: {}", e.getMessage());
+				return; // 유효하지 않은 토큰은 블랙리스트에 추가할 수 없음
+			}
 
+			String jti = claims.get("jti", String.class);
+			Long memberId = claims.get("memberId", Long.class);
 			Date expirationDate = claims.getExpiration();
 			long expirationTime = expirationDate.getTime() - System.currentTimeMillis();
 
@@ -163,12 +184,20 @@ public class JwtTokenProvider {
 	}
 
 	public String getJti(String refreshToken) {
-		return Jwts.parser()
-			.verifyWith(key)
-			.build()
-			.parseSignedClaims(refreshToken)
-			.getPayload()
-			.get("jti", String.class);
+		try {
+			return Jwts.parser()
+				.verifyWith(key)
+				.build()
+				.parseSignedClaims(refreshToken)
+				.getPayload()
+				.get("jti", String.class);
+		} catch (ExpiredJwtException e) {
+			log.error("Expired JWT token while getting JTI: {}", e.getMessage());
+			throw new IllegalArgumentException("Refresh token has expired");
+		} catch (Exception e) {
+			log.error("Error getting JTI from refresh token: {}", e.getMessage());
+			throw new IllegalArgumentException("Invalid refresh token");
+		}
 	}
 
 	/**

@@ -1,10 +1,11 @@
-package sevenstar.marineleisure.global.api;
+package sevenstar.marineleisure.global.api.khoa;
 
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,27 +13,24 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import sevenstar.marineleisure.global.api.khoa.KhoaApiClient;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.FishingItem;
 import sevenstar.marineleisure.global.api.khoa.dto.item.MudflatItem;
 import sevenstar.marineleisure.global.api.khoa.dto.item.ScubaItem;
 import sevenstar.marineleisure.global.api.khoa.dto.item.SurfingItem;
-import sevenstar.marineleisure.global.api.openmeteo.OpenMeteoApiClient;
-import sevenstar.marineleisure.global.api.openmeteo.dto.common.OpenMeteoReadResponse;
-import sevenstar.marineleisure.global.api.openmeteo.dto.item.SunTimeItem;
-import sevenstar.marineleisure.global.api.openmeteo.dto.item.UvIndexItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 
 /**
- * 외부 API 클라이언트 조회 테스트
+ * 해당 테스트는 외부 API 테스트입니다.
+ * 실제 API 호출이 이뤄짐으로 , 운영 환경에서 테스트가 실행되지 않도록 @Disabled 어노테이션을 설정하였습니다.
+ * 해당 테스트를 통해 Client 사용 예시를 참고해주시기 바랍니다.
+ * @author gunwoong
  */
 @SpringBootTest
-public class ApiClientTest {
+@Disabled
+class KhoaApiClientTest {
 	@Autowired
 	private KhoaApiClient khoaApiClient;
-	@Autowired
-	private OpenMeteoApiClient openMeteoApiClient;
 
 	private String reqDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
@@ -66,36 +64,5 @@ public class ApiClientTest {
 		}, reqDate, 1, 15, ActivityCategory.SCUBA);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
-	}
-
-	@Test
-	void receiveSunTimes() {
-		ResponseEntity<OpenMeteoReadResponse<SunTimeItem>> result = openMeteoApiClient.getSunTimes(
-			new ParameterizedTypeReference<>() {
-			}, LocalDate.now(), LocalDate.now(), 37.526126, 126.922255
-		);
-
-		assertThat(result.getStatusCode().is2xxSuccessful()).isTrue();
-		assertThat(result.getBody()).isNotNull();
-		assertThat(result.getBody().getDaily().getTime().size()).isEqualTo(
-			result.getBody().getDaily().getSunrise().size());
-		assertThat(result.getBody().getDaily().getTime().size()).isEqualTo(
-			result.getBody().getDaily().getSunset().size());
-		assertThat(result.getBody().getDaily()).isNotNull();
-	}
-
-	@Test
-	void receiveUvIndex() {
-		ResponseEntity<OpenMeteoReadResponse<UvIndexItem>> result = openMeteoApiClient.getUvIndex(
-			new ParameterizedTypeReference<>() {
-			}, LocalDate.now(), LocalDate.now(), 37.526126, 126.922255
-		);
-
-		assertThat(result.getStatusCode().is2xxSuccessful()).isTrue();
-		assertThat(result.getBody()).isNotNull();
-		assertThat(result.getBody()).isNotNull();
-		assertThat(result.getBody().getDaily().getTime().size()).isEqualTo(
-			result.getBody().getDaily().getUvIndexMax().size());
-		assertThat(result.getBody().getDaily()).isNotNull();
 	}
 }

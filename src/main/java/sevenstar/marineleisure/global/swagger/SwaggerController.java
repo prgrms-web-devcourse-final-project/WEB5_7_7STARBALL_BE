@@ -69,4 +69,5 @@ public class SwaggerController {
 	) {
 		return BaseResponse.error(CommonErrorCode.INTERNET_SERVER_ERROR);
 	}
+
 }
