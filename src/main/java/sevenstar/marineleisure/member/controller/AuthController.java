@@ -102,25 +102,35 @@ public class AuthController {
 	/**
 	 * 토큰 재발급
 	 *
-	 * @param refreshToken 리프레시 토큰 (쿠키에서 추출)
+	 * @param refreshToken 리프레시 토큰 (쿠키 또는 요청 본문에서 추출)
+	 * @param refreshTokenFromBody 요청 본문에서 전달된 리프레시 토큰 (jwt.use-cookie=false 설정용)
 	 * @param response HTTP 응답
 	 * @return 새로운 액세스 토큰과 사용자 정보
 	 */
 	@PostMapping("/refresh")
 	public ResponseEntity<BaseResponse<LoginResponse>> refreshToken(
-		@CookieValue("refresh_token") String refreshToken,
+		@CookieValue(value = "refresh_token", required = false) String refreshToken,
+		@RequestBody(required = false) Map<String, String> refreshTokenFromBody,
 		HttpServletResponse response
 	) {
-		log.info("Refreshing token with refresh token: {}", refreshToken);
+		log.info("Refreshing token");
 
 		try {
+			String token = refreshToken;
+
+			// jwt.use-cookie=false 설정일 때는 요청 본문에서 리프레시 토큰 추출
+			if ((token == null || token.isEmpty()) && refreshTokenFromBody != null) {
+				token = refreshTokenFromBody.get("refreshToken");
+				log.info("Using refresh token from request body: {}", token);
+			}
+
 			// 리프레시 토큰이 없는 경우
-			if (refreshToken == null || refreshToken.isEmpty()) {
+			if (token == null || token.isEmpty()) {
 				log.error("Empty refresh token");
 				return BaseResponse.error(MemberErrorCode.REFRESH_TOKEN_MISSING);
 			}
 
-			LoginResponse loginResponse = authService.refreshToken(refreshToken, response);
+			LoginResponse loginResponse = authService.refreshToken(token, response);
 			return BaseResponse.success(loginResponse);
 		} catch (IllegalArgumentException e) {
 			log.info("Invalid refresh token: {}", e.getMessage());

@@ -1,5 +1,6 @@
 package sevenstar.marineleisure.member.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,9 @@ public class AuthService {
 	private final OauthService oauthService;
 	private final CookieUtil cookieUtil;
 	private final StateEncryptionUtil stateEncryptionUtil;
+
+	@Value("${jwt.use-cookie:true}")
+	private boolean useCookie;
 
 	/**
 	 * 카카오 로그인 처리 (stateless)
@@ -62,11 +66,17 @@ public class AuthService {
 		String jwtAccessToken = jwtTokenProvider.createAccessToken(member);
 		String refreshToken = jwtTokenProvider.createRefreshToken(member);
 
-		// 5. 리프레시 토큰 쿠키 설정
-		cookieUtil.addCookie(response, cookieUtil.createRefreshTokenCookie(refreshToken));
-
-		// 6. 로그인 응답 생성
-		return createLoginResponse(member, jwtAccessToken);
+		// 5. jwt.use-cookie 설정에 따라 리프레시 토큰 전달 방식 결정
+		if (useCookie) {
+			// useCookie=true: 쿠키로 전송
+			log.debug("Using cookie for refresh token (useCookie=true)");
+			cookieUtil.addCookie(response, cookieUtil.createRefreshTokenCookie(refreshToken));
+			return LoginResponse.of(jwtAccessToken, member);
+		} else {
+			// useCookie=false: JSON 응답으로 전송
+			log.debug("Using JSON response for refresh token (useCookie=false)");
+			return LoginResponse.of(jwtAccessToken, member, refreshToken);
+		}
 	}
 
 	/**
@@ -100,12 +110,17 @@ public class AuthService {
 		String newAccessToken = jwtTokenProvider.createAccessToken(member);
 		String newRefreshToken = jwtTokenProvider.createRefreshToken(member);
 
-		// 5. 새 리프레시 토큰 쿠키 설정
-		cookieUtil.addCookie(response, cookieUtil.createRefreshTokenCookie(newRefreshToken));
-
-		// 6. 로그인 응답 생성
-		log.info("토큰 재발급 성공: userId={}", memberId);
-		return createLoginResponse(member, newAccessToken);
+		// 5. jwt.use-cookie 설정에 따라 리프레시 토큰 전달 방식 결정
+		if (useCookie) {
+			// useCookie=true: 쿠키로 전송
+			log.debug("Using cookie for refresh token (useCookie=true)");
+			cookieUtil.addCookie(response, cookieUtil.createRefreshTokenCookie(newRefreshToken));
+			return LoginResponse.of(newAccessToken, member);
+		} else {
+			// useCookie=false: JSON 응답으로 전송
+			log.debug("Using JSON response for refresh token (useCookie=false)");
+			return LoginResponse.of(newAccessToken, member, newRefreshToken);
+		}
 	}
 
 	/**
@@ -133,19 +148,5 @@ public class AuthService {
 		log.info("로그아웃 성공");
 	}
 
-	/**
-	 * 로그인 응답 DTO 생성
-	 *
-	 * @param member 회원 정보
-	 * @param accessToken 액세스 토큰
-	 * @return 로그인 응답 DTO
-	 */
-	private LoginResponse createLoginResponse(Member member, String accessToken) {
-		return LoginResponse.builder()
-			.accessToken(accessToken)
-			.email(member.getEmail())
-			.userId(member.getId())
-			.nickname(member.getNickname())
-			.build();
-	}
+	// createLoginResponse 메서드는 LoginResponse.of() 정적 팩토리 메서드로 대체.
 }
