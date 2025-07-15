@@ -40,3 +40,7 @@ VALUES (1, '인천', '2025-07-03', 'LOW', NOW(), NOW()),
        (7, '강원', '2025-07-03', 'LOW', NOW(), NOW())
 ON DUPLICATE KEY UPDATE density_type = VALUES(density_type),
                         updated_at   = NOW();
+INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)
+VALUES ('보름달물해파리', 'NONE', NOW(), NOW());
+INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)
+VALUES ('보름달물해파리', 'NONE', NOW(), NOW());

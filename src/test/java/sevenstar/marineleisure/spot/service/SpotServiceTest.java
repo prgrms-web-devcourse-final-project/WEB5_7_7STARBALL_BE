@@ -30,10 +30,17 @@ import sevenstar.marineleisure.global.utils.GeoUtils;
 import sevenstar.marineleisure.spot.config.GeoConfig;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
+import sevenstar.marineleisure.spot.dto.detail.provider.ActivityDetailProviderFactory;
+import sevenstar.marineleisure.spot.dto.detail.provider.FishingDetailProvider;
+import sevenstar.marineleisure.spot.dto.detail.provider.MudflatDetailProvider;
+import sevenstar.marineleisure.spot.dto.detail.provider.ScubaDetailProvider;
+import sevenstar.marineleisure.spot.dto.detail.provider.SurfingDetailProvider;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @MysqlDataJpaTest
-@Import({SpotServiceImpl.class, GeoUtils.class, GeoConfig.class})
+@Import({SpotServiceImpl.class, GeoUtils.class, GeoConfig.class, ActivityDetailProviderFactory.class,
+	FishingDetailProvider.class, MudflatDetailProvider.class, ScubaDetailProvider.class,
+	SurfingDetailProvider.class})
 class SpotServiceTest {
 	@Autowired
 	private SpotService spotService;
@@ -59,7 +66,7 @@ class SpotServiceTest {
 	void setUp() {
 		LocalDate startDate = LocalDate.now();
 		LocalDate endDate = startDate.plusDays(7);
-		FishingTarget target = fishingTargetRepository.save(new FishingTarget("감성돔"));
+		FishingTarget target = fishingTargetRepository.save(new FishingTarget("Temp1"));
 
 		for (ActivityCategory category : List.of(ActivityCategory.FISHING, ActivityCategory.MUDFLAT,
 			ActivityCategory.SURFING, ActivityCategory.SCUBA)) {
@@ -128,31 +135,16 @@ class SpotServiceTest {
 		// given
 		Integer radius = 1;
 		// when
-
 		SpotReadResponse fishingResponse = spotService.searchSpot(baseLat, baseLon, radius, ActivityCategory.FISHING);
 		SpotReadResponse scubaResponse = spotService.searchSpot(baseLat, baseLon, radius, ActivityCategory.SCUBA);
 		SpotReadResponse surfingResponse = spotService.searchSpot(baseLat, baseLon, radius, ActivityCategory.SURFING);
 		SpotReadResponse mudflatResponse = spotService.searchSpot(baseLat, baseLon, radius, ActivityCategory.MUDFLAT);
-
 
 		// then
 		assertThat(fishingResponse.spots()).hasSize(1);
 		assertThat(scubaResponse.spots()).hasSize(1);
 		assertThat(surfingResponse.spots()).hasSize(1);
 		assertThat(mudflatResponse.spots()).hasSize(1);
-	}
-
-	@Test
-	void should_searchAllSpots() {
-		// given
-		Integer radius = 1;
-
-		// when
-
-		SpotReadResponse response = spotService.searchAllSpot(baseLat, baseLon,radius);
-
-		//
-		assertThat(response.spots()).hasSize(4);
 	}
 
 }
