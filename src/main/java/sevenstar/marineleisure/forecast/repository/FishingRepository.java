@@ -5,18 +5,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Fishing;
-import sevenstar.marineleisure.global.enums.TimePeriod;
-import sevenstar.marineleisure.global.enums.TotalIndex;
-import sevenstar.marineleisure.spot.dto.FishingReadResponse;
+import sevenstar.marineleisure.spot.dto.projection.FishingReadProjection;
+import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
-public interface FishingRepository extends JpaRepository<Fishing, Long> {
+public interface FishingRepository extends ActivityRepository<Fishing, Long> {
 	@Query(value = """
 					SELECT DISTINCT f.spotId FROM Fishing f
 					WHERE f.forecastDate BETWEEN :forecastDateAfter AND :forecastDateBefore
@@ -25,19 +23,31 @@ public interface FishingRepository extends JpaRepository<Fishing, Long> {
 		@Param("forecastDateBefore") LocalDate forecastDateBefore);
 
 	@Query("""
-		    SELECT new sevenstar.marineleisure.spot.dto.FishingReadResponse(:spotId,ft.id,ft.name,f.forecastDate,f.timePeriod,f.tide,f.totalIndex,f.waveHeightMin,f.waveHeightMax,f.seaTempMin,f.seaTempMax,f.airTempMin,f.airTempMax,f.currentSpeedMin,f.currentSpeedMax,f.windSpeedMin,f.windSpeedMax,f.uvIndex) FROM Fishing f
+		    SELECT
+		        f.forecastDate AS forecastDate,
+		        f.timePeriod AS timePeriod,
+		        f.tide AS tide,
+		        f.totalIndex AS totalIndex,
+		        f.waveHeightMin AS waveHeightMin,
+		        f.waveHeightMax AS waveHeightMax,
+		        f.seaTempMin AS seaTempMin,
+		        f.seaTempMax AS seaTempMax,
+		        f.airTempMin AS airTempMin,
+		        f.airTempMax AS airTempMax,
+		        f.currentSpeedMin AS currentSpeedMin,
+		        f.currentSpeedMax AS currentSpeedMax,
+		        f.windSpeedMin AS windSpeedMin,
+		        f.windSpeedMax AS windSpeedMax,
+		        f.uvIndex AS uvIndex,
+				ft.id AS targetId,
+				ft.name AS targetName
+		
+		    FROM Fishing f
 		    LEFT JOIN FishingTarget ft ON f.targetId = ft.id
 		    WHERE f.spotId = :spotId
-		    	AND f.forecastDate = :date
+		      AND f.forecastDate = :date
 		""")
-	List<FishingReadResponse> findFishingForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
-
-	@Query("""
-		SELECT f.totalIndex
-		FROM Fishing f
-		WHERE f.spotId = :spotId AND f.forecastDate = :date AND f.timePeriod = :timePeriod
-		""")
-	Optional<TotalIndex> findTotalIndexBySpotIdAndDate(@Param("spotId") Long spotId, @Param("date") LocalDate date,@Param("timePeriod") TimePeriod timePeriod);
+	List<FishingReadProjection> findForecastsWithFish(@Param("spotId") Long spotId, @Param("date") LocalDate date);
 
 	@Modifying
 	@Transactional
@@ -112,5 +122,4 @@ public interface FishingRepository extends JpaRepository<Fishing, Long> {
 	Optional<Fishing> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
 
 	Optional<Fishing> findBySpotIdOrderByCreatedAt(Long spotId);
-
 }
