@@ -55,13 +55,35 @@ public class Member extends BaseEntity {
 		this.longitude = longitude;
 	}
 
-	public Member update(String nickname) {
-		this.nickname = nickname;
-		return this;
-	}
 	public void updateNickname(String newNickname) {
 		if (!Objects.equals(this.nickname, newNickname)) {
 			this.nickname = newNickname;
+		}
+	}
+
+	/**
+	 * 회원의 상태를 업데이트합니다.
+	 *
+	 * @param newStatus 새 상태
+	 */
+	public void updateStatus(MemberStatus newStatus) {
+		if (this.status != newStatus) {
+			this.status = newStatus;
+		}
+	}
+
+	/**
+	 * 회원의 위치 정보를 업데이트합니다.
+	 *
+	 * @param newLatitude 새 위도
+	 * @param newLongitude 새 경도
+	 */
+	public void updateLocation(BigDecimal newLatitude, BigDecimal newLongitude) {
+		if (newLatitude != null && (this.latitude == null || !this.latitude.equals(newLatitude))) {
+			this.latitude = newLatitude;
+		}
+		if (newLongitude != null && (this.longitude == null || !this.longitude.equals(newLongitude))) {
+			this.longitude = newLongitude;
 		}
 	}
 }
