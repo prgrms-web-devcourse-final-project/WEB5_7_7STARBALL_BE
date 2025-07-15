@@ -44,7 +44,7 @@ class AuthServiceTest {
 	private HttpServletResponse mockResponse;
 	private Cookie mockCookie;
 
-	@BeforeEach
+ @BeforeEach
 	void setUp() {
 		// 테스트용 Member 객체 생성
 		testMember = Member.builder()
@@ -62,10 +62,13 @@ class AuthServiceTest {
 
 		// Mock Cookie
 		mockCookie = mock(Cookie.class);
+
+		// useCookie 설정 (기본값: true)
+		ReflectionTestUtils.setField(authService, "useCookie", true);
 	}
 
 	@Test
-	@DisplayName("카카오 로그인을 처리하고 로그인 응답을 반환할 수 있다")
+	@DisplayName("카카오 로그인을 처리하고 로그인 응답을 반환할 수 있다 (쿠키 모드)")
 	void processKakaoLogin() {
 		// given
 		String code = "test-auth-code";
@@ -74,6 +77,9 @@ class AuthServiceTest {
 		String accessToken = "kakao-access-token";
 		String jwtAccessToken = "jwt-access-token";
 		String refreshToken = "jwt-refresh-token";
+
+		// useCookie = true 설정 (기본값)
+		ReflectionTestUtils.setField(authService, "useCookie", true);
 
 		// 카카오 토큰 응답 설정
 		KakaoTokenResponse tokenResponse = KakaoTokenResponse.builder()
@@ -105,9 +111,56 @@ class AuthServiceTest {
 		assertThat(response.userId()).isEqualTo(1L);
 		assertThat(response.email()).isEqualTo("test@example.com");
 		assertThat(response.nickname()).isEqualTo("testUser");
+		assertThat(response.refreshToken()).isNull(); // 쿠키 모드에서는 refreshToken이 응답에 포함되지 않음
 
 		// 쿠키 추가 확인
 		verify(cookieUtil).addCookie(mockResponse, mockCookie);
+	}
+
+	@Test
+	@DisplayName("카카오 로그인을 처리하고 로그인 응답을 반환할 수 있다 (비쿠키 모드)")
+	void processKakaoLogin_noCookie() {
+		// given
+		String code = "test-auth-code";
+		String state = "test-state";
+		String encryptedState = "encrypted-test-state";
+		String accessToken = "kakao-access-token";
+		String jwtAccessToken = "jwt-access-token";
+		String refreshToken = "jwt-refresh-token";
+
+		// useCookie = false 설정
+		ReflectionTestUtils.setField(authService, "useCookie", false);
+
+		// 카카오 토큰 응답 설정
+		KakaoTokenResponse tokenResponse = KakaoTokenResponse.builder()
+			.accessToken(accessToken)
+			.tokenType("bearer")
+			.refreshToken("kakao-refresh-token")
+			.expiresIn(3600L)
+			.build();
+
+		// state 검증 모킹
+		when(stateEncryptionUtil.validateState(state, encryptedState)).thenReturn(true);
+
+		// 서비스 메서드 모킹
+		when(oauthService.exchangeCodeForToken(code)).thenReturn(tokenResponse);
+		when(oauthService.processKakaoUser(accessToken)).thenReturn(testMember);
+		when(jwtTokenProvider.createAccessToken(testMember)).thenReturn(jwtAccessToken);
+		when(jwtTokenProvider.createRefreshToken(testMember)).thenReturn(refreshToken);
+
+		// when
+		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, mockResponse);
+
+		// then
+		assertThat(response).isNotNull();
+		assertThat(response.accessToken()).isEqualTo(jwtAccessToken);
+		assertThat(response.userId()).isEqualTo(1L);
+		assertThat(response.email()).isEqualTo("test@example.com");
+		assertThat(response.nickname()).isEqualTo("testUser");
+		assertThat(response.refreshToken()).isEqualTo(refreshToken); // 비쿠키 모드에서는 refreshToken이 응답에 포함됨
+
+		// 쿠키 추가되지 않음 확인
+		verify(cookieUtil, never()).addCookie(any(), any());
 	}
 
 	@Test
@@ -138,12 +191,15 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("리프레시 토큰으로 새 토큰을 발급할 수 있다")
+	@DisplayName("리프레시 토큰으로 새 토큰을 발급할 수 있다 (쿠키 모드)")
 	void refreshToken() {
 		// given
 		String refreshToken = "valid-refresh-token";
 		String newAccessToken = "new-access-token";
 		String newRefreshToken = "new-refresh-token";
+
+		// useCookie = true 설정 (기본값)
+		ReflectionTestUtils.setField(authService, "useCookie", true);
 
 		// 쿠키 설정
 		when(cookieUtil.createRefreshTokenCookie(newRefreshToken)).thenReturn(mockCookie);
@@ -164,12 +220,49 @@ class AuthServiceTest {
 		assertThat(response.userId()).isEqualTo(1L);
 		assertThat(response.email()).isEqualTo("test@example.com");
 		assertThat(response.nickname()).isEqualTo("testUser");
+		assertThat(response.refreshToken()).isNull(); // 쿠키 모드에서는 refreshToken이 응답에 포함되지 않음
 
 		// 기존 토큰 블랙리스트 추가 확인
 		verify(jwtTokenProvider).blacklistRefreshToken(refreshToken);
 
 		// 새 쿠키 추가 확인
 		verify(cookieUtil).addCookie(mockResponse, mockCookie);
+	}
+
+	@Test
+	@DisplayName("리프레시 토큰으로 새 토큰을 발급할 수 있다 (비쿠키 모드)")
+	void refreshToken_noCookie() {
+		// given
+		String refreshToken = "valid-refresh-token";
+		String newAccessToken = "new-access-token";
+		String newRefreshToken = "new-refresh-token";
+
+		// useCookie = false 설정
+		ReflectionTestUtils.setField(authService, "useCookie", false);
+
+		// 토큰 검증 및 생성 설정
+		when(jwtTokenProvider.validateRefreshToken(refreshToken)).thenReturn(true);
+		when(jwtTokenProvider.getMemberId(refreshToken)).thenReturn(1L);
+		when(oauthService.findUserById(1L)).thenReturn(testMember);
+		when(jwtTokenProvider.createAccessToken(testMember)).thenReturn(newAccessToken);
+		when(jwtTokenProvider.createRefreshToken(testMember)).thenReturn(newRefreshToken);
+
+		// when
+		LoginResponse response = authService.refreshToken(refreshToken, mockResponse);
+
+		// then
+		assertThat(response).isNotNull();
+		assertThat(response.accessToken()).isEqualTo(newAccessToken);
+		assertThat(response.userId()).isEqualTo(1L);
+		assertThat(response.email()).isEqualTo("test@example.com");
+		assertThat(response.nickname()).isEqualTo("testUser");
+		assertThat(response.refreshToken()).isEqualTo(newRefreshToken); // 비쿠키 모드에서는 refreshToken이 응답에 포함됨
+
+		// 기존 토큰 블랙리스트 추가 확인
+		verify(jwtTokenProvider).blacklistRefreshToken(refreshToken);
+
+		// 쿠키 추가되지 않음 확인
+		verify(cookieUtil, never()).addCookie(any(), any());
 	}
 
 	@Test

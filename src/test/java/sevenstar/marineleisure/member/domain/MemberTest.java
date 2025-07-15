@@ -63,6 +63,80 @@ class MemberTest {
 	}
 
 	@Test
+	@DisplayName("updateStatus 메서드를 사용하여 회원 상태를 변경할 수 있다")
+	void updateStatus() {
+		// given
+		Member member = Member.builder()
+			.nickname("testUser")
+			.email("test@example.com")
+			.provider("kakao")
+			.providerId("12345")
+			.build();
+		MemberStatus newStatus = MemberStatus.EXPIRED;
+
+		// when
+		member.updateStatus(newStatus);
+
+		// then
+		assertThat(member.getStatus()).isEqualTo(newStatus);
+	}
+
+	@Test
+	@DisplayName("updateLocation 메서드를 사용하여 위치 정보를 변경할 수 있다")
+	void updateLocation() {
+		// given
+		Member member = Member.builder()
+			.nickname("testUser")
+			.email("test@example.com")
+			.provider("kakao")
+			.providerId("12345")
+			.latitude(BigDecimal.valueOf(37.5665))
+			.longitude(BigDecimal.valueOf(126.9780))
+			.build();
+		BigDecimal newLatitude = BigDecimal.valueOf(35.1796);
+		BigDecimal newLongitude = BigDecimal.valueOf(129.0756);
+
+		// when
+		member.updateLocation(newLatitude, newLongitude);
+
+		// then
+		assertThat(member.getLatitude()).isEqualTo(newLatitude);
+		assertThat(member.getLongitude()).isEqualTo(newLongitude);
+	}
+
+	@Test
+	@DisplayName("updateLocation 메서드는 null이 아닌 값만 업데이트한다")
+	void updateLocationWithNullValues() {
+		// given
+		BigDecimal initialLatitude = BigDecimal.valueOf(37.5665);
+		BigDecimal initialLongitude = BigDecimal.valueOf(126.9780);
+		Member member = Member.builder()
+			.nickname("testUser")
+			.email("test@example.com")
+			.provider("kakao")
+			.providerId("12345")
+			.latitude(initialLatitude)
+			.longitude(initialLongitude)
+			.build();
+
+		// when: 위도만 업데이트
+		BigDecimal newLatitude = BigDecimal.valueOf(35.1796);
+		member.updateLocation(newLatitude, null);
+
+		// then
+		assertThat(member.getLatitude()).isEqualTo(newLatitude);
+		assertThat(member.getLongitude()).isEqualTo(initialLongitude); // 변경되지 않음
+
+		// when: 경도만 업데이트
+		BigDecimal newLongitude = BigDecimal.valueOf(129.0756);
+		member.updateLocation(null, newLongitude);
+
+		// then
+		assertThat(member.getLatitude()).isEqualTo(newLatitude); // 이전에 변경된 값 유지
+		assertThat(member.getLongitude()).isEqualTo(newLongitude);
+	}
+
+	@Test
 	@DisplayName("Member 객체는 BaseEntity를 상속받아 생성 및 수정 시간 정보를 가진다")
 	void memberExtendsBaseEntity() {
 		// given

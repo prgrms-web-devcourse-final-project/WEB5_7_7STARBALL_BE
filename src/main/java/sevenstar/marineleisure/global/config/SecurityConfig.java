@@ -2,6 +2,7 @@ package sevenstar.marineleisure.global.config;
 
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,6 +28,9 @@ public class SecurityConfig {
 
 	private final JwtTokenProvider jwtTokenProvider;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+	@Value("${jwt.use-cookie:true}")
+	private boolean useCookie;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -75,7 +79,10 @@ public class SecurityConfig {
 
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-		config.setAllowCredentials(true);
+
+		// jwt.use-cookie 설정에 따라 credentials 설정 변경
+		// useCookie=true 일 때만 allowCredentials=true (쿠키 사용)
+		config.setAllowCredentials(useCookie);
 		config.setMaxAge(3600L); // 프리플라이트 요청 캐싱 (1시간)
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
