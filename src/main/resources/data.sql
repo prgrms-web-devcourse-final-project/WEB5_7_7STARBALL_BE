@@ -44,3 +44,7 @@ INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)
 VALUES ('보름달물해파리', 'NONE', NOW(), NOW());
 INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)
 VALUES ('보름달물해파리', 'NONE', NOW(), NOW());
+INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)
+VALUES ('보름달물해파리', 'NONE', NOW(), NOW());
+INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)
+VALUES ('보름달물해파리', 'NONE', NOW(), NOW());
