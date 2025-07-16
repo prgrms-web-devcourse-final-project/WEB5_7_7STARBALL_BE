@@ -1,0 +1,39 @@
+### Kakao API HTTP Requests
+
+### Get Kakao Login URL
+###
+@baseUrl =http://localhost:8083
+# 1. Get Kakao Login URL (따로 없으면 redirecturi == yml 파일의 정보로 가져옴)
+GET {{baseUrl}}/auth/kakao/url
+Accept: application/json
+
+###
+# 1-2. Get Kakao Login URL (커스텀 리다이렉트 URI)
+GET {{baseUrl}}/auth/kakao/url?redirectUri=https://example.com/oauth/kakao/callback
+Accept: application/json
+
+###
+# 3. Process Kakao Login (카카오 로그인 실제 진행)
+POST {{baseUrl}}/auth/kakao/code
+Content-Type: application/json
+Accept: application/json
+
+{
+  "code": "your_authorization_code",
+  "state": "rawState",
+  "encryptedState": "encryptedState"
+}
+
+###
+# 4. Refresh Token
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+Accept: application/json
+Cookie: refresh_token=<<yourRefreshTokenHere>>
+
+###
+# 5. Logout
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+Accept: application/json
+Cookie: refresh_token=<<yourRefreshTokenHere>>
