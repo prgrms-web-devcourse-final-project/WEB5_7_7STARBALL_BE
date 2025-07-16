@@ -70,7 +70,9 @@ dependencies {
     // mock-inline
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     // embedded-redis
-    testImplementation 'it.ozimov:embedded-redis:0.7.3'
+    testImplementation ('it.ozimov:embedded-redis:0.7.3') {
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+    }
     // html parser
     implementation 'org.jsoup:jsoup:1.21.1'
 
