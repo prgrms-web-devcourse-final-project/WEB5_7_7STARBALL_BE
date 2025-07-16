@@ -103,7 +103,8 @@ public class MeetingMapper {
 
 	public MeetingDetailAndMemberResponse meetingDetailAndMemberResponseMapper
 		(Meeting targetMeeting, Member host, OutdoorSpot targetSpot,
-			List<ParticipantResponse> participantResponseList) {
+			List<ParticipantResponse> participantResponseList
+		, Tag tag) {
 		return MeetingDetailAndMemberResponse.builder()
 			.id(targetMeeting.getId())
 			.title(targetMeeting.getTitle())
@@ -126,6 +127,7 @@ public class MeetingMapper {
 				participantResponseList
 			)
 			.createdAt(targetMeeting.getCreatedAt())
+			.tagList(DetailTag(tag))
 			.build();
 	}
 
@@ -156,6 +158,12 @@ public class MeetingMapper {
 		return Tag.builder()
 			.meetingId(meetingId)
 			.content(request.tags())
+			.build();
+	}
+
+	public TagList DetailTag(Tag tag){
+		return TagList.builder()
+			.content(tag.getContent())
 			.build();
 	}
 }

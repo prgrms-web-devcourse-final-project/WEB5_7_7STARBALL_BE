@@ -2,7 +2,9 @@ package sevenstar.marineleisure.meeting.domain;
 
 import java.util.List;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseEntity;
+import sevenstar.marineleisure.meeting.service.util.StringListConverter;
 
 @Entity
 @Getter
@@ -31,6 +34,7 @@ public class Tag extends BaseEntity {
 	private Long meetingId;
 
 
+	@Convert(converter = StringListConverter.class)
 	private List<String> content;
 
 

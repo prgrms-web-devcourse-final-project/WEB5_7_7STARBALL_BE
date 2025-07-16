@@ -105,8 +105,9 @@ public class MeetingServiceImpl implements MeetingService {
 			.toList();
 		Map<Long,String> participantNicknames = memberRepository.findAllById(participantUserIds).stream()
 			.collect(Collectors.toMap(Member::getId, Member::getNickname));
+		Tag targetTag = tagValidate.findByMeetingId(meetingId).orElse(null);
 		List<ParticipantResponse> participantResponseList = meetingMapper.toParticipantResponseList(participants,participantNicknames);
-		return meetingMapper.meetingDetailAndMemberResponseMapper(targetMeeting,host,targetSpot,participantResponseList);
+		return meetingMapper.meetingDetailAndMemberResponseMapper(targetMeeting,host,targetSpot,participantResponseList,targetTag);
 	}
 
 	@Override
@@ -169,7 +170,7 @@ public class MeetingServiceImpl implements MeetingService {
 	public Long updateMeeting(Long meetingId, Long memberId, UpdateMeetingRequest request) {
 		Member host = memberValidate.foundMember(memberId);
 		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
-		meetingValidate.verifyIsHost(targetMeeting.getId(), host.getId());
+		meetingValidate.verifyIsHost(host.getId(), targetMeeting.getHostId());
 		Tag targetTag = tagValidate.findByMeetingId(meetingId).orElse(null);
 		Meeting updateMeeting = meetingRepository.save(meetingMapper.UpdateMeeting(request, targetMeeting));
 		tagRepository.save(
