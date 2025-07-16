@@ -2,11 +2,6 @@ package sevenstar.marineleisure.alert.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -89,7 +84,7 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 					speciesRepository.save(species);
 					log.info("신종 해파리등록 : {}", dto.species());
 
-					appendToDataSql(dto.species(), ToxicityLevel.NONE);
+					// appendToDataSql(dto.species(), ToxicityLevel.NONE);
 				}
 
 				DensityLevel densityLevel = dto.densityType().equals("HIGH") ? DensityLevel.HIGH : DensityLevel.LOW;
@@ -109,35 +104,4 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 		}
 	}
 
-	/**
-	 * DB적재중 신종해파리 등록시 자동으로 data.sql에 INSERT문을 추가하는 메서드입니다.
-	 * @param speciesName 신종 해파리 등록
-	 * @param toxicity 무독성 고정
-	 */
-	private void appendToDataSql(String speciesName, ToxicityLevel toxicity) {
-		try {
-
-			String resourcePath = "src/main/resources/data.sql";
-			Path dataFilePath = Paths.get(resourcePath);
-
-			if (!Files.exists(dataFilePath)) {
-				Files.createFile(dataFilePath);
-				log.info("data.sql 파일 생성");
-			}
-
-			String insertStatement = String.format(
-				"INSERT INTO jellyfish_species (name, toxicity, created_at, updated_at)\n" +
-					"VALUES ('%s', '%s', NOW(), NOW());\n",
-				speciesName, toxicity.name()
-			);
-
-			Files.write(dataFilePath, insertStatement.getBytes(StandardCharsets.UTF_8),
-				StandardOpenOption.APPEND);
-
-			log.info("새로운 종 인서트문 생성: {}", speciesName);
-
-		} catch (IOException e) {
-			log.error("쓰기 실패", e);
-		}
-	}
 }
