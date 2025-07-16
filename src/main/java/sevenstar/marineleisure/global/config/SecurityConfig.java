@@ -56,6 +56,9 @@ public class SecurityConfig {
 				// 위험경보관련 API는 인증이 필요하지 않습니다.
 				.requestMatchers("/alerts/**").permitAll()
 				.requestMatchers("/activities/**").permitAll()
+				//Meeting 조회에는 인증이 필요하지 않습니다.
+				.requestMatchers(HttpMethod.GET, "/meetings").permitAll()
+				.requestMatchers(HttpMethod.GET, "/meetings/{id}").permitAll()
 				// (6) 나머지는 인증 필요
 				.anyRequest().authenticated()
 			)
