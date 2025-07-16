@@ -25,7 +25,7 @@ services:
       start_period: 40s
 
   app:
-    image: ghcr.io/prgrms-web-devcourse-final-project/WEB5_7_7STARBALL_BE:latest
+    image: ghcr.io/prgrms-web-devcourse-final-project/web5_7_7starball_be:latest
     networks:
       - marine-net
     container_name: marine_app
