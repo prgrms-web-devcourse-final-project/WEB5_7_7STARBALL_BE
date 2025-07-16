@@ -1,0 +1,93 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+ext {
+    springAiVersion = "1.0.0"
+}
+
+group = 'sevenstar'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // spring boot dependencies
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // jwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6' //JSON 파싱
+
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+//JSON parsing
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    // db dependencies
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
+
+    // security dependencies
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // swagger dependencies
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+
+    // geo dependencies
+    implementation 'org.hibernate:hibernate-spatial:6.5.2.Final'
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
+
+    // mock-inline
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    // embedded-redis
+    testImplementation 'it.ozimov:embedded-redis:0.7.3'
+    // html parser
+    implementation 'org.jsoup:jsoup:1.21.1'
+
+    // pdf parsing
+    implementation 'org.apache.pdfbox:pdfbox:3.0.5'
+
+    testImplementation "org.testcontainers:mysql:1.19.3"
+    testImplementation "org.testcontainers:junit-jupiter:1.19.3"
+
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:$springAiVersion"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
