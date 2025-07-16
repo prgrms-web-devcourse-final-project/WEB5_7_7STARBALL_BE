@@ -3,7 +3,6 @@ package sevenstar.marineleisure.global.api;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +11,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import sevenstar.marineleisure.global.api.kakao.KakaoApiClient;
+import sevenstar.marineleisure.global.api.kakao.dto.RegionResponse;
 import sevenstar.marineleisure.global.api.khoa.KhoaApiClient;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.FishingItem;
@@ -34,6 +35,8 @@ public class ApiClientTest {
 	private KhoaApiClient khoaApiClient;
 	@Autowired
 	private OpenMeteoApiClient openMeteoApiClient;
+	@Autowired
+	private KakaoApiClient kakaoApiClient;
 
 	private LocalDate reqDate = LocalDate.now();
 
@@ -98,5 +101,15 @@ public class ApiClientTest {
 		assertThat(result.getBody().getDaily().getTime().size()).isEqualTo(
 			result.getBody().getDaily().getUvIndexMax().size());
 		assertThat(result.getBody().getDaily()).isNotNull();
+	}
+
+	@Test
+	void receiveRegion() {
+		float latitude = 36.3777f;
+		float longitude = 127.3727f;
+
+		ResponseEntity<RegionResponse> regionResponse = kakaoApiClient.get(latitude, longitude);
+		assertThat(regionResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(regionResponse.getBody().getDocuments().getFirst().getAddress_name()).startsWith("대전광역시");
 	}
 }

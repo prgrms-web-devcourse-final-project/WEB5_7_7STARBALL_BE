@@ -6,7 +6,9 @@ import lombok.experimental.UtilityClass;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.domain.SpotPreset;
 import sevenstar.marineleisure.spot.domain.SpotViewQuartile;
+import sevenstar.marineleisure.spot.dto.SpotPreviewReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
 import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.projection.SpotDistanceProjection;
@@ -25,6 +27,11 @@ public class SpotMapper {
 	public static <T> SpotDetailReadResponse toDto(OutdoorSpot outdoorSpot, boolean isFavorite, List<T> detail) {
 		return new SpotDetailReadResponse(outdoorSpot.getId(), outdoorSpot.getName(), outdoorSpot.getCategory(),
 			outdoorSpot.getLatitude().floatValue(), outdoorSpot.getLongitude().floatValue(), isFavorite, detail);
+	}
+
+	public static SpotPreviewReadResponse toDto(SpotPreset spotPreset) {
+		return new SpotPreviewReadResponse(spotPreset.getFishing(), spotPreset.getMudflat(), spotPreset.getSurfing(),
+			spotPreset.getScuba());
 	}
 }
 

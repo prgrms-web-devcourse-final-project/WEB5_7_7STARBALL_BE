@@ -3,6 +3,7 @@ package sevenstar.marineleisure.meeting.domain;
 import java.util.List;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,11 +32,12 @@ public class Tag extends BaseEntity {
 	private Long meetingId;
 
 
+	@Convert(converter = StringListConverter.class)
 	private List<String> content;
 
 
 	@Builder
-	public Tag(Long meetingId, List<String> content) {
+	public Tag(Long meetingId) {
 		this.meetingId = meetingId;
 		this.content = content;
 	}

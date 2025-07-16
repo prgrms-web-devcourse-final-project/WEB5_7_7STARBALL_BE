@@ -72,6 +72,11 @@ dependencies {
 
     // pdf parsing
     implementation 'org.apache.pdfbox:pdfbox:3.0.5'
+
+    // db migration
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+
 }
 
 dependencyManagement {

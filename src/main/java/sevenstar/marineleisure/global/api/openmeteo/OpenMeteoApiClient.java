@@ -19,7 +19,7 @@ import sevenstar.marineleisure.global.utils.UriBuilder;
 @Component
 @RequiredArgsConstructor
 public class OpenMeteoApiClient {
-	private final RestTemplate restTemplate;
+	private final RestTemplate apiRestTemplate;
 	private final OpenMeteoProperties openMeteoProperties;
 
 	public ResponseEntity<OpenMeteoReadResponse<SunTimeItem>> getSunTimes(
@@ -28,7 +28,7 @@ public class OpenMeteoApiClient {
 		URI uri = UriBuilder.buildQueryParameter(openMeteoProperties.getBaseUrl(),
 			openMeteoProperties.getSunriseSunsetParams(startDate, endDate, latitude, longitude));
 
-		return restTemplate.exchange(uri, HttpMethod.GET, null, responseType);
+		return apiRestTemplate.exchange(uri, HttpMethod.GET, null, responseType);
 	}
 
 	public ResponseEntity<OpenMeteoReadResponse<UvIndexItem>> getUvIndex(
@@ -37,6 +37,6 @@ public class OpenMeteoApiClient {
 		URI uri = UriBuilder.buildQueryParameter(openMeteoProperties.getBaseUrl(),
 			openMeteoProperties.getUvIndexParams(startDate, endDate, latitude, longitude));
 
-		return restTemplate.exchange(uri, HttpMethod.GET, null, responseType);
+		return apiRestTemplate.exchange(uri, HttpMethod.GET, null, responseType);
 	}
 }

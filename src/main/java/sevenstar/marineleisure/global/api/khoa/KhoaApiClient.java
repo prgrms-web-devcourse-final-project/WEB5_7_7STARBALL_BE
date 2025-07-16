@@ -3,6 +3,7 @@ package sevenstar.marineleisure.global.api.khoa;
 import java.net.URI;
 import java.time.LocalDate;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -15,13 +16,15 @@ import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.FishingItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
+import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.global.exception.enums.CommonErrorCode;
 import sevenstar.marineleisure.global.utils.DateUtils;
 import sevenstar.marineleisure.global.utils.UriBuilder;
 
 @Component
 @RequiredArgsConstructor
 public class KhoaApiClient {
-	private final RestTemplate restTemplate;
+	private final RestTemplate apiRestTemplate;
 	private final KhoaProperties khoaProperties;
 
 	/**
@@ -38,11 +41,11 @@ public class KhoaApiClient {
 		ActivityCategory category) {
 		if (category == ActivityCategory.FISHING) {
 			// TODO : handling exception
-			// throw new IllegalAccessException();
+			throw new CustomException(CommonErrorCode.INTERNET_SERVER_ERROR);
 		}
 		URI uri = UriBuilder.buildQueryParameter(khoaProperties.getBaseUrl(), khoaProperties.getPath(category),
 			khoaProperties.getParams(DateUtils.formatTime(reqDate), page, size));
-		return restTemplate.exchange(uri, HttpMethod.GET, null, responseType);
+		return apiRestTemplate.exchange(uri, HttpMethod.GET, null, responseType);
 	}
 
 	/**
@@ -59,7 +62,7 @@ public class KhoaApiClient {
 		FishingType gubun) {
 		URI uri = UriBuilder.buildQueryParameter(khoaProperties.getBaseUrl(),
 			khoaProperties.getPath(ActivityCategory.FISHING), khoaProperties.getParams(DateUtils.formatTime(reqDate), page, size, gubun.getDescription()));
-		return restTemplate.exchange(uri, HttpMethod.GET, null, responseType);
+		return apiRestTemplate.exchange(uri, HttpMethod.GET, null, responseType);
 	}
 
 }

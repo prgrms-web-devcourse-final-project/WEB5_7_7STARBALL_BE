@@ -6,6 +6,7 @@ import static sevenstar.marineleisure.global.util.CurrentUserUtil.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.favorite.repository.FavoriteRepository;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
+import sevenstar.marineleisure.global.enums.Region;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.global.exception.enums.CommonErrorCode;
 import sevenstar.marineleisure.global.exception.enums.SpotErrorCode;
+import sevenstar.marineleisure.global.utils.GeoUtils;
+import sevenstar.marineleisure.spot.domain.BestSpot;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.domain.SpotPreset;
 import sevenstar.marineleisure.spot.domain.SpotViewQuartile;
 import sevenstar.marineleisure.spot.dto.SpotPreviewReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
@@ -25,9 +31,10 @@ import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.detail.provider.ActivityDetailProviderFactory;
 import sevenstar.marineleisure.spot.dto.detail.provider.ActivitySpotDetail;
 import sevenstar.marineleisure.spot.dto.projection.SpotDistanceProjection;
-import sevenstar.marineleisure.spot.dto.projection.SpotPreviewProjection;
+import sevenstar.marineleisure.spot.dto.projection.BestSpotProjection;
 import sevenstar.marineleisure.spot.mapper.SpotMapper;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
+import sevenstar.marineleisure.spot.repository.SpotPresetRepository;
 import sevenstar.marineleisure.spot.repository.SpotViewQuartileRepository;
 import sevenstar.marineleisure.spot.repository.SpotViewStatsRepository;
 
@@ -39,7 +46,9 @@ public class SpotServiceImpl implements SpotService {
 	private final SpotViewStatsRepository spotViewStatsRepository;
 	private final SpotViewQuartileRepository spotViewQuartileRepository;
 	private final FavoriteRepository favoriteRepository;
+	private final SpotPresetRepository spotPresetRepository;
 	private final ActivityDetailProviderFactory activityDetailProviderFactory;
+	private final GeoUtils geoUtils;
 
 	@Override
 	public SpotReadResponse searchSpot(float latitude, float longitude, Integer radius, ActivityCategory category) {
@@ -103,17 +112,27 @@ public class SpotServiceImpl implements SpotService {
 
 	@Override
 	public SpotPreviewReadResponse preview(float latitude, float longitude) {
-		LocalDate now = LocalDate.now();
-		// TODO : 기능 고도화 필요
-		SpotPreviewProjection bestSpotInFishing = outdoorSpotRepository.findBestSpotInFishing(latitude, longitude, now);
-		SpotPreviewProjection bestSpotInMudflat = outdoorSpotRepository.findBestSpotInMudflat(latitude, longitude, now);
-		SpotPreviewProjection bestSpotInScuba = outdoorSpotRepository.findBestSpotInScuba(latitude, longitude, now);
-		SpotPreviewProjection bestSpotInSurfing = outdoorSpotRepository.findBestSpotInSurfing(latitude, longitude, now);
+		Region region = geoUtils.searchRegion(latitude, longitude);
+		if (region == Region.OCEAN) {
+			LocalDate now = LocalDate.now();
+			BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", null);
+			double radius = 500_000;
+			double bufferDegree = GeoUtils.meterToBufferDegree(radius);
+			BestSpot bestSpotInFishing = outdoorSpotRepository.findBestSpotInFishing(region.getLatitude(),
+				region.getLongitude(), now, radius,bufferDegree).map(BestSpot::new).orElse(emptySpot);
+			BestSpot bestSpotInMudflat = outdoorSpotRepository.findBestSpotInMudflat(region.getLatitude(),
+				region.getLongitude(), now, radius,bufferDegree).map(BestSpot::new).orElse(emptySpot);
+			BestSpot bestSpotInScuba = outdoorSpotRepository.findBestSpotInScuba(region.getLatitude(),
+				region.getLongitude(), now, radius,bufferDegree).map(BestSpot::new).orElse(emptySpot);
+			BestSpot bestSpotInSurfing = outdoorSpotRepository.findBestSpotInSurfing(region.getLatitude(),
+				region.getLongitude(), now, radius,bufferDegree).map(BestSpot::new).orElse(emptySpot);
+			return new SpotPreviewReadResponse(bestSpotInFishing, bestSpotInMudflat, bestSpotInSurfing,
+				bestSpotInScuba);
+		}
+		SpotPreset spotPreset = spotPresetRepository.findById(region)
+			.orElseThrow(() -> new CustomException(CommonErrorCode.INTERNET_SERVER_ERROR, "존재하지 않는 region"));
 
-		return new SpotPreviewReadResponse(SpotPreviewReadResponse.SpotPreview.from(bestSpotInFishing),
-			SpotPreviewReadResponse.SpotPreview.from(bestSpotInMudflat),
-			SpotPreviewReadResponse.SpotPreview.from(bestSpotInScuba),
-			SpotPreviewReadResponse.SpotPreview.from(bestSpotInSurfing));
+		return SpotMapper.toDto(spotPreset);
 	}
 
 	@Override

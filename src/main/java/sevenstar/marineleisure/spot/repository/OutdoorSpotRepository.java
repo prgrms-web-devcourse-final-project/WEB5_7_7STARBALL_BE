@@ -12,116 +12,133 @@ import org.springframework.data.repository.query.Param;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.dto.projection.SpotDistanceProjection;
-import sevenstar.marineleisure.spot.dto.projection.SpotPreviewProjection;
+import sevenstar.marineleisure.spot.dto.projection.BestSpotProjection;
 
 public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> {
+
 	Optional<OutdoorSpot> findByLatitudeAndLongitudeAndCategory(BigDecimal latitude, BigDecimal longitude,
 		ActivityCategory category);
 
 	@Query(value = """
-		SELECT o.id, o.name, o.category,o.latitude,o.longitude,ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude),4326)) AS distance
+		SELECT o.id, o.name, o.category, o.latitude, o.longitude,
+		       ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) AS distance
 		FROM outdoor_spots o
-		WHERE ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude),4326)) <= :radius
-				AND (:category IS NULL OR o.category = :category)
+		WHERE ST_Distance_Sphere(o.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
+		  AND (:category IS NULL OR o.category = :category)
 		""", nativeQuery = true)
-	List<SpotDistanceProjection> findSpots(@Param("latitude") Float latitude,
-		@Param("longitude") Float longitude, @Param("radius") double radius, @Param("category") String category);
+	List<SpotDistanceProjection> findSpots(@Param("latitude") Float latitude, @Param("longitude") Float longitude,
+		@Param("radius") double radius, @Param("category") String category);
 
-	// TODO : 리팩토링 무조건 필요 (지점 기반 프리셋 생성후 프리뷰같은)
+	// Fishing Forecast
 	@Query(value = """
-		SELECT
-		    os.id AS spotId,
-		    os.name AS name,
-		    f.total_index AS totalIndex
+		SELECT os.id AS id, os.name AS name, f.total_index AS totalIndex
 		FROM outdoor_spots os
 		JOIN fishing_forecast f ON os.id = f.spot_id
 		WHERE f.forecast_date = :forecastDate
+		  AND MBRContains(
+		          ST_Buffer(ST_SRID(POINT(:longitude, :latitude), 4326), :bufferDegree),
+		          os.geo_point
+		      )
+		  AND ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
 		ORDER BY
-		    CASE f.total_index
-		        WHEN 'IMPOSSIBLE' THEN -1
-		        WHEN 'VERY_BAD' THEN (1.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-		        WHEN 'BAD' THEN (2.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-		        WHEN 'NORMAL' THEN (3.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-		        WHEN 'GOOD' THEN (4.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-		        WHEN 'VERY_GOOD' THEN (5.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-		    END DESC
+		  CASE f.total_index
+		    WHEN 'IMPOSSIBLE' THEN -1
+		    WHEN 'VERY_BAD' THEN (1.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'BAD' THEN (2.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'NORMAL' THEN (3.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'GOOD' THEN (4.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'VERY_GOOD' THEN (5.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		  END DESC
 		LIMIT 1
 		""", nativeQuery = true)
-	SpotPreviewProjection findBestSpotInFishing(@Param("latitude") double latitude,
-		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate);
+	Optional<BestSpotProjection> findBestSpotInFishing(@Param("latitude") double latitude,
+		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate,
+		@Param("radius") double radius, @Param("bufferDegree") double bufferDegree);
+
+	// Mudflat Forecast
+	@Query(value = """
+		SELECT os.id AS id, os.name AS name, m.total_index AS totalIndex
+		FROM outdoor_spots os
+		JOIN mudflat_forecast m ON os.id = m.spot_id
+		WHERE m.forecast_date = :forecastDate
+		  AND MBRContains(
+		          ST_Buffer(ST_SRID(POINT(:longitude, :latitude), 4326), :bufferDegree),
+		          os.geo_point
+		      )
+		  AND ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
+		ORDER BY
+		  CASE m.total_index
+		    WHEN 'IMPOSSIBLE' THEN -1
+		    WHEN 'VERY_BAD' THEN (1.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'BAD' THEN (2.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'NORMAL' THEN (3.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'GOOD' THEN (4.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'VERY_GOOD' THEN (5.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		  END DESC
+		LIMIT 1
+		""", nativeQuery = true)
+	Optional<BestSpotProjection> findBestSpotInMudflat(@Param("latitude") double latitude,
+		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate,
+		@Param("radius") double radius, @Param("bufferDegree") double bufferDegree);
+
+	// Surfing Forecast
+	@Query(value = """
+		SELECT os.id AS id, os.name AS name, s.total_index AS totalIndex
+		FROM outdoor_spots os
+		JOIN surfing_forecast s ON os.id = s.spot_id
+		WHERE s.forecast_date = :forecastDate
+		  AND MBRContains(
+		          ST_Buffer(ST_SRID(POINT(:longitude, :latitude), 4326), :bufferDegree),
+		          os.geo_point
+		      )
+		  AND ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
+		ORDER BY
+		  CASE s.total_index
+		    WHEN 'IMPOSSIBLE' THEN -1
+		    WHEN 'VERY_BAD' THEN (1.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'BAD' THEN (2.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'NORMAL' THEN (3.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'GOOD' THEN (4.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'VERY_GOOD' THEN (5.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		  END DESC
+		LIMIT 1
+		""", nativeQuery = true)
+	Optional<BestSpotProjection> findBestSpotInSurfing(@Param("latitude") double latitude,
+		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate,
+		@Param("radius") double radius, @Param("bufferDegree") double bufferDegree);
+
+	// Scuba Forecast
+	@Query(value = """
+		SELECT os.id AS id, os.name AS name, s.total_index AS totalIndex
+		FROM outdoor_spots os
+		JOIN scuba_forecast s ON os.id = s.spot_id
+		WHERE s.forecast_date = :forecastDate
+		  AND MBRContains(
+		          ST_Buffer(ST_SRID(POINT(:longitude, :latitude), 4326), :bufferDegree),
+		          os.geo_point
+		      )
+		  AND ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
+		ORDER BY
+		  CASE s.total_index
+		    WHEN 'IMPOSSIBLE' THEN -1
+		    WHEN 'VERY_BAD' THEN (1.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'BAD' THEN (2.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'NORMAL' THEN (3.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'GOOD' THEN (4.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		    WHEN 'VERY_GOOD' THEN (5.0/5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326))/1000 + 1)) / 2
+		  END DESC
+		LIMIT 1
+		""", nativeQuery = true)
+	Optional<BestSpotProjection> findBestSpotInScuba(@Param("latitude") double latitude,
+		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate,
+		@Param("radius") double radius, @Param("bufferDegree") double bufferDegree);
 
 	@Query(value = """
-		    SELECT
-		        os.id AS spotId,
-		        os.name AS name,
-		        m.total_index AS totalIndex
-		    FROM outdoor_spots os
-		    JOIN mudflat_forecast m ON os.id = m.spot_id
-		    WHERE m.forecast_date = :forecastDate
-		    ORDER BY
-		        CASE m.total_index
-					WHEN 'IMPOSSIBLE' THEN -1
-					WHEN 'VERY_BAD' THEN (1.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'BAD' THEN (2.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'NORMAL' THEN (3.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'GOOD' THEN (4.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'VERY_GOOD' THEN (5.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-		        END DESC
-		    LIMIT 1
+		SELECT *, ST_Distance_Sphere(POINT(longitude, latitude), POINT(:longitude, :latitude)) AS distance_in_meters
+		FROM outdoor_spots
+		ORDER BY distance_in_meters ASC
+		LIMIT :limit
 		""", nativeQuery = true)
-	SpotPreviewProjection findBestSpotInMudflat(@Param("latitude") double latitude,
-		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate);
-
-	@Query(value = """
-		    SELECT
-		        os.id AS spotId,
-		        os.name AS name,
-		        s.total_index AS totalIndex
-		    FROM outdoor_spots os
-		    JOIN surfing_forecast s ON os.id = s.spot_id
-		    WHERE s.forecast_date = :forecastDate
-		    ORDER BY
-		        CASE s.total_index
-					WHEN 'IMPOSSIBLE' THEN -1
-					WHEN 'VERY_BAD' THEN (1.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'BAD' THEN (2.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'NORMAL' THEN (3.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'GOOD' THEN (4.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'VERY_GOOD' THEN (5.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-		        END DESC
-		    LIMIT 1
-		""", nativeQuery = true)
-	SpotPreviewProjection findBestSpotInSurfing(@Param("latitude") double latitude,
-		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate);
-
-	@Query(value = """
-		    SELECT
-		        os.id AS spotId,
-		        os.name AS name,
-		        s.total_index AS totalIndex
-		    FROM outdoor_spots os
-		    JOIN scuba_forecast s ON os.id = s.spot_id
-		    WHERE s.forecast_date = :forecastDate
-		    ORDER BY
-		        CASE s.total_index
-					WHEN 'IMPOSSIBLE' THEN -1
-					WHEN 'VERY_BAD' THEN (1.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'BAD' THEN (2.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'NORMAL' THEN (3.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'GOOD' THEN (4.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-					WHEN 'VERY_GOOD' THEN (5.0 / 5 + 1 / (ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) / 1000 + 1)) / 2
-		        END DESC
-		    LIMIT 1
-		""", nativeQuery = true)
-	SpotPreviewProjection findBestSpotInScuba(@Param("latitude") double latitude, @Param("longitude") double longitude,
-		@Param("forecastDate") LocalDate forecastDate);
-
-	@Query(value =
-		"SELECT *, ST_Distance_Sphere(POINT(longitude, latitude), POINT(:longitude, :latitude)) as distance_in_meters " +
-			"FROM outdoor_spot " +
-			"ORDER BY distance_in_meters ASC " +
-			"LIMIT :limit"
-		, nativeQuery = true)
-	List<OutdoorSpot> findByCoordinates(BigDecimal latitude, BigDecimal longitude, int limit);
-
+	List<OutdoorSpot> findByCoordinates(@Param("latitude") BigDecimal latitude,
+		@Param("longitude") BigDecimal longitude, @Param("limit") int limit);
 }
