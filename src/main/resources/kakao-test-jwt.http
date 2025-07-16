@@ -1,0 +1,19 @@
+### Test JWT Token Creation with Kakao Access Token
+@baseUrl = http://localhost:8083
+# 테스트용 토큰 셍성기
+# {kakaoAccessToken} 에 테스트용 액세스 토큰을 넣어주면 됩니다.
+
+
+POST {{baseUrl}}/auth/kakao/test-jwt?kakaoAccessToken={kakaoAccessToken}
+Accept: application/json
+
+### How to use:
+# 1. 카카오 개발자 사이트에서 토큰 가져오기:
+#    - Go to https://developers.kakao.com/console/app
+#    - 내 앱( 멤버 추가 해드려야 할듯합니다)
+#    - "카카오 로그인" > "테스트"
+#    - "토큰 발급받기" 눌러서 발급.
+# 2. 액세스 토큰 복사
+# 3. {kakaoAccessToken} 복사한거 붙여넣기
+# 4. 이 api 호출
+# 5. 응답에 서비스 내의 access 토큰 들어 있다.
