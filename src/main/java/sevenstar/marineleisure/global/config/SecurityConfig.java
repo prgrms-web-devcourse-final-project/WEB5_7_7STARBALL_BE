@@ -55,6 +55,7 @@ public class SecurityConfig {
 				.requestMatchers("/map/**").permitAll()
 				// 위험경보관련 API는 인증이 필요하지 않습니다.
 				.requestMatchers("/alerts/**").permitAll()
+				.requestMatchers("/activities/**").permitAll()
 				// (6) 나머지는 인증 필요
 				.anyRequest().authenticated()
 			)

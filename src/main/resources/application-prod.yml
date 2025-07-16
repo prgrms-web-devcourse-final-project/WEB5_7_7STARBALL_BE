@@ -54,7 +54,7 @@ kakao:
   login:
     api_key: ${KAKAO_API_KEY}
     client_secret: ${KAKAO_CLIENT_SECRET}
-    redirect_uri: http://localhost:8080/oauth/kakao/callback
+    redirect_uri: http://localhost:5173/oauth/kakao/callback
     uri:
       code: /oauth/authorize
       base: https://kauth.kakao.com
