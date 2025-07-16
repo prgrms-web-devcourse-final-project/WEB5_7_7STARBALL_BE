@@ -9,7 +9,10 @@ import sevenstar.marineleisure.global.domain.BaseEntity;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "blacklisted_refresh_tokens")
+@Table(name = "blacklisted_refresh_tokens", 
+       indexes = {
+           @Index(name = "idx_blacklisted_refresh_tokens_jti", columnList = "jti")
+       })
 @Getter
 @NoArgsConstructor
 public class BlacklistedRefreshToken extends BaseEntity {
