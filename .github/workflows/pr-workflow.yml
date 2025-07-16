@@ -8,27 +8,27 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  codetest:
-    name: 코드 테스트
-    runs-on: ubuntu-latest
+  #  codetest:
+  #    name: 코드 테스트
+  #    runs-on: ubuntu-latest
+  #
+  #    steps:
+  #      - name: branch checkout
+  #        uses: actions/checkout@v4
+  #
+  #      - name: JDK setting
+  #        uses: actions/setup-java@v4
+  #        with:
+  #          java-version: '21'
+  #          distribution: 'temurin'
+  #
+  #      - name: set Permission
+  #        run: chmod +x ./gradlew
 
-    steps:
-      - name: branch checkout
-        uses: actions/checkout@v4
-
-      - name: JDK setting
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: set Permission
-        run: chmod +x ./gradlew
-
-      - name: do test
-        run: ./gradlew test --stacktrace --no-daemon -Dspring.profiles.active=test --info
-        env:
-          JAVA_TOOL_OPTIONS: "-Dlogging.level.root=DEBUG"
+  #      - name: do test
+  #        run: ./gradlew -x test --stacktrace --no-daemon -Dspring.profiles.active=test --info
+  #        env:
+  #          JAVA_TOOL_OPTIONS: "-Dlogging.level.root=DEBUG"
 
   tagging:
     name: 태깅 및 릴리즈

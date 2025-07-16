@@ -25,7 +25,7 @@ services:
       start_period: 40s
 
   app:
-    image: ghcr.io/your-org/your-repo:latest  # 최신 이미지 태그
+    image: ghcr.io/prgrms-web-devcourse-final-project/WEB5_7_7STARBALL_BE:latest
     networks:
       - marine-net
     container_name: marine_app
