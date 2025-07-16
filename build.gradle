@@ -69,11 +69,17 @@ dependencies {
 
     // mock-inline
     testImplementation 'org.mockito:mockito-inline:5.2.0'
+    // embedded-redis
+    testImplementation 'it.ozimov:embedded-redis:0.7.3'
     // html parser
     implementation 'org.jsoup:jsoup:1.21.1'
 
     // pdf parsing
     implementation 'org.apache.pdfbox:pdfbox:3.0.5'
+
+    testImplementation "org.testcontainers:mysql:1.19.3"
+    testImplementation "org.testcontainers:junit-jupiter:1.19.3"
+
 }
 
 dependencyManagement {
