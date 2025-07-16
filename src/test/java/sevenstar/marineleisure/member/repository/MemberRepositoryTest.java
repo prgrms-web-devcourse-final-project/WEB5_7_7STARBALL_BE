@@ -10,12 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import sevenstar.marineleisure.AbstractTest;
 import sevenstar.marineleisure.annotation.MysqlDataJpaTest;
 import sevenstar.marineleisure.global.enums.MemberStatus;
 import sevenstar.marineleisure.member.domain.Member;
 
-@MysqlDataJpaTest
-class MemberRepositoryTest {
+class MemberRepositoryTest extends AbstractTest {
 
 	@Autowired
 	private MemberRepository memberRepository;

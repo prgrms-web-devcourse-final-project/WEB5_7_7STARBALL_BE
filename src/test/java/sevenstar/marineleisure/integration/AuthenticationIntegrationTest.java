@@ -11,18 +11,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import sevenstar.marineleisure.AbstractTest;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
 import sevenstar.marineleisure.member.service.OauthService;
 
-@SpringBootTest
+// @SpringBootTest
 @AutoConfigureMockMvc
-public class AuthenticationIntegrationTest {
+public class AuthenticationIntegrationTest extends AbstractTest {
 
 	@Autowired
 	private MockMvc mockMvc;

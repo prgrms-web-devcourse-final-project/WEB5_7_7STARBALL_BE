@@ -3,15 +3,14 @@ package sevenstar.marineleisure.global.api;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import sevenstar.marineleisure.AbstractTest;
 import sevenstar.marineleisure.global.api.khoa.KhoaApiClient;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.FishingItem;
@@ -28,8 +27,8 @@ import sevenstar.marineleisure.global.enums.FishingType;
 /**
  * 외부 API 클라이언트 조회 테스트
  */
-@SpringBootTest
-public class ApiClientTest {
+// @SpringBootTest
+public class ApiClientTest extends AbstractTest {
 	@Autowired
 	private KhoaApiClient khoaApiClient;
 	@Autowired

@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.validation.constraints.Size;
 import lombok.extern.slf4j.Slf4j;
+import sevenstar.marineleisure.AbstractTest;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
 import sevenstar.marineleisure.global.enums.MeetingRole;
@@ -66,8 +67,8 @@ import sevenstar.marineleisure.meeting.global.TestSecurityConfig;
 
 
 @Slf4j
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, 
-    properties = {"spring.task.scheduling.enabled=false"})
+// @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+//     properties = {"spring.task.scheduling.enabled=false"})
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("mysql-test")
 @TestMethodOrder(MethodOrderer.DisplayName.class)
@@ -75,7 +76,7 @@ import sevenstar.marineleisure.meeting.global.TestSecurityConfig;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Transactional
 @Rollback
-class MeetingControllerTest {
+class MeetingControllerTest extends AbstractTest {
 
 	@Autowired
 	private MockMvc mockMvc;
