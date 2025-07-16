@@ -40,3 +40,8 @@ VALUES (1, '인천', '2025-07-03', 'LOW', NOW(), NOW()),
        (7, '강원', '2025-07-03', 'LOW', NOW(), NOW())
 ON DUPLICATE KEY UPDATE density_type = VALUES(density_type),
                         updated_at   = NOW();
+
+select *
+from fishing_forecast;
+select *
+from outdoor_spots;
