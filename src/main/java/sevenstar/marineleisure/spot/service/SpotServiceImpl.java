@@ -6,7 +6,6 @@ import static sevenstar.marineleisure.global.util.CurrentUserUtil.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,6 @@ import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.detail.provider.ActivityDetailProviderFactory;
 import sevenstar.marineleisure.spot.dto.detail.provider.ActivitySpotDetail;
 import sevenstar.marineleisure.spot.dto.projection.SpotDistanceProjection;
-import sevenstar.marineleisure.spot.dto.projection.BestSpotProjection;
 import sevenstar.marineleisure.spot.mapper.SpotMapper;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 import sevenstar.marineleisure.spot.repository.SpotPresetRepository;
@@ -117,15 +115,14 @@ public class SpotServiceImpl implements SpotService {
 			LocalDate now = LocalDate.now();
 			BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", null);
 			double radius = 500_000;
-			double bufferDegree = GeoUtils.meterToBufferDegree(radius);
 			BestSpot bestSpotInFishing = outdoorSpotRepository.findBestSpotInFishing(region.getLatitude(),
-				region.getLongitude(), now, radius,bufferDegree).map(BestSpot::new).orElse(emptySpot);
+				region.getLongitude(), now, radius).map(BestSpot::new).orElse(emptySpot);
 			BestSpot bestSpotInMudflat = outdoorSpotRepository.findBestSpotInMudflat(region.getLatitude(),
-				region.getLongitude(), now, radius,bufferDegree).map(BestSpot::new).orElse(emptySpot);
+				region.getLongitude(), now, radius).map(BestSpot::new).orElse(emptySpot);
 			BestSpot bestSpotInScuba = outdoorSpotRepository.findBestSpotInScuba(region.getLatitude(),
-				region.getLongitude(), now, radius,bufferDegree).map(BestSpot::new).orElse(emptySpot);
+				region.getLongitude(), now, radius).map(BestSpot::new).orElse(emptySpot);
 			BestSpot bestSpotInSurfing = outdoorSpotRepository.findBestSpotInSurfing(region.getLatitude(),
-				region.getLongitude(), now, radius,bufferDegree).map(BestSpot::new).orElse(emptySpot);
+				region.getLongitude(), now, radius).map(BestSpot::new).orElse(emptySpot);
 			return new SpotPreviewReadResponse(bestSpotInFishing, bestSpotInMudflat, bestSpotInSurfing,
 				bestSpotInScuba);
 		}

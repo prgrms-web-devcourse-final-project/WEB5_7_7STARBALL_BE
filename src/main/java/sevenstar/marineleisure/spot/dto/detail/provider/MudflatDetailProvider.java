@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.forecast.domain.Mudflat;
 import sevenstar.marineleisure.forecast.repository.MudflatRepository;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
-import sevenstar.marineleisure.spot.dto.detail.items.MudflatSpotDetail;
+import sevenstar.marineleisure.spot.mapper.SpotDetailMapper;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 @Component
@@ -36,7 +36,7 @@ public class MudflatDetailProvider implements ActivityDetailProvider {
 	private List<ActivitySpotDetail> transform(List<Mudflat> mudflatForecasts) {
 		List<ActivitySpotDetail> details = new ArrayList<>();
 		for (Mudflat mudflatForecast : mudflatForecasts) {
-			details.add(MudflatSpotDetail.of(mudflatForecast));
+			details.add(SpotDetailMapper.toDto(mudflatForecast));
 		}
 		return details;
 	}

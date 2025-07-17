@@ -35,10 +35,6 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		FROM outdoor_spots os
 		JOIN fishing_forecast f ON os.id = f.spot_id
 		WHERE f.forecast_date = :forecastDate
-		  AND MBRContains(
-		          ST_Buffer(ST_SRID(POINT(:longitude, :latitude), 4326), :bufferDegree),
-		          os.geo_point
-		      )
 		  AND ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
 		ORDER BY
 		  CASE f.total_index
@@ -53,7 +49,7 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		""", nativeQuery = true)
 	Optional<BestSpotProjection> findBestSpotInFishing(@Param("latitude") double latitude,
 		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate,
-		@Param("radius") double radius, @Param("bufferDegree") double bufferDegree);
+		@Param("radius") double radius);
 
 	// Mudflat Forecast
 	@Query(value = """
@@ -61,10 +57,6 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		FROM outdoor_spots os
 		JOIN mudflat_forecast m ON os.id = m.spot_id
 		WHERE m.forecast_date = :forecastDate
-		  AND MBRContains(
-		          ST_Buffer(ST_SRID(POINT(:longitude, :latitude), 4326), :bufferDegree),
-		          os.geo_point
-		      )
 		  AND ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
 		ORDER BY
 		  CASE m.total_index
@@ -79,7 +71,7 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		""", nativeQuery = true)
 	Optional<BestSpotProjection> findBestSpotInMudflat(@Param("latitude") double latitude,
 		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate,
-		@Param("radius") double radius, @Param("bufferDegree") double bufferDegree);
+		@Param("radius") double radius);
 
 	// Surfing Forecast
 	@Query(value = """
@@ -87,10 +79,6 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		FROM outdoor_spots os
 		JOIN surfing_forecast s ON os.id = s.spot_id
 		WHERE s.forecast_date = :forecastDate
-		  AND MBRContains(
-		          ST_Buffer(ST_SRID(POINT(:longitude, :latitude), 4326), :bufferDegree),
-		          os.geo_point
-		      )
 		  AND ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
 		ORDER BY
 		  CASE s.total_index
@@ -105,7 +93,7 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		""", nativeQuery = true)
 	Optional<BestSpotProjection> findBestSpotInSurfing(@Param("latitude") double latitude,
 		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate,
-		@Param("radius") double radius, @Param("bufferDegree") double bufferDegree);
+		@Param("radius") double radius);
 
 	// Scuba Forecast
 	@Query(value = """
@@ -113,10 +101,6 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		FROM outdoor_spots os
 		JOIN scuba_forecast s ON os.id = s.spot_id
 		WHERE s.forecast_date = :forecastDate
-		  AND MBRContains(
-		          ST_Buffer(ST_SRID(POINT(:longitude, :latitude), 4326), :bufferDegree),
-		          os.geo_point
-		      )
 		  AND ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) <= :radius
 		ORDER BY
 		  CASE s.total_index
@@ -131,7 +115,7 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		""", nativeQuery = true)
 	Optional<BestSpotProjection> findBestSpotInScuba(@Param("latitude") double latitude,
 		@Param("longitude") double longitude, @Param("forecastDate") LocalDate forecastDate,
-		@Param("radius") double radius, @Param("bufferDegree") double bufferDegree);
+		@Param("radius") double radius);
 
 	@Query(value = """
 		SELECT *, ST_Distance_Sphere(POINT(longitude, latitude), POINT(:longitude, :latitude)) AS distance_in_meters

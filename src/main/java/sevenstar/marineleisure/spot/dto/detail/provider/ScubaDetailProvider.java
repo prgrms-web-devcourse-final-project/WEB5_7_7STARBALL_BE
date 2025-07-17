@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.forecast.domain.Scuba;
 import sevenstar.marineleisure.forecast.repository.ScubaRepository;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
-import sevenstar.marineleisure.spot.dto.detail.items.ScubaSpotDetail;
+import sevenstar.marineleisure.spot.mapper.SpotDetailMapper;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 @Component
@@ -36,7 +36,7 @@ public class ScubaDetailProvider implements ActivityDetailProvider {
 	private List<ActivitySpotDetail> transform(List<Scuba> scubaForecasts) {
 		List<ActivitySpotDetail> details = new ArrayList<>();
 		for (Scuba scubaForecast : scubaForecasts) {
-			details.add(ScubaSpotDetail.of(scubaForecast));
+			details.add(SpotDetailMapper.toDto(scubaForecast));
 		}
 		return details;
 	}

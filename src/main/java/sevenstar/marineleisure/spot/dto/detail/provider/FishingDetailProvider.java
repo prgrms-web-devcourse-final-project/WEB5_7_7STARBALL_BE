@@ -11,6 +11,7 @@ import sevenstar.marineleisure.forecast.repository.FishingRepository;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.spot.dto.detail.items.FishingSpotDetail;
 import sevenstar.marineleisure.spot.dto.projection.FishingReadProjection;
+import sevenstar.marineleisure.spot.mapper.SpotDetailMapper;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 @Component
@@ -37,7 +38,7 @@ public class FishingDetailProvider implements ActivityDetailProvider {
 	private List<ActivitySpotDetail> transform(List<FishingReadProjection> fishingForecasts) {
 		List<ActivitySpotDetail> details = new ArrayList<>();
 		for (FishingReadProjection fishingForecast : fishingForecasts) {
-			details.add(FishingSpotDetail.of(fishingForecast));
+			details.add(SpotDetailMapper.toDto(fishingForecast));
 		}
 		return details;
 	}

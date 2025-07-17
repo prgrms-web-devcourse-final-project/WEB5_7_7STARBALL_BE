@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.forecast.domain.Surfing;
 import sevenstar.marineleisure.forecast.repository.SurfingRepository;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
-import sevenstar.marineleisure.spot.dto.detail.items.SurfingSpotDetail;
+import sevenstar.marineleisure.spot.mapper.SpotDetailMapper;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 @Component
@@ -36,7 +36,7 @@ public class SurfingDetailProvider implements ActivityDetailProvider {
 	private List<ActivitySpotDetail> transform(List<Surfing> surfingForecasts) {
 		List<ActivitySpotDetail> details = new ArrayList<>();
 		for (Surfing surfingForecast : surfingForecasts) {
-			details.add(SurfingSpotDetail.of(surfingForecast));
+			details.add(SpotDetailMapper.toDto(surfingForecast));
 		}
 		return details;
 	}

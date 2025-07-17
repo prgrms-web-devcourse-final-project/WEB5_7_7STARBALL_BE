@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.enums.Region;
 import sevenstar.marineleisure.global.enums.TotalIndex;
-import sevenstar.marineleisure.global.utils.GeoUtils;
 import sevenstar.marineleisure.spot.domain.BestSpot;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 import sevenstar.marineleisure.spot.repository.SpotPresetRepository;
@@ -22,16 +21,15 @@ public class PresetSchedulerService {
 	public void updateRegionApi() {
 		LocalDate now = LocalDate.now();
 		BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", TotalIndex.NONE);
-		double bufferDegree = GeoUtils.meterToBufferDegree(PRESET_RADIUS);
 		for (Region region : Region.getAllKoreaRegion()) {
 			BestSpot bestSpotInFishing = outdoorSpotRepository.findBestSpotInFishing(region.getLatitude(),
-				region.getLongitude(), now, PRESET_RADIUS, bufferDegree).map(BestSpot::new).orElse(emptySpot);
+				region.getLongitude(), now, PRESET_RADIUS).map(BestSpot::new).orElse(emptySpot);
 			BestSpot bestSpotInMudflat = outdoorSpotRepository.findBestSpotInMudflat(region.getLatitude(),
-				region.getLongitude(), now, PRESET_RADIUS, bufferDegree).map(BestSpot::new).orElse(emptySpot);
+				region.getLongitude(), now, PRESET_RADIUS).map(BestSpot::new).orElse(emptySpot);
 			BestSpot bestSpotInScuba = outdoorSpotRepository.findBestSpotInScuba(region.getLatitude(),
-				region.getLongitude(), now, PRESET_RADIUS, bufferDegree).map(BestSpot::new).orElse(emptySpot);
+				region.getLongitude(), now, PRESET_RADIUS).map(BestSpot::new).orElse(emptySpot);
 			BestSpot bestSpotInSurfing = outdoorSpotRepository.findBestSpotInSurfing(region.getLatitude(),
-				region.getLongitude(), now, PRESET_RADIUS, bufferDegree).map(BestSpot::new).orElse(emptySpot);
+				region.getLongitude(), now, PRESET_RADIUS).map(BestSpot::new).orElse(emptySpot);
 
 			spotPresetRepository.upsert(region.name(), bestSpotInFishing.getSpotId(), bestSpotInFishing.getName(),
 				bestSpotInFishing.getTotalIndex().name(), bestSpotInMudflat.getSpotId(), bestSpotInMudflat.getName(),

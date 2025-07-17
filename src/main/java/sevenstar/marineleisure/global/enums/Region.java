@@ -1,7 +1,6 @@
 package sevenstar.marineleisure.global.enums;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 
@@ -25,7 +24,7 @@ public enum Region {
 	GYEONGBUK("경상북도", 36.5760, 128.5056),
 	GYEONGNAM("경상남도", 35.4606, 128.2132),
 	JEJU("제주특별자치도", 33.4996, 126.5312),
-	OCEAN(null, 0, 0),
+	OCEAN("해양", 0, 0),
 	;
 
 	private final String koreanName;
@@ -39,6 +38,9 @@ public enum Region {
 	}
 
 	public static Region fromAddress(String address) {
+		if (address == null) {
+			return OCEAN;
+		}
 		for (Region region : Region.values()) {
 			if (address.startsWith(region.koreanName)) {
 				return region;
