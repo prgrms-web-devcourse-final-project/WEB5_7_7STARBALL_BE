@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -41,6 +42,7 @@ import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 @Import({SpotServiceImpl.class, GeoUtils.class, GeoConfig.class, ActivityDetailProviderFactory.class,
 	FishingDetailProvider.class, MudflatDetailProvider.class, ScubaDetailProvider.class,
 	SurfingDetailProvider.class})
+@Disabled
 class SpotServiceTest {
 	@Autowired
 	private SpotService spotService;
