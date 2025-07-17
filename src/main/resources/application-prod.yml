@@ -55,6 +55,7 @@ api:
       surfing: /fcstSurfing/GetFcstSurfingApiService
   openmeteo:
     base-url: https://api.open-meteo.com/v1/forecast
+    timezone: Asia/Seoul
 badanuri:
   api:
     key: ${BADANURI_KEY}

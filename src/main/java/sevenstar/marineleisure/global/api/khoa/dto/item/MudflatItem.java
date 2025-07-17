@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.utils.DateUtils;
 
 @Getter
+@NoArgsConstructor
 public class MudflatItem implements KhoaItem {
 	private String mdftExpcnVlgNm;       // 마을 이름
 	private double lat;                  // 위도
