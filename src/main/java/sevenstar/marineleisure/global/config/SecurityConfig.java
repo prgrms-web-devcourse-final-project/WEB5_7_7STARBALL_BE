@@ -82,7 +82,7 @@ public class SecurityConfig {
 			"http://localhost:7030"           // 현재 프론트엔드 개발 환경
 		));
 
-		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
 
 		// jwt.use-cookie 설정에 따라 credentials 설정 변경
