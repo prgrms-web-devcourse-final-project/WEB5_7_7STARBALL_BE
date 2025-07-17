@@ -11,21 +11,21 @@ import sevenstar.marineleisure.global.enums.ActivityCategory;
 
 @Component
 public class ActivityDetailProviderFactory {
-	private final Map<ActivityCategory, ActivityDetailProvider> providers = new EnumMap<>(ActivityCategory.class);
-	private final List<ActivityDetailProvider> detailProviders;
+	private final Map<ActivityCategory, ActivityProvider> providers = new EnumMap<>(ActivityCategory.class);
+	private final List<ActivityProvider> detailProviders;
 
-	public ActivityDetailProviderFactory(List<ActivityDetailProvider> detailProviders) {
+	public ActivityDetailProviderFactory(List<ActivityProvider> detailProviders) {
 		this.detailProviders = detailProviders;
 	}
 
 	@PostConstruct
 	public void init() {
-		for (ActivityDetailProvider detailProvider : detailProviders) {
+		for (ActivityProvider detailProvider : detailProviders) {
 			providers.put(detailProvider.getSupportCategory(), detailProvider);
 		}
 	}
 
-	public ActivityDetailProvider getProvider(ActivityCategory category) {
+	public ActivityProvider getProvider(ActivityCategory category) {
 		return providers.get(category);
 	}
 }

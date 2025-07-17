@@ -45,7 +45,7 @@ public class ApiClientTest {
 	@Test
 	void receiveFishApi() {
 		ResponseEntity<ApiResponse<FishingItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, FishingType.ROCK);
+		}, reqDate, 1, 15, ActivityCategory.FISHING, FishingType.ROCK);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}
@@ -53,7 +53,7 @@ public class ApiClientTest {
 	@Test
 	void receiveSurfingApi() {
 		ResponseEntity<ApiResponse<SurfingItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, ActivityCategory.SURFING);
+		}, reqDate, 1, 15, ActivityCategory.SURFING, FishingType.NONE);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}
@@ -61,7 +61,7 @@ public class ApiClientTest {
 	@Test
 	void receiveMudflatApi() {
 		ResponseEntity<ApiResponse<MudflatItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, ActivityCategory.MUDFLAT);
+		}, reqDate, 1, 15, ActivityCategory.MUDFLAT, FishingType.NONE);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}
@@ -69,7 +69,7 @@ public class ApiClientTest {
 	@Test
 	void receiveDivingApi() {
 		ResponseEntity<ApiResponse<ScubaItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, ActivityCategory.SCUBA);
+		}, reqDate, 1, 15, ActivityCategory.SCUBA, FishingType.NONE);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}
