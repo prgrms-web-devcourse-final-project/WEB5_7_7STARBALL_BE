@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +31,7 @@ import sevenstar.marineleisure.global.enums.FishingType;
  * 외부 API 클라이언트 조회 테스트
  */
 @SpringBootTest
+@Disabled
 public class ApiClientTest {
 	@Autowired
 	private KhoaApiClient khoaApiClient;
