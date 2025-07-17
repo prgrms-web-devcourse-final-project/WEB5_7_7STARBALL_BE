@@ -3,7 +3,6 @@ package sevenstar.marineleisure.spot.dto.detail.items;
 import java.time.LocalDate;
 
 import lombok.Getter;
-import sevenstar.marineleisure.forecast.domain.Surfing;
 import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.spot.dto.detail.provider.ActivitySpotDetail;
@@ -19,7 +18,7 @@ public class SurfingSpotDetail implements ActivitySpotDetail {
 	private final TotalIndex totalIndex;
 	private final int uvIndex;
 
-	private SurfingSpotDetail(LocalDate forecastDate, TimePeriod timePeriod, float waveHeight, int wavePeriod,
+	public SurfingSpotDetail(LocalDate forecastDate, TimePeriod timePeriod, float waveHeight, int wavePeriod,
 		float windSpeed, float seaTemp, TotalIndex totalIndex, int uvIndex) {
 		this.forecastDate = forecastDate;
 		this.timePeriod = timePeriod;
@@ -31,9 +30,5 @@ public class SurfingSpotDetail implements ActivitySpotDetail {
 		this.uvIndex = uvIndex;
 	}
 
-	public static SurfingSpotDetail of(Surfing surfingForecast) {
-		return new SurfingSpotDetail(surfingForecast.getForecastDate(), surfingForecast.getTimePeriod(),
-			surfingForecast.getWaveHeight(), surfingForecast.getWavePeriod().intValue(), surfingForecast.getWindSpeed(),
-			surfingForecast.getSeaTemp(), surfingForecast.getTotalIndex(), surfingForecast.getUvIndex().intValue());
-	}
+
 }

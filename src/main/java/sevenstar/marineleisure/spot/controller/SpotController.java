@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.domain.BaseResponse;
-import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotPreviewReadResponse;
 import sevenstar.marineleisure.spot.dto.SpotPreviewRequest;
 import sevenstar.marineleisure.spot.dto.SpotReadRequest;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
+import sevenstar.marineleisure.spot.dto.detail.SpotDetailReadResponse;
 import sevenstar.marineleisure.spot.service.SpotService;
 
 @RestController
@@ -37,7 +37,8 @@ public class SpotController {
 	}
 
 	@GetMapping("/preview")
-	ResponseEntity<BaseResponse<SpotPreviewReadResponse>> getSpotPreview(@ModelAttribute @Valid SpotPreviewRequest request) {
+	ResponseEntity<BaseResponse<SpotPreviewReadResponse>> getSpotPreview(
+		@ModelAttribute @Valid SpotPreviewRequest request) {
 		return BaseResponse.success(spotService.preview(request.getLatitude(), request.getLongitude()));
 	}
 }

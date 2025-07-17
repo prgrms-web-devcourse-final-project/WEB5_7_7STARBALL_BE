@@ -34,6 +34,12 @@ spring:
       api-key: ${OPENAI_KEY}
       chat:
         model: gpt-3.5-turbo
+
+  flyway:
+    enabled: false
+  #    baseline-on-migrate: true
+  #    locations: classpath:db/migration
+
 api:
   # 국립해양조사원(Korea Hydrographic and Oceanographic Agency, KHOA)
   khoa:
@@ -47,6 +53,7 @@ api:
       surfing: /fcstSurfing/GetFcstSurfingApiService
   openmeteo:
     base-url: https://api.open-meteo.com/v1/forecast
+    timezone: Asia/Seoul
 badanuri:
   api:
     key: ${BADANURI_KEY}
@@ -54,7 +61,8 @@ kakao:
   login:
     api_key: ${KAKAO_API_KEY}
     client_secret: ${KAKAO_CLIENT_SECRET}
-    redirect_uri: http://localhost:5173/oauth/kakao/callback
+    redirect_uri: ${KAKAO_REDIRECT_URI}
+
     uri:
       code: /oauth/authorize
       base: https://kauth.kakao.com
