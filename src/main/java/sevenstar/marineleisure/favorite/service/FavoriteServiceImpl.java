@@ -16,6 +16,7 @@ import sevenstar.marineleisure.favorite.dto.vo.FavoriteItemVO;
 import sevenstar.marineleisure.favorite.repository.FavoriteRepository;
 import sevenstar.marineleisure.global.exception.CustomException;
 import sevenstar.marineleisure.global.exception.enums.FavoriteErrorCode;
+import sevenstar.marineleisure.global.exception.enums.SpotErrorCode;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
@@ -45,9 +46,8 @@ public class FavoriteServiceImpl implements FavoriteService {
 	@Transactional
 	public Long createFavorite(Long id) {
 		Long currentMemberId = getCurrentUserId();
-		// 우선 즐겨찾기를 못찾았다고 넣었지만, 나중에 Spot에러코드 추가되면 그걸로 교체 예정입니다.
 		OutdoorSpot outdoorSpot = spotRepository.findById(id)
-			.orElseThrow(() -> new CustomException(FavoriteErrorCode.FAVORITE_NOT_FOUND));
+			.orElseThrow(() -> new CustomException(SpotErrorCode.SPOT_NOT_FOUND));
 
 		FavoriteSpot createdFavoriteSpot = FavoriteSpot.builder()
 			.memberId(currentMemberId)
