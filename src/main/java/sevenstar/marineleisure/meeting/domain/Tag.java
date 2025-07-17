@@ -39,7 +39,7 @@ public class Tag extends BaseEntity {
 
 
 	@Builder
-	public Tag(Long meetingId, List<String> content) {
+	public Tag(Long meetingId) {
 		this.meetingId = meetingId;
 		this.content = content;
 	}

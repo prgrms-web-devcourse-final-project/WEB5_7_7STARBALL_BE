@@ -2,8 +2,8 @@ package sevenstar.marineleisure.spot.dto.projection;
 
 import sevenstar.marineleisure.global.enums.TotalIndex;
 
-public interface SpotPreviewProjection {
-	Long getSpotId();
+public interface BestSpotProjection {
+	Long getId();
 	String getName();
 	TotalIndex getTotalIndex();
 }

@@ -23,7 +23,7 @@ public class FishingSpotDetail implements ActivitySpotDetail {
 	private int uvIndex;
 	private FishDetail target;
 
-	private FishingSpotDetail(LocalDate forecastDate, TimePeriod timePeriod, String tide, TotalIndex totalIndex,
+	public FishingSpotDetail(LocalDate forecastDate, TimePeriod timePeriod, String tide, TotalIndex totalIndex,
 		RangeDetail waveHeight, RangeDetail seaTemp, RangeDetail airTemp, RangeDetail currentSpeed,
 		RangeDetail windSpeed,
 		int uvIndex, FishDetail target) {
@@ -38,17 +38,5 @@ public class FishingSpotDetail implements ActivitySpotDetail {
 		this.windSpeed = windSpeed;
 		this.uvIndex = uvIndex;
 		this.target = target;
-	}
-
-	public static FishingSpotDetail of(FishingReadProjection projection) {
-		return new FishingSpotDetail(projection.getForecastDate(), projection.getTimePeriod(),
-			projection.getTide().getDescription(),
-			projection.getTotalIndex(),
-			RangeDetail.of(projection.getWaveHeightMin(), projection.getWaveHeightMax()),
-			RangeDetail.of(projection.getSeaTempMin(), projection.getSeaTempMax()),
-			RangeDetail.of(projection.getAirTempMin(), projection.getAirTempMax()),
-			RangeDetail.of(projection.getCurrentSpeedMin(), projection.getCurrentSpeedMax()),
-			RangeDetail.of(projection.getWindSpeedMin(), projection.getWindSpeedMax()),
-			projection.getUvIndex().intValue(), new FishDetail(projection.getTargetId(), projection.getTargetName()));
 	}
 }
