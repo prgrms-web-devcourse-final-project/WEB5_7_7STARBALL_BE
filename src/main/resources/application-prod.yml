@@ -66,7 +66,8 @@ kakao:
     uri:
       code: /oauth/authorize
       base: https://kauth.kakao.com
-
+  map:
+    uri: https://dapi.kakao.com/v2/local/geo/coord2regioncode
 jwt:
   secret: ${JWT_SECRET}
   access-token-validity-in-seconds: 300
