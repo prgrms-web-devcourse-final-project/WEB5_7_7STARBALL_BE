@@ -55,6 +55,7 @@ kakao:
     api_key: ${KAKAO_API_KEY}
     client_secret: ${KAKAO_CLIENT_SECRET}
     redirect_uri: ${KAKAO_REDIRECT_URI}
+
     uri:
       code: /oauth/authorize
       base: https://kauth.kakao.com
