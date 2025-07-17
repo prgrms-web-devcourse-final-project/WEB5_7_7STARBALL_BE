@@ -1,0 +1,46 @@
+### Member API HTTP Requests
+
+### Get Current Member Details
+@baseUrl =http://localhost:8083
+@jwtToken = 액세스 토큰입니다.
+
+GET {{baseUrl}}/members/me
+Accept: application/json
+Authorization: Bearer {{jwtToken}}
+
+### Update Member Nickname
+PUT {{baseUrl}}/members/me
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "nickname": "new_nickname"
+}
+
+### Update Member Location
+PUT {{baseUrl}}/members/me/location
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "latitude": 37.5665,
+  "longitude": 126.9780
+}
+
+### Update Member Status
+PATCH {{baseUrl}}/members/me/status
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "status": "ACTIVE"
+}
+
+### Delete Member (Soft Delete)
+POST {{baseUrl}}/members/delete
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{jwtToken}}

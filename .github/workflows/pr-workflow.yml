@@ -1,0 +1,92 @@
+name: MarineLeisure Pull Request Script -Test & Image build
+on:
+  pull_request:
+    branches:
+      - main
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  #  codetest:
+  #    name: 코드 테스트
+  #    runs-on: ubuntu-latest
+  #
+  #    steps:
+  #      - name: branch checkout
+  #        uses: actions/checkout@v4
+  #
+  #      - name: JDK setting
+  #        uses: actions/setup-java@v4
+  #        with:
+  #          java-version: '21'
+  #          distribution: 'temurin'
+  #
+  #      - name: set Permission
+  #        run: chmod +x ./gradlew
+
+  #      - name: do test
+  #        run: ./gradlew -x test --stacktrace --no-daemon -Dspring.profiles.active=test --info
+  #        env:
+  #          JAVA_TOOL_OPTIONS: "-Dlogging.level.root=DEBUG"
+
+  tagging:
+    name: 태깅 및 릴리즈
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.tag_version.outputs.new_tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: versioning and tagging
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: releasing
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+  build-image:
+    name: 도커 이미지 빌드
+    runs-on: ubuntu-latest
+    needs: tagging
+
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    steps:
+
+      - name: Check out Repository
+        uses: actions/checkout@v4
+
+      - name: Sign in github container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{env.REGISTRY}}
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}
+          tags: |
+            type=sha
+            type=raw,value=${{needs.tagging.outputs.tag_name}}
+            type=raw,value=latest
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: 'true'
+          tags: ${{steps.meta.outputs.tags}}
+          labels: ${{steps.meta.outputs.labels}}
