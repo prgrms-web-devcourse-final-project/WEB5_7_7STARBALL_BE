@@ -78,7 +78,8 @@ public class SecurityConfig {
 		config.setAllowedOrigins(Arrays.asList(
 			"https://your-frontend-domain.com",  // 프로덕션 환경 프론트엔드 도메인
 			"http://localhost:3000",             // 개발 환경 프론트엔드 도메인
-			"http://localhost:5173"              // 현재 프론트엔드 개발 환경
+			"http://localhost:5173",
+			"http://localhost:7030"           // 현재 프론트엔드 개발 환경
 		));
 
 		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
