@@ -76,12 +76,13 @@ public class SecurityConfig {
 
 		// 와일드카드 대신 명시적인 오리진 목록 사용
 		config.setAllowedOrigins(Arrays.asList(
-			"https://your-frontend-domain.com",  // 프로덕션 환경 프론트엔드 도메인
+			"https://marineleisure.vercel.app",  // 프로덕션 환경 프론트엔드 도메인
 			"http://localhost:3000",             // 개발 환경 프론트엔드 도메인
-			"http://localhost:5173"              // 현재 프론트엔드 개발 환경
+			"http://localhost:5173",
+			"http://localhost:7030"           // 현재 프론트엔드 개발 환경
 		));
 
-		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
 
 		// jwt.use-cookie 설정에 따라 credentials 설정 변경

@@ -2,12 +2,12 @@ package sevenstar.marineleisure.spot.dto.detail.items;
 
 import java.time.LocalDate;
 
-import sevenstar.marineleisure.forecast.domain.Scuba;
+import lombok.Getter;
 import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
-import sevenstar.marineleisure.global.utils.DateUtils;
 import sevenstar.marineleisure.spot.dto.detail.provider.ActivitySpotDetail;
 
+@Getter
 public class ScubaSpotDetail implements ActivitySpotDetail {
 	private final LocalDate forecastDate;
 	private final TimePeriod timePeriod;
@@ -19,7 +19,7 @@ public class ScubaSpotDetail implements ActivitySpotDetail {
 	private final RangeDetail currentSpeed;
 	private final TotalIndex totalIndex;
 
-	private ScubaSpotDetail(LocalDate forecastDate, TimePeriod timePeriod, String sunrise, String sunset, String tide,
+	public ScubaSpotDetail(LocalDate forecastDate, TimePeriod timePeriod, String sunrise, String sunset, String tide,
 		RangeDetail waveHeight, RangeDetail seaTemp, RangeDetail currentSpeed, TotalIndex totalIndex) {
 		this.forecastDate = forecastDate;
 		this.timePeriod = timePeriod;
@@ -32,14 +32,4 @@ public class ScubaSpotDetail implements ActivitySpotDetail {
 		this.totalIndex = totalIndex;
 	}
 
-	public static ScubaSpotDetail of(Scuba scubaForecast) {
-		return new ScubaSpotDetail(scubaForecast.getForecastDate(), scubaForecast.getTimePeriod(),
-			DateUtils.formatTime(scubaForecast.getSunrise()), DateUtils.formatTime(scubaForecast.getSunset()),
-			scubaForecast.getTide().getDescription(),
-			RangeDetail.of(scubaForecast.getWaveHeightMin(), scubaForecast.getWaveHeightMax()),
-			RangeDetail.of(scubaForecast.getSeaTempMin(), scubaForecast.getSeaTempMax()),
-			RangeDetail.of(scubaForecast.getCurrentSpeedMin(), scubaForecast.getCurrentSpeedMax()),
-			scubaForecast.getTotalIndex());
-
-	}
 }

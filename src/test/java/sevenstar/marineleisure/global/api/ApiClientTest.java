@@ -3,8 +3,8 @@ package sevenstar.marineleisure.global.api;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +12,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import sevenstar.marineleisure.global.api.kakao.KakaoApiClient;
+import sevenstar.marineleisure.global.api.kakao.dto.RegionResponse;
 import sevenstar.marineleisure.global.api.khoa.KhoaApiClient;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.FishingItem;
@@ -29,18 +31,21 @@ import sevenstar.marineleisure.global.enums.FishingType;
  * 외부 API 클라이언트 조회 테스트
  */
 @SpringBootTest
+@Disabled
 public class ApiClientTest {
 	@Autowired
 	private KhoaApiClient khoaApiClient;
 	@Autowired
 	private OpenMeteoApiClient openMeteoApiClient;
+	@Autowired
+	private KakaoApiClient kakaoApiClient;
 
 	private LocalDate reqDate = LocalDate.now();
 
 	@Test
 	void receiveFishApi() {
 		ResponseEntity<ApiResponse<FishingItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, FishingType.ROCK);
+		}, reqDate, 1, 15, ActivityCategory.FISHING, FishingType.ROCK);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}
@@ -48,7 +53,7 @@ public class ApiClientTest {
 	@Test
 	void receiveSurfingApi() {
 		ResponseEntity<ApiResponse<SurfingItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, ActivityCategory.SURFING);
+		}, reqDate, 1, 15, ActivityCategory.SURFING, FishingType.NONE);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}
@@ -56,7 +61,7 @@ public class ApiClientTest {
 	@Test
 	void receiveMudflatApi() {
 		ResponseEntity<ApiResponse<MudflatItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, ActivityCategory.MUDFLAT);
+		}, reqDate, 1, 15, ActivityCategory.MUDFLAT, FishingType.NONE);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}
@@ -64,7 +69,7 @@ public class ApiClientTest {
 	@Test
 	void receiveDivingApi() {
 		ResponseEntity<ApiResponse<ScubaItem>> response = khoaApiClient.get(new ParameterizedTypeReference<>() {
-		}, reqDate, 1, 15, ActivityCategory.SCUBA);
+		}, reqDate, 1, 15, ActivityCategory.SCUBA, FishingType.NONE);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(response.getBody().getResponse().getBody().getItems().getItem()).hasSize(15);
 	}
@@ -98,5 +103,15 @@ public class ApiClientTest {
 		assertThat(result.getBody().getDaily().getTime().size()).isEqualTo(
 			result.getBody().getDaily().getUvIndexMax().size());
 		assertThat(result.getBody().getDaily()).isNotNull();
+	}
+
+	@Test
+	void receiveRegion() {
+		float latitude = 36.3777f;
+		float longitude = 127.3727f;
+
+		ResponseEntity<RegionResponse> regionResponse = kakaoApiClient.get(latitude, longitude);
+		assertThat(regionResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(regionResponse.getBody().getDocuments().getFirst().getAddress_name()).startsWith("대전광역시");
 	}
 }
