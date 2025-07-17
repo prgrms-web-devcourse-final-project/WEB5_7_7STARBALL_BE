@@ -36,6 +36,12 @@ spring:
       api-key: ${OPENAI_KEY}
       chat:
         model: gpt-3.5-turbo
+
+  flyway:
+    enabled: false
+  #    baseline-on-migrate: true
+  #    locations: classpath:db/migration
+
 api:
   # 국립해양조사원(Korea Hydrographic and Oceanographic Agency, KHOA)
   khoa:
