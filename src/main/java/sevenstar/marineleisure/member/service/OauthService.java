@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ch.qos.logback.core.joran.action.ParamAction;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -177,5 +178,40 @@ public class OauthService {
 		return memberRepository.findById(id)
 			.orElseThrow(
 				() -> new NoSuchElementException("User not found for id: " + id + " or email: " + id + "@kakao.com"));
+	}
+
+	/**
+	 * 카카오 계정과 앱 연결 끊기 (회원 탈퇴 시 호출)
+	 *
+	 * @param providerId 카카오 사용자 ID (Member.providerId)
+	 * @return 연결 끊기에 성공한 사용자의 ID
+	 */
+	public Long unlinkKakaoAccount(String providerId) {
+		log.info("카카오 계정으로 연결 끊기 요청: providerId-{}", providerId);
+
+		String unlinkUrl = "https://kapi.kakao.com/v1/user/unlink";
+
+		// Admin Key 방식 으로 연결 끊기 요청
+		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+		params.add("target_id_type", "user_id");
+		params.add("target_id", providerId);
+
+		Map<String, Object> response = webClient.post()
+			.uri(unlinkUrl)
+			.header("Authorization", "KakaoAK" + clientSecret)
+			.header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
+			.body(BodyInserters.fromFormData(params))
+			.retrieve()
+			.bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+			.block();
+
+		if (response != null && response.containsKey("id")){
+			Long kakaoId = ((Number) response.get("id")).longValue();
+			log.info("카카오 계정 연결 끊기 성공: kakaoId={}", kakaoId);
+			return kakaoId;
+		} else{
+			log.error("카카오 계정 연결 끊기 실패: kakaoId={}", response);
+			throw new RuntimeException("Failed to unlink Kakao account");
+		}
 	}
 }
