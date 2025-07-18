@@ -40,6 +40,9 @@ class MemberServiceTest {
 	@Mock
 	private ParticipantRepository participantRepository;
 
+	@Mock
+	private OauthService oauthService;
+
 	@InjectMocks
 	private MemberService memberService;
 
@@ -199,6 +202,7 @@ class MemberServiceTest {
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
 		when(meetingRepository.findByHostId(memberId)).thenReturn(hostedMeetings);
 		when(participantRepository.findByUserId(memberId)).thenReturn(participations);
+		when(oauthService.unlinkKakaoAccount(testMember.getProviderId())).thenReturn(12345L);
 
 		// when
 		memberService.deleteMember(memberId);
@@ -209,6 +213,31 @@ class MemberServiceTest {
 		verify(meetingRepository).deleteAll(hostedMeetings);
 		verify(participantRepository).findByUserId(memberId);
 		verify(participantRepository).deleteAll(participations);
+		verify(oauthService).unlinkKakaoAccount(testMember.getProviderId());
+		verify(memberRepository).save(testMember);
+	}
+
+	@Test
+	@DisplayName("카카오 연결 끊기 실패 시에도 회원 탈퇴 처리는 계속 진행된다")
+	void deleteMember_unlinkFailed() {
+		// given
+		List<Meeting> hostedMeetings = new ArrayList<>();
+		List<Participant> participations = new ArrayList<>();
+
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
+		when(meetingRepository.findByHostId(memberId)).thenReturn(hostedMeetings);
+		when(participantRepository.findByUserId(memberId)).thenReturn(participations);
+		when(oauthService.unlinkKakaoAccount(testMember.getProviderId()))
+			.thenThrow(new RuntimeException("Failed to unlink Kakao account"));
+
+		// when
+		memberService.deleteMember(memberId);
+
+		// then
+		verify(memberRepository).findById(memberId);
+		verify(meetingRepository).findByHostId(memberId);
+		verify(participantRepository).findByUserId(memberId);
+		verify(oauthService).unlinkKakaoAccount(testMember.getProviderId());
 		verify(memberRepository).save(testMember);
 	}
 }
