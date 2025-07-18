@@ -12,6 +12,7 @@ import sevenstar.marineleisure.forecast.domain.Surfing;
 import sevenstar.marineleisure.forecast.repository.SurfingRepository;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.SurfingItem;
+import sevenstar.marineleisure.global.api.openmeteo.dto.item.UvIndexItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
 import sevenstar.marineleisure.global.enums.TimePeriod;
@@ -54,6 +55,20 @@ public class SurfingProvider extends ActivityProvider {
 				TimePeriod.from(item.getPredcNoonSeCd()).name(), Float.parseFloat(item.getAvgWvhgt()),
 				Float.parseFloat(item.getAvgWvpd()), Float.parseFloat(item.getAvgWspd()),
 				Float.parseFloat(item.getAvgWtem()), TotalIndex.fromDescription(item.getTotalIndex()).name());
+		}
+	}
+
+	@Override
+	public void update(LocalDate startDate, LocalDate endDate) {
+		for (Long spotId : surfingRepository.findByForecastDateBetween(startDate, endDate)) {
+			OutdoorSpot outdoorSpot = outdoorSpotRepository.findById(spotId).orElseThrow();
+			UvIndexItem uvIndex = getUvIndex(startDate, endDate, outdoorSpot.getLatitude().doubleValue(),
+				outdoorSpot.getLongitude().doubleValue());
+			for (int i = 0; i < uvIndex.getTime().size(); i++) {
+				Float uvIndexValue = uvIndex.getUvIndexMax().get(i);
+				LocalDate date = uvIndex.getTime().get(i);
+				surfingRepository.updateUvIndex(uvIndexValue, spotId, date);
+			}
 		}
 	}
 
