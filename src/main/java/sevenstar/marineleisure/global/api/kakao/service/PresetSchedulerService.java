@@ -3,6 +3,7 @@ package sevenstar.marineleisure.global.api.kakao.service;
 import java.time.LocalDate;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.enums.Region;
@@ -18,6 +19,7 @@ public class PresetSchedulerService {
 	private final OutdoorSpotRepository outdoorSpotRepository;
 	private final SpotPresetRepository spotPresetRepository;
 
+	@Transactional
 	public void updateRegionApi() {
 		LocalDate now = LocalDate.now();
 		BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", TotalIndex.NONE);
