@@ -10,7 +10,7 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 
 class GeoUtilsTest {
-	private GeoUtils geoUtils = new GeoUtils(new GeometryFactory(new PrecisionModel(), 4326));
+	private GeoUtils geoUtils = new GeoUtils(new GeometryFactory(new PrecisionModel(), 4326),null);
 
 	@Test
 	void should_success() {
@@ -24,5 +24,4 @@ class GeoUtilsTest {
 		// then
 		assertThat(point).isNotNull();
 	}
-
 }

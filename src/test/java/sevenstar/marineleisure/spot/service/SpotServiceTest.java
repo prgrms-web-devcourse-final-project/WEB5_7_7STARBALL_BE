@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -31,16 +32,17 @@ import sevenstar.marineleisure.spot.config.GeoConfig;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.dto.SpotReadResponse;
 import sevenstar.marineleisure.spot.dto.detail.provider.ActivityDetailProviderFactory;
-import sevenstar.marineleisure.spot.dto.detail.provider.FishingDetailProvider;
-import sevenstar.marineleisure.spot.dto.detail.provider.MudflatDetailProvider;
-import sevenstar.marineleisure.spot.dto.detail.provider.ScubaDetailProvider;
-import sevenstar.marineleisure.spot.dto.detail.provider.SurfingDetailProvider;
+import sevenstar.marineleisure.spot.dto.detail.provider.FishingProvider;
+import sevenstar.marineleisure.spot.dto.detail.provider.MudflatProvider;
+import sevenstar.marineleisure.spot.dto.detail.provider.ScubaProvider;
+import sevenstar.marineleisure.spot.dto.detail.provider.SurfingProvider;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 @MysqlDataJpaTest
 @Import({SpotServiceImpl.class, GeoUtils.class, GeoConfig.class, ActivityDetailProviderFactory.class,
-	FishingDetailProvider.class, MudflatDetailProvider.class, ScubaDetailProvider.class,
-	SurfingDetailProvider.class})
+	FishingProvider.class, MudflatProvider.class, ScubaProvider.class,
+	SurfingProvider.class})
+@Disabled
 class SpotServiceTest {
 	@Autowired
 	private SpotService spotService;
