@@ -277,4 +277,66 @@ class OauthServiceTest {
 		// verify
 		verify(memberRepository).findById(memberId);
 	}
+
+	@Test
+	@DisplayName("카카오 계정 연결 끊기를 요청할 수 있다")
+	void unlinkKakaoAccount() {
+		// given
+		String providerId = "12345";
+		Map<String, Object> response = new HashMap<>();
+		response.put("id", 12345L);
+
+		// WebClient 모킹
+		WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+		WebClient.RequestBodySpec requestBodySpec = mock(WebClient.RequestBodySpec.class);
+		WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+		WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+
+		when(webClient.post()).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(eq("https://kapi.kakao.com/v1/user/unlink"))).thenReturn(requestBodySpec);
+		when(requestBodySpec.header(eq("Authorization"), eq("KakaoAK test-client-secret"))).thenReturn(requestBodySpec);
+		when(requestBodySpec.header(eq("Content-Type"), eq("application/x-www-form-urlencoded;charset=utf-8"))).thenReturn(requestBodySpec);
+		when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class))).thenReturn(Mono.just(response));
+
+		// when
+		Long result = oauthService.unlinkKakaoAccount(providerId);
+
+		// then
+		assertThat(result).isEqualTo(12345L);
+
+		// verify
+		verify(webClient).post();
+	}
+
+	@Test
+	@DisplayName("카카오 계정 연결 끊기 실패 시 예외가 발생한다")
+	void unlinkKakaoAccountFailed() {
+		// given
+		String providerId = "12345";
+		Map<String, Object> response = new HashMap<>();
+		// id 필드가 없는 응답
+
+		// WebClient 모킹
+		WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+		WebClient.RequestBodySpec requestBodySpec = mock(WebClient.RequestBodySpec.class);
+		WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+		WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+
+		when(webClient.post()).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+		when(requestBodySpec.header(anyString(), anyString())).thenReturn(requestBodySpec);
+		when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class))).thenReturn(Mono.just(response));
+
+		// when & then
+		assertThatThrownBy(() -> oauthService.unlinkKakaoAccount(providerId))
+			.isInstanceOf(RuntimeException.class)
+			.hasMessageContaining("Failed to unlink Kakao account");
+
+		// verify
+		verify(webClient).post();
+	}
 }
