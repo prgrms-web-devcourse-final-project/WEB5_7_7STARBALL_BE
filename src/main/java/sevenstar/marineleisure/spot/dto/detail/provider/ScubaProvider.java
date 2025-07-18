@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.spot.dto.detail.provider;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import sevenstar.marineleisure.forecast.domain.Scuba;
 import sevenstar.marineleisure.forecast.repository.ScubaRepository;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.ScubaItem;
+import sevenstar.marineleisure.global.api.openmeteo.dto.item.SunTimeItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
 import sevenstar.marineleisure.global.enums.TidePhase;
@@ -56,6 +58,21 @@ public class ScubaProvider extends ActivityProvider {
 				Float.parseFloat(item.getMaxWvhgt()), Float.parseFloat(item.getMinWtem()),
 				Float.parseFloat(item.getMaxWtem()), Float.parseFloat(item.getMinCrsp()),
 				Float.parseFloat(item.getMaxCrsp()));
+		}
+	}
+
+	@Override
+	public void update(LocalDate startDate, LocalDate endDate) {
+		for (Long spotId : scubaRepository.findByForecastDateBetween(startDate, endDate)) {
+			OutdoorSpot outdoorSpot = outdoorSpotRepository.findById(spotId).orElseThrow();
+			SunTimeItem sunTimeItem = getSunTimes(startDate, endDate, outdoorSpot.getLatitude().doubleValue(),
+				outdoorSpot.getLongitude().doubleValue());
+			for (int i = 0; i < sunTimeItem.getTime().size(); i++) {
+				LocalDateTime sunrise = sunTimeItem.getSunrise().get(i);
+				LocalDateTime sunset = sunTimeItem.getSunset().get(i);
+				LocalDate date = sunTimeItem.getTime().get(i);
+				scubaRepository.updateSunriseAndSunset(sunrise.toLocalTime(), sunset.toLocalTime(), spotId, date);
+			}
 		}
 	}
 

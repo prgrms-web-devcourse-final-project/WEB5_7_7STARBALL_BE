@@ -13,6 +13,7 @@ import sevenstar.marineleisure.forecast.domain.Mudflat;
 import sevenstar.marineleisure.forecast.repository.MudflatRepository;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.MudflatItem;
+import sevenstar.marineleisure.global.api.openmeteo.dto.item.UvIndexItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
 import sevenstar.marineleisure.global.enums.TotalIndex;
@@ -55,6 +56,20 @@ public class MudflatProvider extends ActivityProvider {
 				Float.parseFloat(item.getMinArtmp()), Float.parseFloat(item.getMaxArtmp()),
 				Float.parseFloat(item.getMinWspd()), Float.parseFloat(item.getMaxWspd()), item.getWeather(),
 				TotalIndex.fromDescription(item.getTotalIndex()).name());
+		}
+	}
+
+	@Override
+	public void update(LocalDate startDate, LocalDate endDate) {
+		for (Long spotId : mudflatRepository.findByForecastDateBetween(startDate, endDate)) {
+			OutdoorSpot outdoorSpot = outdoorSpotRepository.findById(spotId).orElseThrow();
+			UvIndexItem uvIndex = getUvIndex(startDate, endDate, outdoorSpot.getLatitude().doubleValue(),
+				outdoorSpot.getLongitude().doubleValue());
+			for (int i = 0; i < uvIndex.getTime().size(); i++) {
+				Float uvIndexValue = uvIndex.getUvIndexMax().get(i);
+				LocalDate date = uvIndex.getTime().get(i);
+				mudflatRepository.updateUvIndex(uvIndexValue, spotId, date);
+			}
 		}
 	}
 
