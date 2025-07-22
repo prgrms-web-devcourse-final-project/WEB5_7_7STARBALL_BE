@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.global.domain.BaseResponse;
+import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.global.exception.CustomException;
 import sevenstar.marineleisure.global.jwt.UserPrincipal;
@@ -84,13 +85,14 @@ public class MeetingController {
 	@GetMapping("/meetings/my")
 	public ResponseEntity<BaseResponse<Slice<MeetingListResponse>>> getStatusListMeeting(
 		@RequestParam(name = "status",defaultValue = "RECRUITING") MeetingStatus status,
+		@RequestParam(name = "role",defaultValue = "HOST") MeetingRole role,
 		@RequestParam(name = "cursorId", defaultValue = "0") Long cursorId,
 		@RequestParam(name = "size", defaultValue = "10") Integer sizes,
 		@AuthenticationPrincipal UserPrincipal userDetails
 	){
 
 		Long memberId = userDetails.getId();
-		Slice<Meeting> not_mapping_result = meetingService.getStatusMyMeetings(memberId,cursorId,sizes,status);
+		Slice<Meeting> not_mapping_result = meetingService.getStatusMyMeetings_role(memberId,role,cursorId,sizes,status);
 		List<MeetingListResponse> dtoList = not_mapping_result.getContent().stream()
 			//TODO :: 개선예정
 			.map(meeting -> {
