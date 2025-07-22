@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -126,9 +127,13 @@ public class SpotServiceImpl implements SpotService {
 			return new SpotPreviewReadResponse(bestSpotInFishing, bestSpotInMudflat, bestSpotInSurfing,
 				bestSpotInScuba);
 		}
+		return getSpotPresetPreview(region);
+	}
+
+	@Cacheable(value = "spotPresetPreviews", key = "#region.name()")
+	public SpotPreviewReadResponse getSpotPresetPreview(Region region) {
 		SpotPreset spotPreset = spotPresetRepository.findById(region)
 			.orElseThrow(() -> new CustomException(CommonErrorCode.INTERNET_SERVER_ERROR, "존재하지 않는 region"));
-
 		return SpotMapper.toDto(spotPreset);
 	}
 
