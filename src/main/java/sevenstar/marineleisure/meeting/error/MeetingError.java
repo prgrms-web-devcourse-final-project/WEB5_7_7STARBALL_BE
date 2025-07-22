@@ -11,6 +11,7 @@ public enum MeetingError implements ErrorCode {
 	MEETING_NOT_HOST(2400,HttpStatus.BAD_REQUEST,"Not Host"),
 	MEETING_NOT_LEAVE_HOST(2409,HttpStatus.CONFLICT ,"Not LeaveHost" ),
 	CANNOT_LEAVE_COMPLETED_MEETING(2400,HttpStatus.BAD_REQUEST,"Cannot Leave"),
+	MEETING_MEMBER_NOT_FOUND(2404, HttpStatus.NOT_FOUND, "Member Not Found"),
 	;
 
 
