@@ -63,11 +63,17 @@ import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 import sevenstar.marineleisure.meeting.repository.TagRepository;
 import sevenstar.marineleisure.meeting.global.TestSecurityConfig;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.ai.openai.OpenAiChatModel;
 
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, 
-    properties = {"spring.task.scheduling.enabled=false"})
+    properties = {
+        "spring.task.scheduling.enabled=false",
+        "spring.ai.openai.api-key=dummy",
+        "spring.ai.openai.base-url=http://localhost:8080"
+    })
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("mysql-test")
 @TestMethodOrder(MethodOrderer.DisplayName.class)
@@ -102,6 +108,9 @@ class MeetingControllerTest {
 	private TagRepository tagRepository;
 
 	private TestUtil testUtil;
+	
+	@MockitoBean
+	private OpenAiChatModel openAiChatModel;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -487,11 +496,12 @@ class MeetingControllerTest {
 	}
 	@Test
 	@WithMockCustomUser(id = 4L, username = "testHost")
-	@DisplayName("GET /meetings/my status:RECRUITING -- 인증된 사용자의 미팅 목록")
-	void getMeeting_WithAuth() throws Exception {
+	@DisplayName("GET /meetings/my role:HOST status:RECRUITING -- 호스트로 모집중 미팅 목록")
+	void getMeeting_WithAuth_Host_Recruiting() throws Exception {
 		MvcResult mvcResult = mockMvc.perform(
 			get("/meetings/my")
 				.param("status","RECRUITING")
+				.param("role","HOST")
 				.param("cursorId","0")
 				.accept(MediaType.APPLICATION_JSON)
 		)
@@ -502,18 +512,40 @@ class MeetingControllerTest {
 		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
 			.writeValueAsString(jsonObject);
 
-		log.info("Formatted JSON Response:");
+		log.info("HOST RECRUITING Response:");
 		log.info("prettyJson == {}", prettyJson);
+	}
 
+	@Test
+	@WithMockCustomUser(id = 2L, username = "testUser1")
+	@DisplayName("GET /meetings/my role:GUEST status:RECRUITING -- 게스트로 모집중 미팅 목록")
+	void getMeeting_WithAuth_Guest_Recruiting() throws Exception {
+		MvcResult mvcResult = mockMvc.perform(
+			get("/meetings/my")
+				.param("status","RECRUITING")
+				.param("role","GUEST")
+				.param("cursorId","0")
+				.accept(MediaType.APPLICATION_JSON)
+		)
+			.andExpect(status().isOk())
+			.andReturn();
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("GUEST RECRUITING Response:");
+		log.info("prettyJson == {}", prettyJson);
 	}
 
 	@Test
 	@WithMockCustomUser(id = 4L, username = "testHost")
-	@DisplayName("GET /meetings/my status:ONGOING -- 인증된 사용자의 미팅 목록")
-	void getMeeting_WithAuth_ONGOING() throws Exception {
+	@DisplayName("GET /meetings/my role:HOST status:ONGOING -- 호스트로 진행중 미팅 목록")
+	void getMeeting_WithAuth_Host_Ongoing() throws Exception {
 		MvcResult mvcResult = mockMvc.perform(
 				get("/meetings/my")
 					.param("status","ONGOING")
+					.param("role","HOST")
 					.param("cursorId","0")
 					.accept(MediaType.APPLICATION_JSON)
 			)
@@ -524,17 +556,40 @@ class MeetingControllerTest {
 		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
 			.writeValueAsString(jsonObject);
 
-		log.info("Formatted JSON Response:");
+		log.info("HOST ONGOING Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 3L, username = "testUser2")
+	@DisplayName("GET /meetings/my role:GUEST status:ONGOING -- 게스트로 진행중 미팅 목록")
+	void getMeeting_WithAuth_Guest_Ongoing() throws Exception {
+		MvcResult mvcResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status","ONGOING")
+					.param("role","GUEST")
+					.param("cursorId","0")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("GUEST ONGOING Response:");
 		log.info("prettyJson == {}", prettyJson);
 	}
 
 	@Test
 	@WithMockCustomUser(id = 4L, username = "testHost")
-	@DisplayName("GET /meetings/my status : FULL -- 인증된 사용자의 미팅 목록")
-	void getMeeting_WithAuth_FULL() throws Exception {
+	@DisplayName("GET /meetings/my role:HOST status:FULL -- 호스트로 모집완료 미팅 목록")
+	void getMeeting_WithAuth_Host_Full() throws Exception {
 		MvcResult mvcResult = mockMvc.perform(
 				get("/meetings/my")
 					.param("status","FULL")
+					.param("role","HOST")
 					.param("cursorId","0")
 					.accept(MediaType.APPLICATION_JSON)
 			)
@@ -545,17 +600,40 @@ class MeetingControllerTest {
 		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
 			.writeValueAsString(jsonObject);
 
-		log.info("Formatted JSON Response:");
+		log.info("HOST FULL Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 2L, username = "testUser1")
+	@DisplayName("GET /meetings/my role:GUEST status:FULL -- 게스트로 모집완료 미팅 목록")
+	void getMeeting_WithAuth_Guest_Full() throws Exception {
+		MvcResult mvcResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status","FULL")
+					.param("role","GUEST")
+					.param("cursorId","0")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("GUEST FULL Response:");
 		log.info("prettyJson == {}", prettyJson);
 	}
 
 	@Test
 	@WithMockCustomUser(id = 4L, username = "testHost")
-	@DisplayName("GET /meetings/my status : COMPLETED -- 인증된 사용자의 미팅 목록")
-	void getMeetings_withAuth_COMPLETED() throws Exception {
+	@DisplayName("GET /meetings/my role:HOST status:COMPLETED -- 호스트로 완료된 미팅 목록")
+	void getMeeting_WithAuth_Host_Completed() throws Exception {
 		MvcResult mvcResult = mockMvc.perform(
 				get("/meetings/my")
 					.param("status","COMPLETED")
+					.param("role","HOST")
 					.param("cursorId","0")
 					.accept(MediaType.APPLICATION_JSON)
 			)
@@ -566,7 +644,29 @@ class MeetingControllerTest {
 		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
 			.writeValueAsString(jsonObject);
 
-		log.info("Formatted JSON Response:");
+		log.info("HOST COMPLETED Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 3L, username = "testUser2")
+	@DisplayName("GET /meetings/my role:GUEST status:COMPLETED -- 게스트로 완료된 미팅 목록")
+	void getMeeting_WithAuth_Guest_Completed() throws Exception {
+		MvcResult mvcResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status","COMPLETED")
+					.param("role","GUEST")
+					.param("cursorId","0")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("GUEST COMPLETED Response:");
 		log.info("prettyJson == {}", prettyJson);
 	}
 
@@ -801,4 +901,188 @@ class MeetingControllerTest {
 		log.info("Formatted JSON Response:");
 		log.info("prettyJson == {}", prettyJson);
 	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("GET /meetings/my role:HOST status:RECRUITING -- 호스트 역할 모집중 미팅")
+	void getMyMeetings_HostRecruiting() throws Exception {
+		MvcResult mvcResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status", "RECRUITING")
+					.param("role", "HOST")
+					.param("cursorId", "0")
+					.param("size", "10")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("HOST RECRUITING Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 2L, username = "testUser1")
+	@DisplayName("GET /meetings/my role:GUEST status:ONGOING -- 게스트 역할 진행중 미팅")
+	void getMyMeetings_GuestOngoing() throws Exception {
+		MvcResult mvcResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status", "ONGOING")
+					.param("role", "GUEST")
+					.param("cursorId", "0")
+					.param("size", "5")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("GUEST ONGOING Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("GET /meetings/my role:HOST status:COMPLETED -- 호스트 완료된 미팅")
+	void getMyMeetings_HostCompleted() throws Exception {
+		MvcResult mvcResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status", "COMPLETED")
+					.param("role", "HOST")
+					.param("cursorId", "3")
+					.param("size", "10")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("HOST COMPLETED Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 3L, username = "testUser2")
+	@DisplayName("GET /meetings/my role:GUEST status:FULL -- 게스트 모집완료 미팅")
+	void getMyMeetings_GuestFull() throws Exception {
+		MvcResult mvcResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status", "FULL")
+					.param("role", "GUEST")
+					.param("cursorId", "0")
+					.param("size", "10")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("GUEST FULL Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("GET /meetings/my -- 잘못된 role 파라미터 테스트")
+	void getMyMeetings_InvalidRole() throws Exception {
+		mockMvc.perform(
+				get("/meetings/my")
+					.param("status", "RECRUITING")
+					.param("role", "INVALID_ROLE")
+					.param("cursorId", "0")
+					.param("size", "10")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isInternalServerError());
+	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("GET /meetings/my -- 잘못된 status 파라미터 테스트")
+	void getMyMeetings_InvalidStatus() throws Exception {
+		mockMvc.perform(
+				get("/meetings/my")
+					.param("status", "INVALID_STATUS")
+					.param("role", "HOST")
+					.param("cursorId", "0")
+					.param("size", "10")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isInternalServerError());
+	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("GET /meetings/my -- 페이징 테스트 (cursorId 사용)")
+	void getMyMeetings_WithCursor() throws Exception {
+		// 먼저 첫 페이지 조회
+		MvcResult firstPageResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status", "RECRUITING")
+					.param("role", "HOST")
+					.param("cursorId", "0")
+					.param("size", "2")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		// 응답에서 nextCursorId 추출 (실제로는 JSON 파싱 필요)
+		String responseBody = firstPageResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		log.info("First page response: {}", responseBody);
+
+		// 두 번째 페이지 조회 (실제 cursorId 값 사용)
+		MvcResult secondPageResult = mockMvc.perform(
+				get("/meetings/my")
+					.param("status", "RECRUITING")
+					.param("role", "HOST")
+					.param("cursorId", "5") // 실제로는 첫 페이지 응답에서 추출한 값
+					.param("size", "2")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		String secondResponseBody = secondPageResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		log.info("Second page response: {}", secondResponseBody);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("GET /meetings/my -- 기본값 테스트 (role=HOST, status=RECRUITING)")
+	void getMyMeetings_DefaultParameters_Fixed() throws Exception {
+		// 기본값이 role=HOST, status=RECRUITING이므로 HOST 사용자로 테스트
+		MvcResult mvcResult = mockMvc.perform(
+				get("/meetings/my")
+					.accept(MediaType.APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("Default parameters (HOST, RECRUITING) response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
 }

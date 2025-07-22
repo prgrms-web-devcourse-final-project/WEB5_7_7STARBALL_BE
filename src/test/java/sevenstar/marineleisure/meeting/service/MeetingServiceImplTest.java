@@ -306,6 +306,127 @@ class MeetingServiceImplTest {
         assertEquals(MeetingError.MEETING_NOT_FOUND, exception.getErrorCode());
     }
 
+    // getStatusMyMeetings_role Tests
+    @Test
+    @DisplayName("역할과 상태별 내 모임 조회 성공 - HOST, RECRUITING")
+    void getStatusMyMeetings_role_Success_HostRecruiting() {
+        // given
+        Long memberId = testHost.getId();
+        MeetingRole role = MeetingRole.HOST;
+        Long cursorId = 0L;
+        int size = 10;
+        MeetingStatus status = MeetingStatus.RECRUITING;
+        Pageable pageable = PageRequest.of(0, size);
+        
+        List<Meeting> mockMeetings = Arrays.asList(testMeeting);
+        Slice<Meeting> mockSlice = new SliceImpl<>(mockMeetings, pageable, false);
+        
+        doNothing().when(memberValidate).existMember(memberId);
+        when(meetingRepository.findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, Long.MAX_VALUE, pageable))
+            .thenReturn(mockSlice);
+        
+        // when
+        Slice<Meeting> result = meetingService.getStatusMyMeetings_role(memberId, role, cursorId, size, status);
+        
+        // then
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(testMeeting.getId(), result.getContent().get(0).getId());
+        assertFalse(result.hasNext());
+        
+        verify(memberValidate).existMember(memberId);
+        verify(meetingRepository).findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, Long.MAX_VALUE, pageable);
+    }
+
+    @Test
+    @DisplayName("역할과 상태별 내 모임 조회 성공 - GUEST, ONGOING, cursorId 유효값")
+    void getStatusMyMeetings_role_Success_GuestOngoingWithCursor() {
+        // given
+        Long memberId = testMember.getId();
+        MeetingRole role = MeetingRole.GUEST;
+        Long cursorId = 5L;
+        int size = 5;
+        MeetingStatus status = MeetingStatus.ONGOING;
+        Pageable pageable = PageRequest.of(0, size);
+        
+        List<Meeting> mockMeetings = Arrays.asList(testMeeting);
+        Slice<Meeting> mockSlice = new SliceImpl<>(mockMeetings, pageable, true);
+        
+        doNothing().when(memberValidate).existMember(memberId);
+        when(meetingRepository.findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, cursorId, pageable))
+            .thenReturn(mockSlice);
+        
+        // when
+        Slice<Meeting> result = meetingService.getStatusMyMeetings_role(memberId, role, cursorId, size, status);
+        
+        // then
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.hasNext());
+        
+        verify(memberValidate).existMember(memberId);
+        verify(meetingRepository).findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, cursorId, pageable);
+    }
+
+    @Test
+    @DisplayName("역할과 상태별 내 모임 조회 - cursorId null일 때 Long.MAX_VALUE로 처리")
+    void getStatusMyMeetings_role_Success_NullCursorId() {
+        // given
+        Long memberId = testHost.getId();
+        MeetingRole role = MeetingRole.HOST;
+        Long cursorId = null;
+        int size = 10;
+        MeetingStatus status = MeetingStatus.COMPLETED;
+        Pageable pageable = PageRequest.of(0, size);
+        
+        List<Meeting> mockMeetings = Collections.emptyList();
+        Slice<Meeting> mockSlice = new SliceImpl<>(mockMeetings, pageable, false);
+        
+        doNothing().when(memberValidate).existMember(memberId);
+        when(meetingRepository.findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, Long.MAX_VALUE, pageable))
+            .thenReturn(mockSlice);
+        
+        // when
+        Slice<Meeting> result = meetingService.getStatusMyMeetings_role(memberId, role, cursorId, size, status);
+        
+        // then
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
+        assertFalse(result.hasNext());
+        
+        verify(memberValidate).existMember(memberId);
+        verify(meetingRepository).findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, Long.MAX_VALUE, pageable);
+    }
+
+    @Test
+    @DisplayName("역할과 상태별 내 모임 조회 실패 - 존재하지 않는 멤버")
+    void getStatusMyMeetings_role_Fail_MemberNotFound() {
+        // given
+        Long nonExistentMemberId = 99L;
+        MeetingRole role = MeetingRole.HOST;
+        Long cursorId = 0L;
+        int size = 10;
+        MeetingStatus status = MeetingStatus.RECRUITING;
+        
+        doThrow(new CustomException(MeetingError.MEETING_MEMBER_NOT_FOUND))
+            .when(memberValidate).existMember(nonExistentMemberId);
+        
+        // when & then
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            meetingService.getStatusMyMeetings_role(nonExistentMemberId, role, cursorId, size, status);
+        });
+        
+        assertEquals(MeetingError.MEETING_MEMBER_NOT_FOUND, exception.getErrorCode());
+        verify(meetingRepository, never()).findMeetingsByParticipantRoleWithCursor(
+            anyLong(), any(), any(), anyLong(), any());
+    }
+
     private <T> T withId(T entity, Long id) {
         try {
             Field idField = entity.getClass().getDeclaredField("id");
