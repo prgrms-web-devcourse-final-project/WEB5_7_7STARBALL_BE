@@ -119,7 +119,7 @@ class OauthServiceTest {
 		when(responseSpec.bodyToMono(KakaoTokenResponse.class)).thenReturn(Mono.just(expectedResponse));
 
 		// when
-		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code);
+		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code, codeVerifier);
 
 		// then
 		assertThat(result).isNotNull();

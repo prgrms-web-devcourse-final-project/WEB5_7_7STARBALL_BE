@@ -96,7 +96,7 @@ class AuthServiceTest {
 		when(stateEncryptionUtil.validateState(state, encryptedState)).thenReturn(true);
 
 		// 서비스 메서드 모킹
-		when(oauthService.exchangeCodeForToken(code)).thenReturn(tokenResponse);
+		when(oauthService.exchangeCodeForToken(code, codeVerifier)).thenReturn(tokenResponse);
 		when(oauthService.processKakaoUser(accessToken)).thenReturn(testMember);
 		// findUserById는 이제 필요 없음 (processKakaoUser가 직접 Member를 반환)
 		when(jwtTokenProvider.createAccessToken(testMember)).thenReturn(jwtAccessToken);
@@ -143,7 +143,7 @@ class AuthServiceTest {
 		when(stateEncryptionUtil.validateState(state, encryptedState)).thenReturn(true);
 
 		// 서비스 메서드 모킹
-		when(oauthService.exchangeCodeForToken(code)).thenReturn(tokenResponse);
+		when(oauthService.exchangeCodeForToken(code, codeVerifier)).thenReturn(tokenResponse);
 		when(oauthService.processKakaoUser(accessToken)).thenReturn(testMember);
 		when(jwtTokenProvider.createAccessToken(testMember)).thenReturn(jwtAccessToken);
 		when(jwtTokenProvider.createRefreshToken(testMember)).thenReturn(refreshToken);
@@ -182,7 +182,7 @@ class AuthServiceTest {
 		// state 검증 모킹
 		when(stateEncryptionUtil.validateState(state, encryptedState)).thenReturn(true);
 
-		when(oauthService.exchangeCodeForToken(code)).thenReturn(tokenResponse);
+		when(oauthService.exchangeCodeForToken(code, codeVerifier)).thenReturn(tokenResponse);
 
 		// when & then
 		assertThatThrownBy(() -> authService.processKakaoLogin(code, state, encryptedState, mockResponse))
