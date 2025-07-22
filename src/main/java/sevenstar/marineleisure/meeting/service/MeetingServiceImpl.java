@@ -83,12 +83,17 @@ public class MeetingServiceImpl implements MeetingService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Slice<Meeting> getStatusMyMeetings(Long memberId, Long cursorId, int size, MeetingStatus meetingStatus) {
+	public Slice<Meeting> getStatusMyMeetings_role(Long memberId ,MeetingRole role , Long cursorId, int size, MeetingStatus meetingStatus) {
 		Pageable pageable = PageRequest.of(0, size);
 		memberValidate.existMember(memberId);
 		Long currentCursorId = (cursorId == null || cursorId == 0L) ? Long.MAX_VALUE : cursorId;
-		return meetingRepository.findMyMeetingsByMemberIdAndStatusWithCursor(memberId, meetingStatus,
-			currentCursorId, pageable);
+		return meetingRepository.findMeetingsByParticipantRoleWithCursor(
+			memberId,
+			meetingStatus,
+			role,
+			currentCursorId,
+			pageable
+		);
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package sevenstar.marineleisure.meeting.service;
 
 import org.springframework.data.domain.Slice;
 
+import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
@@ -40,7 +41,9 @@ public interface MeetingService {
 	 * @param MeetingStatus
 	 * @return
 	 */
-	Slice<Meeting> getStatusMyMeetings(Long memberId,Long cursorId, int size , MeetingStatus MeetingStatus);
+	Slice<Meeting> getStatusMyMeetings_role(Long memberId , MeetingRole role , Long cursorId, int size, MeetingStatus meetingStatus);
+
+
 
 
 	MeetingDetailAndMemberResponse getMeetingDetailAndMember(Long memberId, Long meetingId);
