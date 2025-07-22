@@ -27,17 +27,33 @@ public class StateEncryptionUtil {
      * @param state 암호화할 상태 값
      * @return 암호화된 상태 값 (Base64 인코딩)
      */
-    public String encryptState(String state) {
+    public String encryptState(String state, String codeVerifier) {
         try {
+            String combined = state + "|" + codeVerifier;
+
             SecretKeySpec keySpec = generateKey(secretKey);
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-            byte[] encrypted = cipher.doFinal(state.getBytes(StandardCharsets.UTF_8));
+            byte[] encrypted = cipher.doFinal(combined.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().encodeToString(encrypted);
         } catch (Exception e) {
             throw new RuntimeException("Failed to encrypt state", e);
         }
     }
+
+
+    public String extractCodeVerifier(String state) {
+		try {
+			String decrypted = decryptState(state);
+			String[] parts = decrypted.split("\\|", 2);
+			if (parts.length != 2) {
+				throw new IllegalArgumentException("Invalid encrypted format");
+			}
+            return parts[1];
+		} catch (IllegalArgumentException e) {
+			throw new RuntimeException("Failed to extract code verifier", e);
+		}
+	}
 
     /**
      * 암호화된 상태 값을 복호화.
@@ -68,7 +84,11 @@ public class StateEncryptionUtil {
     public boolean validateState(String state, String encryptedState) {
         try {
             String decryptedState = decryptState(encryptedState);
-            return decryptedState.equals(state);
+            String[] parts = decryptedState.split("\\|", 2);
+            if (parts.length != 2) {
+                return false;
+            }
+            return parts[0].equals(state);
         } catch (Exception e) {
             return false;
         }

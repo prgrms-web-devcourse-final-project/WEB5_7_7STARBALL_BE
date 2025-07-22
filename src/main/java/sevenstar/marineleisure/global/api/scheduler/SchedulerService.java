@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +17,6 @@ import sevenstar.marineleisure.global.api.openmeteo.dto.service.OpenMeteoService
 import sevenstar.marineleisure.spot.repository.SpotViewQuartileRepository;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class SchedulerService {
 	public static final int MAX_UPDATE_DAY = 3;
@@ -23,8 +24,23 @@ public class SchedulerService {
 	private final OpenMeteoService openMeteoService;
 	private final PresetSchedulerService presetSchedulerService;
 	private final SpotViewQuartileRepository spotViewQuartileRepository;
+
+
 	private final Executor taskExecutor;
 
+	public SchedulerService(
+		KhoaApiService khoaApiService,
+		OpenMeteoService openMeteoService,
+		PresetSchedulerService presetSchedulerService,
+		SpotViewQuartileRepository spotViewQuartileRepository,
+		@Qualifier("applicationTaskExecutor") Executor taskExecutor   // ★ 여기
+	) {
+		this.khoaApiService          = khoaApiService;
+		this.openMeteoService        = openMeteoService;
+		this.presetSchedulerService  = presetSchedulerService;
+		this.spotViewQuartileRepository = spotViewQuartileRepository;
+		this.taskExecutor            = taskExecutor;
+	}
 	/**
 	 * 앞으로의 스케줄링 전략에 의해 수정될 부분입니다.
 	 * @author guwnoong

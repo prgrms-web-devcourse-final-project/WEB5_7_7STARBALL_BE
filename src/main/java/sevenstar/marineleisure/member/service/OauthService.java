@@ -6,7 +6,6 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -19,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import sevenstar.marineleisure.global.util.PkceUtil;
 import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
@@ -32,6 +32,7 @@ public class OauthService {
 	private final MemberRepository memberRepository;
 	private final WebClient webClient;
 	private final StateEncryptionUtil stateEncryptionUtil;
+	private final PkceUtil pkceUtil;
 
 	@Value("${kakao.login.api_key}")
 	private String apiKey;
@@ -45,6 +46,7 @@ public class OauthService {
 	@Value("${kakao.login.redirect_uri}")
 	private String redirectUri;
 
+
 	/**
 	 * 카카오 로그인 URL 생성 (stateless)
 	 *
@@ -53,9 +55,14 @@ public class OauthService {
 	 */
 	public Map<String, String> getKakaoLoginUrl(String customRedirectUri) {
 		String state = UUID.randomUUID().toString();
-		String encryptedState = stateEncryptionUtil.encryptState(state);
+
+		String codeVerifier = pkceUtil.generateCodeVerifier();
+		String codeChallenge = pkceUtil.generateCodeChallenge(codeVerifier);
+
+		String encryptedState = stateEncryptionUtil.encryptState(state, codeVerifier);
 
 		log.info("Generated OAuth state: {} (encrypted: {})", state, encryptedState);
+		log.info("Generated PKCE code_verifier: {} (challenge: {})", codeVerifier, codeChallenge);
 
 		// Use the provided redirectUri or fall back to the configured one
 		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
@@ -66,6 +73,8 @@ public class OauthService {
 			.queryParam("redirect_uri", finalRedirectUri)
 			.queryParam("response_type", "code")
 			.queryParam("state", state)
+			.queryParam("code_challenge", codeChallenge)
+			.queryParam("code_challenge_method", "S256")
 			.build()
 			.toUriString();
 
@@ -91,10 +100,11 @@ public class OauthService {
 	/**
 	 * 카카오 인증 코드로 토큰 교환
 	 *
-	 * @param code 인증 코드
+	 * @param code         인증 코드
+	 * @param codeVerifier
 	 * @return 카카오 토큰 응답
 	 */
-	public KakaoTokenResponse exchangeCodeForToken(String code) {
+	public KakaoTokenResponse exchangeCodeForToken(String code, String codeVerifier) {
 		String tokenUrl = UriComponentsBuilder.fromUriString(kakaoBaseUri)
 			.path("/oauth/token")
 			.build()
@@ -102,6 +112,7 @@ public class OauthService {
 
 		log.info("Exchanging authorization code for token with redirect URI: {}", redirectUri);
 		log.info("Authorization code: {}", code);
+		log.info("PKCE code_verifier: {}", codeVerifier);
 
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add("grant_type", "authorization_code");
@@ -109,6 +120,7 @@ public class OauthService {
 		params.add("redirect_uri", redirectUri);
 		params.add("code", code);
 		params.add("client_secret", clientSecret);
+		params.add("code_verifier", codeVerifier);
 
 		return webClient.post()
 			.uri(tokenUrl)
