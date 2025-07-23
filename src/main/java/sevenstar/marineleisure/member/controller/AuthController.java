@@ -87,6 +87,7 @@ public class AuthController {
 				request.code(),
 				request.state(),
 				request.encryptedState(),
+				request.codeVerifier(),
 				response
 			);
 			return BaseResponse.success(loginResponse);

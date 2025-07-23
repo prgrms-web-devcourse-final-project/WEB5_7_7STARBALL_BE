@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.member.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
@@ -35,23 +36,22 @@ public class AuthService {
 	 *
 	 * @param code 인증 코드
 	 * @param state OAuth state 파라미터
-	 * @param encryptedStateAndCodeVerifier 암호화된 "state" + "|" + "codeVerifier"
+	 * @param encryptedState 암호화된 "state"
 	 * @param response HTTP 응답
 	 * @return 로그인 응답 DTO
 	 */
-	public LoginResponse processKakaoLogin(String code, String state, String encryptedStateAndCodeVerifier,
+	public LoginResponse processKakaoLogin(String code, String state, String encryptedState, String codeVerifier,
 		HttpServletResponse response) {
 		// 0. state 검증 (stateless)
-		log.info("Validating OAuth state: received={}, encrypted={}", state, encryptedStateAndCodeVerifier);
+		log.info("Validating OAuth state: received={}, encrypted={}", state, encryptedState);
 
-		if (!stateEncryptionUtil.validateState(state, encryptedStateAndCodeVerifier)) {
+		if (!stateEncryptionUtil.validateState(state, encryptedState)) {
 			log.error("State validation failed: possible CSRF attack");
 			throw new BadCredentialsException("Possible CSRF attack: state parameter doesn't match");
 		}
 
 		// 0. code_verifier 추출
-		String codeVerifier = stateEncryptionUtil.extractCodeVerifier(encryptedStateAndCodeVerifier);
-		log.info("Extracted code_verifier: {}", codeVerifier);
+		// String codeVerifier = stateEncryptionUtil.extractCodeVerifier(encryptedStateAndCodeVerifier);
 
 		// 1. 인증 코드로 카카오 토큰 교환
 		KakaoTokenResponse tokenResponse = oauthService.exchangeCodeForToken(code, codeVerifier);

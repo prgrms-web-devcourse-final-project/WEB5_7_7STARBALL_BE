@@ -1,12 +1,15 @@
 package sevenstar.marineleisure.member.service;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -54,12 +57,12 @@ public class OauthService {
 	 * @return 카카오 로그인 URL, state 값, 암호화된 state 값을 포함한 Map
 	 */
 	public Map<String, String> getKakaoLoginUrl(String customRedirectUri) {
-		String state = UUID.randomUUID().toString();
 
+		String state = UUID.randomUUID().toString();
 		String codeVerifier = pkceUtil.generateCodeVerifier();
 		String codeChallenge = pkceUtil.generateCodeChallenge(codeVerifier);
 
-		String encryptedState = stateEncryptionUtil.encryptState(state, codeVerifier);
+		String encryptedState = stateEncryptionUtil.encryptState(state);
 
 		log.info("Generated OAuth state: {} (encrypted: {})", state, encryptedState);
 		log.info("Generated PKCE code_verifier: {} (challenge: {})", codeVerifier, codeChallenge);
@@ -81,7 +84,8 @@ public class OauthService {
 		return Map.of(
 			"kakaoAuthUrl", kakaoAuthUrl,
 			"state", state,
-			"encryptedState", encryptedState
+			"encryptedState", encryptedState,
+			"codeVerifier", codeVerifier // 추가.
 		);
 	}
 
