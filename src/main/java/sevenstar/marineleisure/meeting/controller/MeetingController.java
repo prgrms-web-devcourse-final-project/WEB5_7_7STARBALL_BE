@@ -24,6 +24,7 @@ import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.global.exception.CustomException;
 import sevenstar.marineleisure.global.jwt.UserPrincipal;
+import sevenstar.marineleisure.meeting.dto.mapper.CustomSlicePageResponse;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
@@ -53,7 +54,7 @@ public class MeetingController {
 	private final ParticipantRepository participantRepository;
 
 	@GetMapping("/meetings")
-	public ResponseEntity<BaseResponse<Slice<MeetingListResponse>>> getAllListMeetings(
+	public ResponseEntity<BaseResponse<CustomSlicePageResponse<MeetingListResponse>>> getAllListMeetings(
 		@RequestParam(name = "cursorId", defaultValue = "0") Long cursorId,
 		@RequestParam(name = "size", defaultValue = "10") Integer sizes
 	) {
@@ -73,8 +74,19 @@ public class MeetingController {
 				return MeetingListResponse.fromEntity(meeting, host, participantCount, spot, tag);
 			})
 			.collect(Collectors.toList());
-		Slice<MeetingListResponse> result = new SliceImpl<>(dtoList, not_mapping_result.getPageable(), not_mapping_result.hasNext());
-		return BaseResponse.success(result);
+		Long nextCursorId = null;
+		if(not_mapping_result.hasNext() && !not_mapping_result.getContent().isEmpty()) {
+			Meeting lastMeetingInSlice = not_mapping_result.getContent().get(sizes - 1);
+			nextCursorId = lastMeetingInSlice.getId();
+		}
+		CustomSlicePageResponse<MeetingListResponse> result_Mapping =
+			new CustomSlicePageResponse<>(
+				dtoList,
+				nextCursorId,
+				sizes,
+				not_mapping_result.hasNext()
+			);
+		return BaseResponse.success(result_Mapping);
 	}
 	@GetMapping("/meetings/{id}")
 	public ResponseEntity<BaseResponse<MeetingDetailResponse>> getMeetingDetail(
@@ -83,7 +95,7 @@ public class MeetingController {
 		return BaseResponse.success(meetingService.getMeetingDetails(meetingId));
 	}
 	@GetMapping("/meetings/my")
-	public ResponseEntity<BaseResponse<Slice<MeetingListResponse>>> getStatusListMeeting(
+	public ResponseEntity<BaseResponse<CustomSlicePageResponse<MeetingListResponse>>> getStatusListMeeting(
 		@RequestParam(name = "status",defaultValue = "RECRUITING") MeetingStatus status,
 		@RequestParam(name = "role",defaultValue = "HOST") MeetingRole role,
 		@RequestParam(name = "cursorId", defaultValue = "0") Long cursorId,
@@ -108,8 +120,20 @@ public class MeetingController {
 				return MeetingListResponse.fromEntity(meeting, host, participantCount, spot, tag);
 			})
 			.collect(Collectors.toList());
-		Slice<MeetingListResponse> result = new SliceImpl<>(dtoList, not_mapping_result.getPageable(), not_mapping_result.hasNext());
-		return BaseResponse.success(result);
+
+		Long nextCursorId = null;
+		if(not_mapping_result.hasNext() && !not_mapping_result.getContent().isEmpty()) {
+			Meeting lastMeetingInSlice = not_mapping_result.getContent().get(sizes - 1);
+			nextCursorId = lastMeetingInSlice.getId();
+		}
+		CustomSlicePageResponse<MeetingListResponse> result_Mapping =
+			new CustomSlicePageResponse<>(
+				dtoList,
+				nextCursorId,
+				sizes,
+				not_mapping_result.hasNext()
+			);
+		return BaseResponse.success(result_Mapping);
 	}
 	@GetMapping("/meetings/count")
 	public ResponseEntity<BaseResponse<Long>> countMeetings(@AuthenticationPrincipal UserPrincipal userDetails){
