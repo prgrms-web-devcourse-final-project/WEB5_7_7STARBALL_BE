@@ -34,6 +34,7 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final MeetingRepository meetingRepository;
 	private final ParticipantRepository participantRepository;
+	private final OauthService oauthService;
 
 	/**
 	 * 회원 ID로 회원 상세 정보를 조회합니다.
@@ -188,7 +189,19 @@ public class MemberService {
 			participantRepository.deleteAll(participations);
 		}
 
-		// 3. 회원 상태를 EXPIRED로 변경 (실제 삭제 대신 소프트 삭제 방식 사용)
+		// 3. 카카오 계정 연결 끊기 (providerId가 있는 경우)
+		if (member.getProvider() != null && "kakao".equals(member.getProvider()) && member.getProviderId() != null) {
+			try {
+				oauthService.unlinkKakaoAccount(member.getProviderId());
+				log.info("카카오 계정 연결 끊기 성공: memberId={}, providerId={}", memberId, member.getProviderId());
+			} catch (Exception e) {
+				log.error("카카오 계정 연결 끊기 실패: memberId={}, providerId={}, error={}",
+					memberId, member.getProviderId(), e.getMessage(), e);
+				// 연결 끊기 실패 해도 탈퇴는 계속 진행
+			}
+		}
+
+		// 4. 회원 상태를 EXPIRED로 변경 (실제 삭제 대신 소프트 삭제 방식 사용)
 		updateMemberStatusField(member, MemberStatus.EXPIRED);
 		memberRepository.save(member);
 
@@ -206,6 +219,7 @@ public class MemberService {
 			log.error("[Scheduler] failed to delete expired member: {}", e.getMessage());
 		}
 	}
+
 	/**
 	 * 회원의 위치 정보를 업데이트합니다.
 	 * 이 메서드는 Member 엔티티의 updateLocation 메서드를 사용합니다.
