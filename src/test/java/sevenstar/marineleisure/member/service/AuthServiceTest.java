@@ -77,6 +77,7 @@ class AuthServiceTest {
 		String accessToken = "kakao-access-token";
 		String jwtAccessToken = "jwt-access-token";
 		String refreshToken = "jwt-refresh-token";
+		String codeVerifier = "test-code-verifier";
 
 		// useCookie = true 설정 (기본값)
 		ReflectionTestUtils.setField(authService, "useCookie", true);
@@ -103,7 +104,7 @@ class AuthServiceTest {
 		when(jwtTokenProvider.createRefreshToken(testMember)).thenReturn(refreshToken);
 
 		// when
-		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, mockResponse);
+		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse);
 
 		// then
 		assertThat(response).isNotNull();
@@ -127,6 +128,7 @@ class AuthServiceTest {
 		String accessToken = "kakao-access-token";
 		String jwtAccessToken = "jwt-access-token";
 		String refreshToken = "jwt-refresh-token";
+		String codeVerifier = "test-code-verifier";
 
 		// useCookie = false 설정
 		ReflectionTestUtils.setField(authService, "useCookie", false);
@@ -149,7 +151,7 @@ class AuthServiceTest {
 		when(jwtTokenProvider.createRefreshToken(testMember)).thenReturn(refreshToken);
 
 		// when
-		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, mockResponse);
+		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse);
 
 		// then
 		assertThat(response).isNotNull();
@@ -170,6 +172,7 @@ class AuthServiceTest {
 		String code = "test-auth-code";
 		String state = "test-state";
 		String encryptedState = "encrypted-test-state";
+		String codeVerifier = "test-code-verifier";
 
 		// 액세스 토큰이 없는 응답 설정
 		KakaoTokenResponse tokenResponse = KakaoTokenResponse.builder()
@@ -185,7 +188,7 @@ class AuthServiceTest {
 		when(oauthService.exchangeCodeForToken(code, codeVerifier)).thenReturn(tokenResponse);
 
 		// when & then
-		assertThatThrownBy(() -> authService.processKakaoLogin(code, state, encryptedState, mockResponse))
+		assertThatThrownBy(() -> authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse))
 			.isInstanceOf(RuntimeException.class)
 			.hasMessageContaining("Failed to get access token from Kakao");
 	}
