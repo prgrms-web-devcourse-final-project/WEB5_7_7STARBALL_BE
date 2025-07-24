@@ -1,15 +1,12 @@
 package sevenstar.marineleisure.member.service;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.redis.connection.StringRedisConnection;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -56,16 +53,18 @@ public class OauthService {
 	 * @param customRedirectUri 커스텀 리다이렉트 URI (null인 경우 기본값 사용)
 	 * @return 카카오 로그인 URL, state 값, 암호화된 state 값을 포함한 Map
 	 */
-	public Map<String, String> getKakaoLoginUrl(String customRedirectUri) {
+	public Map<String, String> getKakaoLoginUrl(String customRedirectUri, String codeChallenge) {
 
 		String state = UUID.randomUUID().toString();
-		String codeVerifier = pkceUtil.generateCodeVerifier();
-		String codeChallenge = pkceUtil.generateCodeChallenge(codeVerifier);
+
+		/// 기존 서버에서 codeVerifier 생성하는 코드 흐름
+		// String codeVerifier = pkceUtil.generateCodeVerifier();
+		// String codeChallenge = pkceUtil.generateCodeChallenge(codeVerifier);
 
 		String encryptedState = stateEncryptionUtil.encryptState(state);
 
 		log.info("Generated OAuth state: {} (encrypted: {})", state, encryptedState);
-		log.info("Generated PKCE code_verifier: {} (challenge: {})", codeVerifier, codeChallenge);
+		// log.info("Generated PKCE code_verifier: {} (challenge: {})", codeVerifier, codeChallenge);
 
 		// Use the provided redirectUri or fall back to the configured one
 		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
@@ -84,8 +83,8 @@ public class OauthService {
 		return Map.of(
 			"kakaoAuthUrl", kakaoAuthUrl,
 			"state", state,
-			"encryptedState", encryptedState,
-			"codeVerifier", codeVerifier // 추가.
+			"encryptedState", encryptedState
+			// "codeVerifier", codeVerifier // 추가.
 		);
 	}
 
@@ -96,9 +95,9 @@ public class OauthService {
 	 * @param request HTTP 요청 (호환성을 위해 유지, 사용하지 않음)
 	 * @return 카카오 로그인 URL, state 값, 암호화된 state 값을 포함한 Map
 	 */
-	public Map<String, String> getKakaoLoginUrl(String customRedirectUri, HttpServletRequest request) {
+	public Map<String, String> getKakaoLoginUrl(String customRedirectUri,String codeChallenge ,HttpServletRequest request) {
 		// 세션 사용하지 않고 stateless 방식으로 구현
-		return getKakaoLoginUrl(customRedirectUri);
+		return getKakaoLoginUrl(customRedirectUri, codeChallenge);
 	}
 
 	/**

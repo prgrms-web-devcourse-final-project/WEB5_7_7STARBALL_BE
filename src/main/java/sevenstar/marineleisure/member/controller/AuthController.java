@@ -47,10 +47,11 @@ public class AuthController {
 	@GetMapping("/kakao/url")
 	public ResponseEntity<BaseResponse<Map<String, String>>> getKakaoLoginUrl(
 		@RequestParam(required = false) String redirectUri,
+		@RequestParam String codeChallenge,
 		HttpServletRequest request
 	) {
 		log.info("Generating Kakao login URL with redirectUri: {}", redirectUri);
-		Map<String, String> loginUrlInfo = oauthService.getKakaoLoginUrl(redirectUri, request);
+		Map<String, String> loginUrlInfo = oauthService.getKakaoLoginUrl(redirectUri, codeChallenge ,request);
 		return BaseResponse.success(loginUrlInfo);
 	}
 
