@@ -3,7 +3,6 @@ package sevenstar.marineleisure.member.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.lenient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,15 +66,13 @@ class OauthServiceTest {
 	@DisplayName("카카오 로그인 URL을 생성할 수 있다")
 	void getKakaoLoginUrl() {
 		// when
-		Map<String, String> result = oauthService.getKakaoLoginUrl(null);
+		Map<String, String> result = oauthService.getKakaoLoginUrl(null, "test-code-challenge");
 
 		// then
 		assertThat(result).containsKey("kakaoAuthUrl");
 		assertThat(result).containsKey("state");
 		assertThat(result).containsKey("encryptedState");
-		assertThat(result).containsKey("codeVerifier");
 		assertThat(result.get("encryptedState")).isEqualTo("encrypted-state");
-		assertThat(result.get("codeVerifier")).isEqualTo("test-code-verifier");
 		assertThat(result.get("kakaoAuthUrl")).contains("https://kauth.kakao.com/oauth/authorize");
 		assertThat(result.get("kakaoAuthUrl")).contains("client_id=test-api-key");
 		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=http://localhost:8080/oauth/kakao/code");
@@ -92,15 +89,13 @@ class OauthServiceTest {
 		String customRedirectUri = "http://custom-redirect.com/callback";
 
 		// when
-		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri);
+		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri, "test-code-challenge");
 
 		// then
 		assertThat(result).containsKey("kakaoAuthUrl");
 		assertThat(result).containsKey("state");
 		assertThat(result).containsKey("encryptedState");
-		assertThat(result).containsKey("codeVerifier");
 		assertThat(result.get("encryptedState")).isEqualTo("encrypted-state");
-		assertThat(result.get("codeVerifier")).isEqualTo("test-code-verifier");
 		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=" + customRedirectUri);
 		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge=test-code-challenge");
 		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge_method=S256");

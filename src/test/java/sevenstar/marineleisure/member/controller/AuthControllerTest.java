@@ -76,14 +76,17 @@ class AuthControllerTest {
 		loginUrlInfo.put("kakaoAuthUrl",
 			"https://kauth.kakao.com/oauth/authorize?client_id=test-api-key"
 				+ "&redirect_uri=http://localhost:8080/oauth/kakao/code"
-				+ "&response_type=code&state=test-state");
+				+ "&response_type=code&state=test-state"
+				+ "&code_challenge=test-code-challenge"
+				+ "&code_challenge_method=S256");
 		loginUrlInfo.put("state", "test-state");
 		loginUrlInfo.put("encryptedState", "encrypted-test-state");
 		loginUrlInfo.put("accessToken", "test-access-token");
 
-		when(oauthService.getKakaoLoginUrl(isNull(), any())).thenReturn(loginUrlInfo);
+		when(oauthService.getKakaoLoginUrl(isNull(), eq("test-code-challenge"), any())).thenReturn(loginUrlInfo);
 
-		mockMvc.perform(get("/auth/kakao/url"))
+		mockMvc.perform(get("/auth/kakao/url")
+				.param("codeChallenge", "test-code-challenge"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
@@ -100,14 +103,18 @@ class AuthControllerTest {
 		loginUrlInfo.put("kakaoAuthUrl",
 			"https://kauth.kakao.com/oauth/authorize?client_id=test-api-key"
 				+ "&redirect_uri=" + customRedirectUri
-				+ "&response_type=code&state=test-state");
+				+ "&response_type=code&state=test-state"
+				+ "&code_challenge=test-code-challenge"
+				+ "&code_challenge_method=S256");
 		loginUrlInfo.put("state", "test-state");
 		loginUrlInfo.put("encryptedState", "encrypted-test-state");
 		loginUrlInfo.put("accessToken", "test-access-token");
 
-		when(oauthService.getKakaoLoginUrl(any(), any())).thenReturn(loginUrlInfo);
+		when(oauthService.getKakaoLoginUrl(eq(customRedirectUri), eq("test-code-challenge"), any())).thenReturn(loginUrlInfo);
 
-		mockMvc.perform(get("/auth/kakao/url").param("redirectUri", customRedirectUri))
+		mockMvc.perform(get("/auth/kakao/url")
+				.param("redirectUri", customRedirectUri)
+				.param("codeChallenge", "test-code-challenge"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(200))
 			.andExpect(jsonPath("$.body.kakaoAuthUrl").exists())
