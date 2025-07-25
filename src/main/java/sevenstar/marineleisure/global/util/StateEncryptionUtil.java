@@ -39,6 +39,7 @@ public class StateEncryptionUtil {
         }
     }
 
+
     /**
      * 암호화된 상태 값을 복호화.
      *
@@ -67,8 +68,7 @@ public class StateEncryptionUtil {
      */
     public boolean validateState(String state, String encryptedState) {
         try {
-            String decryptedState = decryptState(encryptedState);
-            return decryptedState.equals(state);
+            return decryptState(encryptedState).equals(state);
         } catch (Exception e) {
             return false;
         }

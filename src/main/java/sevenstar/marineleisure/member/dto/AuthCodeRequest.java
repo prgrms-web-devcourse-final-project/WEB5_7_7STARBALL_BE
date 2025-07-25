@@ -13,6 +13,7 @@ public record AuthCodeRequest(
 	String code,
 	String state,
 	String encryptedState,
+	String codeVerifier,
 	String error,
 	String errorDescription
 ) {

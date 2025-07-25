@@ -3,7 +3,6 @@ package sevenstar.marineleisure.member.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.lenient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Mono;
+import sevenstar.marineleisure.global.util.PkceUtil;
 import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
@@ -39,6 +39,9 @@ class OauthServiceTest {
 	@Mock
 	private StateEncryptionUtil stateEncryptionUtil;
 
+	@Mock
+	private PkceUtil pkceUtil;
+
 	@InjectMocks
 	private OauthService oauthService;
 
@@ -53,13 +56,17 @@ class OauthServiceTest {
 		// StateEncryptionUtil 모킹 (lenient 설정으로 불필요한 stubbing 경고 방지)
 		lenient().when(stateEncryptionUtil.encryptState(anyString())).thenReturn("encrypted-state");
 		lenient().when(stateEncryptionUtil.validateState(anyString(), anyString())).thenReturn(true);
+
+		// PkceUtil 모킹
+		lenient().when(pkceUtil.generateCodeVerifier()).thenReturn("test-code-verifier");
+		lenient().when(pkceUtil.generateCodeChallenge(anyString())).thenReturn("test-code-challenge");
 	}
 
 	@Test
 	@DisplayName("카카오 로그인 URL을 생성할 수 있다")
 	void getKakaoLoginUrl() {
 		// when
-		Map<String, String> result = oauthService.getKakaoLoginUrl(null);
+		Map<String, String> result = oauthService.getKakaoLoginUrl(null, "test-code-challenge");
 
 		// then
 		assertThat(result).containsKey("kakaoAuthUrl");
@@ -71,6 +78,8 @@ class OauthServiceTest {
 		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=http://localhost:8080/oauth/kakao/code");
 		assertThat(result.get("kakaoAuthUrl")).contains("response_type=code");
 		assertThat(result.get("kakaoAuthUrl")).contains("state=" + result.get("state"));
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge=test-code-challenge");
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge_method=S256");
 	}
 
 	@Test
@@ -80,7 +89,7 @@ class OauthServiceTest {
 		String customRedirectUri = "http://custom-redirect.com/callback";
 
 		// when
-		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri);
+		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri, "test-code-challenge");
 
 		// then
 		assertThat(result).containsKey("kakaoAuthUrl");
@@ -88,6 +97,8 @@ class OauthServiceTest {
 		assertThat(result).containsKey("encryptedState");
 		assertThat(result.get("encryptedState")).isEqualTo("encrypted-state");
 		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=" + customRedirectUri);
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge=test-code-challenge");
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge_method=S256");
 	}
 
 	@Test
@@ -95,6 +106,7 @@ class OauthServiceTest {
 	void exchangeCodeForToken() {
 		// given
 		String code = "test-auth-code";
+		String codeVerifier = "test-code-verifier";
 		KakaoTokenResponse expectedResponse = KakaoTokenResponse.builder()
 			.accessToken("test-access-token")
 			.tokenType("bearer")
@@ -119,7 +131,7 @@ class OauthServiceTest {
 		when(responseSpec.bodyToMono(KakaoTokenResponse.class)).thenReturn(Mono.just(expectedResponse));
 
 		// when
-		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code);
+		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code, codeVerifier);
 
 		// then
 		assertThat(result).isNotNull();

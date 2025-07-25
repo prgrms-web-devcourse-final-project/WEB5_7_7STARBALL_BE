@@ -15,16 +15,31 @@ import sevenstar.marineleisure.global.api.openmeteo.dto.service.OpenMeteoService
 import sevenstar.marineleisure.spot.repository.SpotViewQuartileRepository;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class SchedulerService {
 	public static final int MAX_UPDATE_DAY = 3;
 	private final KhoaApiService khoaApiService;
 	private final OpenMeteoService openMeteoService;
 	private final PresetSchedulerService presetSchedulerService;
 	private final SpotViewQuartileRepository spotViewQuartileRepository;
+
+
 	private final Executor taskExecutor;
 
+	// public SchedulerService(
+	// 	KhoaApiService khoaApiService,
+	// 	OpenMeteoService openMeteoService,
+	// 	PresetSchedulerService presetSchedulerService,
+	// 	SpotViewQuartileRepository spotViewQuartileRepository,
+	// 	@Qualifier("applicationTaskExecutor") Executor taskExecutor   // ★ 여기
+	// ) {
+	// 	this.khoaApiService          = khoaApiService;
+	// 	this.openMeteoService        = openMeteoService;
+	// 	this.presetSchedulerService  = presetSchedulerService;
+	// 	this.spotViewQuartileRepository = spotViewQuartileRepository;
+	// 	this.taskExecutor            = taskExecutor;
+	// }
 	/**
 	 * 앞으로의 스케줄링 전략에 의해 수정될 부분입니다.
 	 * @author guwnoong
