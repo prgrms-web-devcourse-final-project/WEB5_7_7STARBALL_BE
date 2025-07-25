@@ -41,7 +41,7 @@ public class AuthService {
 	 * @return 로그인 응답 DTO
 	 */
 	public LoginResponse processKakaoLogin(String code, String state, String encryptedState, String codeVerifier,
-		HttpServletResponse response) {
+		HttpServletResponse response, String redirectUri) {
 		// 0. state 검증 (stateless)
 		log.info("Validating OAuth state: received={}, encrypted={}", state, encryptedState);
 
@@ -54,7 +54,7 @@ public class AuthService {
 		// String codeVerifier = stateEncryptionUtil.extractCodeVerifier(encryptedStateAndCodeVerifier);
 
 		// 1. 인증 코드로 카카오 토큰 교환
-		KakaoTokenResponse tokenResponse = oauthService.exchangeCodeForToken(code, codeVerifier);
+		KakaoTokenResponse tokenResponse = oauthService.exchangeCodeForToken(code, codeVerifier, redirectUri);
 
 		// 2. 카카오 토큰으로 사용자 정보 요청 및 처리
 		String accessToken = tokenResponse != null ? tokenResponse.accessToken() : null;

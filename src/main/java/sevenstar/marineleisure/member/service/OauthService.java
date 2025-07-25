@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -13,6 +14,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import ch.qos.logback.core.joran.action.ParamAction;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,7 +51,9 @@ public class OauthService {
 	@Value("${kakao.login.redirect_uri}")
 	private String redirectUri;
 
-
+	private final Cache<String, String> redirectUriCache = Caffeine.newBuilder()
+		.expireAfterWrite(10, TimeUnit.MINUTES)
+		.build();
 	/**
 	 * 카카오 로그인 URL 생성 (stateless)
 	 *
@@ -70,6 +76,8 @@ public class OauthService {
 		// Use the provided redirectUri or fall back to the configured one
 		String finalRedirectUri = customRedirectUri != null ? customRedirectUri : this.redirectUri;
 
+		redirectUriCache.put(state, finalRedirectUri);
+
 		String kakaoAuthUrl = UriComponentsBuilder.fromUriString(kakaoBaseUri)
 			.path("/oauth/authorize")
 			.queryParam("client_id", apiKey)
@@ -89,6 +97,12 @@ public class OauthService {
 		);
 	}
 
+	public String consumeRedirectUri(String state) {
+		// 꺼내고 동시에 무효화
+		String uri = redirectUriCache.getIfPresent(state);
+		redirectUriCache.invalidate(state);
+		return uri;
+	}
 	/**
 	 * 카카오 로그인 URL 생성 (stateless - HttpServletRequest 호환용)
 	 *
@@ -108,7 +122,7 @@ public class OauthService {
 	 * @param codeVerifier
 	 * @return 카카오 토큰 응답
 	 */
-	public KakaoTokenResponse exchangeCodeForToken(String code, String codeVerifier) {
+	public KakaoTokenResponse exchangeCodeForToken(String code, String codeVerifier, String redirectUri) {
 		String tokenUrl = UriComponentsBuilder.fromUriString(kakaoBaseUri)
 			.path("/oauth/token")
 			.build()
@@ -213,7 +227,7 @@ public class OauthService {
 
 		Map<String, Object> response = webClient.post()
 			.uri(unlinkUrl)
-			.header("Authorization", "KakaoAK" + clientSecret)
+			.header("Authorization", "KakaoAK " + clientSecret)
 			.header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
 			.body(BodyInserters.fromFormData(params))
 			.retrieve()
