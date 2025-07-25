@@ -97,14 +97,15 @@ class AuthServiceTest {
 		when(stateEncryptionUtil.validateState(state, encryptedState)).thenReturn(true);
 
 		// 서비스 메서드 모킹
-		when(oauthService.exchangeCodeForToken(code, codeVerifier)).thenReturn(tokenResponse);
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
+		when(oauthService.exchangeCodeForToken(code, codeVerifier, redirectUri)).thenReturn(tokenResponse);
 		when(oauthService.processKakaoUser(accessToken)).thenReturn(testMember);
 		// findUserById는 이제 필요 없음 (processKakaoUser가 직접 Member를 반환)
 		when(jwtTokenProvider.createAccessToken(testMember)).thenReturn(jwtAccessToken);
 		when(jwtTokenProvider.createRefreshToken(testMember)).thenReturn(refreshToken);
 
 		// when
-		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse);
+		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse, redirectUri);
 
 		// then
 		assertThat(response).isNotNull();
@@ -145,13 +146,14 @@ class AuthServiceTest {
 		when(stateEncryptionUtil.validateState(state, encryptedState)).thenReturn(true);
 
 		// 서비스 메서드 모킹
-		when(oauthService.exchangeCodeForToken(code, codeVerifier)).thenReturn(tokenResponse);
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
+		when(oauthService.exchangeCodeForToken(code, codeVerifier, redirectUri)).thenReturn(tokenResponse);
 		when(oauthService.processKakaoUser(accessToken)).thenReturn(testMember);
 		when(jwtTokenProvider.createAccessToken(testMember)).thenReturn(jwtAccessToken);
 		when(jwtTokenProvider.createRefreshToken(testMember)).thenReturn(refreshToken);
 
 		// when
-		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse);
+		LoginResponse response = authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse, redirectUri);
 
 		// then
 		assertThat(response).isNotNull();
@@ -185,10 +187,11 @@ class AuthServiceTest {
 		// state 검증 모킹
 		when(stateEncryptionUtil.validateState(state, encryptedState)).thenReturn(true);
 
-		when(oauthService.exchangeCodeForToken(code, codeVerifier)).thenReturn(tokenResponse);
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
+		when(oauthService.exchangeCodeForToken(code, codeVerifier, redirectUri)).thenReturn(tokenResponse);
 
 		// when & then
-		assertThatThrownBy(() -> authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse))
+		assertThatThrownBy(() -> authService.processKakaoLogin(code, state, encryptedState, codeVerifier, mockResponse, redirectUri))
 			.isInstanceOf(RuntimeException.class)
 			.hasMessageContaining("Failed to get access token from Kakao");
 	}
