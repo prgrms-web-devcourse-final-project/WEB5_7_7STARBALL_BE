@@ -42,7 +42,7 @@ public enum Region {
 			return OCEAN;
 		}
 		for (Region region : Region.values()) {
-			if (address.startsWith(region.koreanName)) {
+			if (region.getKoreanName().startsWith(address)) {
 				return region;
 			}
 		}
