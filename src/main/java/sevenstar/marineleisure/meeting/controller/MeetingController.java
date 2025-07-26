@@ -56,9 +56,9 @@ public class MeetingController {
 	@GetMapping("/meetings")
 	public ResponseEntity<BaseResponse<CustomSlicePageResponse<MeetingListResponse>>> getAllListMeetings(
 		@RequestParam(name = "cursorId", defaultValue = "0") Long cursorId,
-		@RequestParam(name = "size", defaultValue = "10") Integer sizes
+		@RequestParam(name = "size", defaultValue = "10") Integer size
 	) {
-		Slice<Meeting> not_mapping_result = meetingService.getAllMeetings(cursorId, sizes);
+		Slice<Meeting> not_mapping_result = meetingService.getAllMeetings(cursorId, size);
 		List<MeetingListResponse> dtoList = not_mapping_result.getContent().stream()
 			//TODO :: 개선예정
 			.map(meeting -> {
@@ -76,14 +76,14 @@ public class MeetingController {
 			.collect(Collectors.toList());
 		Long nextCursorId = null;
 		if(not_mapping_result.hasNext() && !not_mapping_result.getContent().isEmpty()) {
-			Meeting lastMeetingInSlice = not_mapping_result.getContent().get(sizes - 1);
+			Meeting lastMeetingInSlice = not_mapping_result.getContent().get(size - 1);
 			nextCursorId = lastMeetingInSlice.getId();
 		}
 		CustomSlicePageResponse<MeetingListResponse> result_Mapping =
 			new CustomSlicePageResponse<>(
 				dtoList,
 				nextCursorId,
-				sizes,
+				size,
 				not_mapping_result.hasNext()
 			);
 		return BaseResponse.success(result_Mapping);
@@ -99,12 +99,12 @@ public class MeetingController {
 		@RequestParam(name = "status",defaultValue = "RECRUITING") MeetingStatus status,
 		@RequestParam(name = "role",defaultValue = "HOST") MeetingRole role,
 		@RequestParam(name = "cursorId", defaultValue = "0") Long cursorId,
-		@RequestParam(name = "size", defaultValue = "10") Integer sizes,
+		@RequestParam(name = "size", defaultValue = "10") Integer size,
 		@AuthenticationPrincipal UserPrincipal userDetails
 	){
 
 		Long memberId = userDetails.getId();
-		Slice<Meeting> not_mapping_result = meetingService.getStatusMyMeetings_role(memberId,role,cursorId,sizes,status);
+		Slice<Meeting> not_mapping_result = meetingService.getStatusMyMeetings_role(memberId,role,cursorId,size,status);
 		List<MeetingListResponse> dtoList = not_mapping_result.getContent().stream()
 			//TODO :: 개선예정
 			.map(meeting -> {
@@ -123,14 +123,14 @@ public class MeetingController {
 
 		Long nextCursorId = null;
 		if(not_mapping_result.hasNext() && !not_mapping_result.getContent().isEmpty()) {
-			Meeting lastMeetingInSlice = not_mapping_result.getContent().get(sizes - 1);
+			Meeting lastMeetingInSlice = not_mapping_result.getContent().get(size - 1);
 			nextCursorId = lastMeetingInSlice.getId();
 		}
 		CustomSlicePageResponse<MeetingListResponse> result_Mapping =
 			new CustomSlicePageResponse<>(
 				dtoList,
 				nextCursorId,
-				sizes,
+				size,
 				not_mapping_result.hasNext()
 			);
 		return BaseResponse.success(result_Mapping);

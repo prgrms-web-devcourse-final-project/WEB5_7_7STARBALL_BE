@@ -81,7 +81,7 @@ import org.springframework.ai.openai.OpenAiChatModel;
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Transactional
-@Disabled
+//@Disabled
 @Rollback
 class MeetingControllerTest {
 
@@ -426,7 +426,7 @@ class MeetingControllerTest {
 	}
 
 	@Test
-	@WithMockCustomUser(id = 2L, username = "testHos1t")
+	@WithMockCustomUser(id = 1L, username = "mainTester")
 	@DisplayName("Post /meetings/{id}/join -- 미팅참가")
 	public void joinMeeting_Authorized() throws Exception {
 		List<Meeting> meetings = meetingRepository.findAll();
