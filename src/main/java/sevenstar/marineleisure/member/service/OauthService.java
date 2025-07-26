@@ -100,7 +100,14 @@ public class OauthService {
 	public String consumeRedirectUri(String state) {
 		// 꺼내고 동시에 무효화
 		String uri = redirectUriCache.getIfPresent(state);
+		log.info("Retrieved redirect URI from cache: {} for state: {}", uri, state);
 		redirectUriCache.invalidate(state);
+
+		if (uri == null) {
+			log.warn("No redirect URI found in cache for state: {}, using default: {}", state, this.redirectUri);
+			return this.redirectUri;
+		}
+
 		return uri;
 	}
 	/**
