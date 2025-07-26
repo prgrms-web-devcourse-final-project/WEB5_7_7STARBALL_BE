@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +21,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import jakarta.servlet.http.HttpServletRequest;
 import reactor.core.publisher.Mono;
 import sevenstar.marineleisure.global.util.PkceUtil;
 import sevenstar.marineleisure.global.util.StateEncryptionUtil;
@@ -102,11 +107,33 @@ class OauthServiceTest {
 	}
 
 	@Test
+	@DisplayName("HttpServletRequest와 함께 카카오 로그인 URL을 생성할 수 있다")
+	void getKakaoLoginUrlWithHttpServletRequest() {
+		// given
+		String customRedirectUri = "http://custom-redirect.com/callback";
+		String codeChallenge = "test-code-challenge";
+		HttpServletRequest request = mock(HttpServletRequest.class);
+
+		// when
+		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri, codeChallenge, request);
+
+		// then
+		assertThat(result).containsKey("kakaoAuthUrl");
+		assertThat(result).containsKey("state");
+		assertThat(result).containsKey("encryptedState");
+		assertThat(result.get("encryptedState")).isEqualTo("encrypted-state");
+		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=" + customRedirectUri);
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge=" + codeChallenge);
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge_method=S256");
+	}
+
+	@Test
 	@DisplayName("인증 코드로 카카오 토큰을 교환할 수 있다")
 	void exchangeCodeForToken() {
 		// given
 		String code = "test-auth-code";
 		String codeVerifier = "test-code-verifier";
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
 		KakaoTokenResponse expectedResponse = KakaoTokenResponse.builder()
 			.accessToken("test-access-token")
 			.tokenType("bearer")
@@ -131,7 +158,7 @@ class OauthServiceTest {
 		when(responseSpec.bodyToMono(KakaoTokenResponse.class)).thenReturn(Mono.just(expectedResponse));
 
 		// when
-		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code, codeVerifier);
+		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code, codeVerifier, redirectUri);
 
 		// then
 		assertThat(result).isNotNull();
@@ -350,5 +377,29 @@ class OauthServiceTest {
 
 		// verify
 		verify(webClient).post();
+	}
+
+	@Test
+	@DisplayName("상태값으로 리다이렉트 URI를 가져오고 캐시에서 제거할 수 있다")
+	void consumeRedirectUri() {
+		// given
+		String state = "test-state";
+		String expectedRedirectUri = "http://custom-redirect.com/callback";
+
+		// 리플렉션을 사용하여 캐시에 직접 값 설정
+		Cache<String, String> redirectUriCache = Caffeine.newBuilder()
+			.expireAfterWrite(10, TimeUnit.MINUTES)
+			.build();
+		redirectUriCache.put(state, expectedRedirectUri);
+		ReflectionTestUtils.setField(oauthService, "redirectUriCache", redirectUriCache);
+
+		// when
+		String result = oauthService.consumeRedirectUri(state);
+
+		// then
+		assertThat(result).isEqualTo(expectedRedirectUri);
+
+		// 캐시에서 제거되었는지 확인
+		assertThat(redirectUriCache.getIfPresent(state)).isNull();
 	}
 }

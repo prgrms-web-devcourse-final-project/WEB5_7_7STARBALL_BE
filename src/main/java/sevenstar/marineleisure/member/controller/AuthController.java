@@ -84,12 +84,14 @@ public class AuthController {
 		}
 
 		try {
+			String redirectUri = oauthService.consumeRedirectUri(request.state());
 			LoginResponse loginResponse = authService.processKakaoLogin(
 				request.code(),
 				request.state(),
 				request.encryptedState(),
 				request.codeVerifier(),
-				response
+				response,
+				redirectUri
 			);
 			return BaseResponse.success(loginResponse);
 		} catch (AuthenticationException e) {

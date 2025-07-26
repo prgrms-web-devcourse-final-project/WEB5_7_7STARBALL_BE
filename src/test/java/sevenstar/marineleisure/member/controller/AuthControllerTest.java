@@ -126,10 +126,15 @@ class AuthControllerTest {
 	@Test
 	@DisplayName("카카오 로그인을 처리할 수 있다 (쿠키 모드)")
 	void kakaoLogin() throws Exception {
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
 		AuthCodeRequest request = new AuthCodeRequest("test-auth-code", "test-state", "encrypted-test-state", "test-code-verifier", null,
-			null);
+			null, redirectUri);
+
+		// Mock the consumeRedirectUri method to return the expected redirectUri
+		when(oauthService.consumeRedirectUri(eq("test-state"))).thenReturn(redirectUri);
+
 		when(authService.processKakaoLogin(eq("test-auth-code"), eq("test-state"), eq("encrypted-test-state"), eq("test-code-verifier"), any(
-			HttpServletResponse.class))).thenReturn(loginResponseCookie);
+			HttpServletResponse.class), eq(redirectUri))).thenReturn(loginResponseCookie);
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -146,10 +151,15 @@ class AuthControllerTest {
 	@Test
 	@DisplayName("카카오 로그인을 처리할 수 있다 (비쿠키 모드)")
 	void kakaoLogin_noCookie() throws Exception {
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
 		AuthCodeRequest request = new AuthCodeRequest("test-auth-code", "test-state", "encrypted-test-state", "test-code-verifier", null,
-			null);
+			null, redirectUri);
+
+		// Mock the consumeRedirectUri method to return the expected redirectUri
+		when(oauthService.consumeRedirectUri(eq("test-state"))).thenReturn(redirectUri);
+
 		when(authService.processKakaoLogin(eq("test-auth-code"), eq("test-state"), eq("encrypted-test-state"), eq("test-code-verifier"), any(
-			HttpServletResponse.class))).thenReturn(loginResponseNoCookie);
+			HttpServletResponse.class), eq(redirectUri))).thenReturn(loginResponseNoCookie);
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -166,9 +176,14 @@ class AuthControllerTest {
 	@Test
 	@DisplayName("카카오 로그인 처리 중 오류가 발생하면 에러 응답을 반환한다")
 	void kakaoLogin_error() throws Exception {
-		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state", "encrypted-test-state", "test-code-verifier", null, null);
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
+		AuthCodeRequest request = new AuthCodeRequest("invalid-code", "test-state", "encrypted-test-state", "test-code-verifier", null, null, redirectUri);
+
+		// Mock the consumeRedirectUri method to return the expected redirectUri
+		when(oauthService.consumeRedirectUri(eq("test-state"))).thenReturn(redirectUri);
+
 		when(authService.processKakaoLogin(eq("invalid-code"), eq("test-state"), eq("encrypted-test-state"), eq("test-code-verifier"),
-			any(HttpServletResponse.class)))
+			any(HttpServletResponse.class), eq(redirectUri)))
 			.thenThrow(new RuntimeException("Failed to get access token from Kakao"));
 
 		mockMvc.perform(post("/auth/kakao/code")
@@ -182,8 +197,9 @@ class AuthControllerTest {
 	@Test
 	@DisplayName("사용자가 카카오 로그인을 취소하면 취소 응답을 반환한다")
 	void kakaoLogin_canceled() throws Exception {
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
 		AuthCodeRequest request = new AuthCodeRequest(null, "test-state", "encrypted-test-state", null, "access_denied",
-			"User denied access");
+			"User denied access", redirectUri);
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -196,8 +212,9 @@ class AuthControllerTest {
 	@Test
 	@DisplayName("카카오 로그인 중 다른 에러가 발생하면 에러 응답을 반환한다")
 	void kakaoLogin_otherError() throws Exception {
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
 		AuthCodeRequest request = new AuthCodeRequest(null, "test-state", "encrypted-test-state", null, "server_error",
-			"Internal server error");
+			"Internal server error", redirectUri);
 
 		mockMvc.perform(post("/auth/kakao/code")
 				.contentType(MediaType.APPLICATION_JSON)
