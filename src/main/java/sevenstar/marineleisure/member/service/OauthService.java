@@ -18,12 +18,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import ch.qos.logback.core.joran.action.ParamAction;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import sevenstar.marineleisure.global.util.PkceUtil;
 import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
@@ -37,13 +35,15 @@ public class OauthService {
 	private final MemberRepository memberRepository;
 	private final WebClient webClient;
 	private final StateEncryptionUtil stateEncryptionUtil;
-	private final PkceUtil pkceUtil;
 
 	@Value("${kakao.login.api_key}")
 	private String apiKey;
 
 	@Value("${kakao.login.client_secret}")
 	private String clientSecret;
+
+	@Value("${kakao.login.admin_key}")
+	private String adminKey;
 
 	@Value("${kakao.login.uri.base}")
 	private String kakaoBaseUri;
@@ -234,7 +234,7 @@ public class OauthService {
 
 		Map<String, Object> response = webClient.post()
 			.uri(unlinkUrl)
-			.header("Authorization", "KakaoAK " + clientSecret)
+			.header("Authorization", "KakaoAK " + adminKey)
 			.header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
 			.body(BodyInserters.fromFormData(params))
 			.retrieve()
