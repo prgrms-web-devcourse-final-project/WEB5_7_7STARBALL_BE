@@ -15,6 +15,7 @@ import sevenstar.marineleisure.forecast.repository.FishingTargetRepository;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.FishingItem;
 import sevenstar.marineleisure.global.api.khoa.mapper.KhoaMapper;
+import sevenstar.marineleisure.global.api.openmeteo.dto.item.UvIndexItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
 import sevenstar.marineleisure.global.enums.TidePhase;
@@ -76,6 +77,20 @@ public class FishingProvider extends ActivityProvider {
 					item.getMaxCrsp(), item.getMinWspd(), item.getMaxWspd());
 			}
 
+		}
+	}
+
+	@Override
+	public void update(LocalDate startDate, LocalDate endDate) {
+		for (Long spotId : fishingRepository.findByForecastDateBetween(startDate, endDate)) {
+			OutdoorSpot outdoorSpot = outdoorSpotRepository.findById(spotId).orElseThrow();
+			UvIndexItem uvIndex = getUvIndex(startDate, endDate, outdoorSpot.getLatitude().doubleValue(),
+				outdoorSpot.getLongitude().doubleValue());
+			for (int i = 0; i < uvIndex.getTime().size(); i++) {
+				Float uvIndexValue = uvIndex.getUvIndexMax().get(i);
+				LocalDate date = uvIndex.getTime().get(i);
+				fishingRepository.updateUvIndex(uvIndexValue, spotId, date);
+			}
 		}
 	}
 

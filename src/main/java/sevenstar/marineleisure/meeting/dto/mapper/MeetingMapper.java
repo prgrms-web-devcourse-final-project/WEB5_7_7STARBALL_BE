@@ -23,6 +23,9 @@ import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 
 @Component
 public class MeetingMapper {
+	// Rich Domain Model 리팩토링으로 불필요해진 메서드들
+	// Meeting.changeStatus()로 대체됨
+	/*
 	public Meeting UpdateStatus(Meeting meeting, MeetingStatus status) {
 		return Meeting.builder()
 			.id(meeting.getId())
@@ -36,6 +39,7 @@ public class MeetingMapper {
 			.description(meeting.getDescription())
 			.build();
 	}
+	*/
 
 	public Meeting CreateMeeting(CreateMeetingRequest request, Long hostId) {
 		return Meeting.builder()
@@ -50,6 +54,8 @@ public class MeetingMapper {
 			.build();
 	}
 
+	// Meeting.updateMeetingInfo()로 대체됨
+	/*
 	public Meeting UpdateMeeting(UpdateMeetingRequest request, Meeting meeting) {
 		return
 			Meeting.builder()
@@ -65,6 +71,7 @@ public class MeetingMapper {
 				.build();
 
 	}
+	*/
 
 	public Tag UpdateTag(UpdateMeetingRequest request, Tag tag) {
 		return
@@ -146,6 +153,8 @@ public class MeetingMapper {
 
 	}
 
+	// Meeting.addParticipant()에서 직접 생성으로 대체됨
+	/*
 	public Participant saveParticipant(Long memberId,Long meetingId,MeetingRole role){
 		return Participant.builder()
 			.meetingId(meetingId)
@@ -153,6 +162,7 @@ public class MeetingMapper {
 			.role(role)
 			.build();
 	}
+	*/
 
 	public  Tag saveTag(Long meetingId, CreateMeetingRequest request){
 		return Tag.builder()
