@@ -24,7 +24,7 @@ public interface ActivityRepository<T, ID> extends JpaRepository<T, ID> {
 	@Query("""
 		    SELECT e
 			FROM #{#entityName} e
-		    WHERE e.id = :spotId
+		    WHERE e.spotId = :spotId
 		    	AND e.forecastDate = :date
 		""")
 	List<T> findForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);

@@ -3,12 +3,12 @@ package sevenstar.marineleisure.member.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.lenient;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +21,12 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import jakarta.servlet.http.HttpServletRequest;
 import reactor.core.publisher.Mono;
+import sevenstar.marineleisure.global.util.PkceUtil;
 import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
@@ -39,6 +44,9 @@ class OauthServiceTest {
 	@Mock
 	private StateEncryptionUtil stateEncryptionUtil;
 
+	@Mock
+	private PkceUtil pkceUtil;
+
 	@InjectMocks
 	private OauthService oauthService;
 
@@ -53,13 +61,17 @@ class OauthServiceTest {
 		// StateEncryptionUtil 모킹 (lenient 설정으로 불필요한 stubbing 경고 방지)
 		lenient().when(stateEncryptionUtil.encryptState(anyString())).thenReturn("encrypted-state");
 		lenient().when(stateEncryptionUtil.validateState(anyString(), anyString())).thenReturn(true);
+
+		// PkceUtil 모킹
+		lenient().when(pkceUtil.generateCodeVerifier()).thenReturn("test-code-verifier");
+		lenient().when(pkceUtil.generateCodeChallenge(anyString())).thenReturn("test-code-challenge");
 	}
 
 	@Test
 	@DisplayName("카카오 로그인 URL을 생성할 수 있다")
 	void getKakaoLoginUrl() {
 		// when
-		Map<String, String> result = oauthService.getKakaoLoginUrl(null);
+		Map<String, String> result = oauthService.getKakaoLoginUrl(null, "test-code-challenge");
 
 		// then
 		assertThat(result).containsKey("kakaoAuthUrl");
@@ -71,6 +83,8 @@ class OauthServiceTest {
 		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=http://localhost:8080/oauth/kakao/code");
 		assertThat(result.get("kakaoAuthUrl")).contains("response_type=code");
 		assertThat(result.get("kakaoAuthUrl")).contains("state=" + result.get("state"));
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge=test-code-challenge");
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge_method=S256");
 	}
 
 	@Test
@@ -80,7 +94,7 @@ class OauthServiceTest {
 		String customRedirectUri = "http://custom-redirect.com/callback";
 
 		// when
-		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri);
+		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri, "test-code-challenge");
 
 		// then
 		assertThat(result).containsKey("kakaoAuthUrl");
@@ -88,6 +102,29 @@ class OauthServiceTest {
 		assertThat(result).containsKey("encryptedState");
 		assertThat(result.get("encryptedState")).isEqualTo("encrypted-state");
 		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=" + customRedirectUri);
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge=test-code-challenge");
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge_method=S256");
+	}
+
+	@Test
+	@DisplayName("HttpServletRequest와 함께 카카오 로그인 URL을 생성할 수 있다")
+	void getKakaoLoginUrlWithHttpServletRequest() {
+		// given
+		String customRedirectUri = "http://custom-redirect.com/callback";
+		String codeChallenge = "test-code-challenge";
+		HttpServletRequest request = mock(HttpServletRequest.class);
+
+		// when
+		Map<String, String> result = oauthService.getKakaoLoginUrl(customRedirectUri, codeChallenge, request);
+
+		// then
+		assertThat(result).containsKey("kakaoAuthUrl");
+		assertThat(result).containsKey("state");
+		assertThat(result).containsKey("encryptedState");
+		assertThat(result.get("encryptedState")).isEqualTo("encrypted-state");
+		assertThat(result.get("kakaoAuthUrl")).contains("redirect_uri=" + customRedirectUri);
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge=" + codeChallenge);
+		assertThat(result.get("kakaoAuthUrl")).contains("code_challenge_method=S256");
 	}
 
 	@Test
@@ -95,6 +132,8 @@ class OauthServiceTest {
 	void exchangeCodeForToken() {
 		// given
 		String code = "test-auth-code";
+		String codeVerifier = "test-code-verifier";
+		String redirectUri = "http://localhost:8080/oauth/kakao/code";
 		KakaoTokenResponse expectedResponse = KakaoTokenResponse.builder()
 			.accessToken("test-access-token")
 			.tokenType("bearer")
@@ -119,7 +158,7 @@ class OauthServiceTest {
 		when(responseSpec.bodyToMono(KakaoTokenResponse.class)).thenReturn(Mono.just(expectedResponse));
 
 		// when
-		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code);
+		KakaoTokenResponse result = oauthService.exchangeCodeForToken(code, codeVerifier, redirectUri);
 
 		// then
 		assertThat(result).isNotNull();
@@ -276,5 +315,91 @@ class OauthServiceTest {
 
 		// verify
 		verify(memberRepository).findById(memberId);
+	}
+
+	@Test
+	@DisplayName("카카오 계정 연결 끊기를 요청할 수 있다")
+	void unlinkKakaoAccount() {
+		// given
+		String providerId = "12345";
+		Map<String, Object> response = new HashMap<>();
+		response.put("id", 12345L);
+
+		// WebClient 모킹
+		WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+		WebClient.RequestBodySpec requestBodySpec = mock(WebClient.RequestBodySpec.class);
+		WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+		WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+
+		when(webClient.post()).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(eq("https://kapi.kakao.com/v1/user/unlink"))).thenReturn(requestBodySpec);
+		when(requestBodySpec.header(eq("Authorization"), eq("KakaoAK test-client-secret"))).thenReturn(requestBodySpec);
+		when(requestBodySpec.header(eq("Content-Type"), eq("application/x-www-form-urlencoded;charset=utf-8"))).thenReturn(requestBodySpec);
+		when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class))).thenReturn(Mono.just(response));
+
+		// when
+		Long result = oauthService.unlinkKakaoAccount(providerId);
+
+		// then
+		assertThat(result).isEqualTo(12345L);
+
+		// verify
+		verify(webClient).post();
+	}
+
+	@Test
+	@DisplayName("카카오 계정 연결 끊기 실패 시 예외가 발생한다")
+	void unlinkKakaoAccountFailed() {
+		// given
+		String providerId = "12345";
+		Map<String, Object> response = new HashMap<>();
+		// id 필드가 없는 응답
+
+		// WebClient 모킹
+		WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+		WebClient.RequestBodySpec requestBodySpec = mock(WebClient.RequestBodySpec.class);
+		WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+		WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+
+		when(webClient.post()).thenReturn(requestBodyUriSpec);
+		when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+		when(requestBodySpec.header(anyString(), anyString())).thenReturn(requestBodySpec);
+		when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
+		when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+		when(responseSpec.bodyToMono(any(ParameterizedTypeReference.class))).thenReturn(Mono.just(response));
+
+		// when & then
+		assertThatThrownBy(() -> oauthService.unlinkKakaoAccount(providerId))
+			.isInstanceOf(RuntimeException.class)
+			.hasMessageContaining("Failed to unlink Kakao account");
+
+		// verify
+		verify(webClient).post();
+	}
+
+	@Test
+	@DisplayName("상태값으로 리다이렉트 URI를 가져오고 캐시에서 제거할 수 있다")
+	void consumeRedirectUri() {
+		// given
+		String state = "test-state";
+		String expectedRedirectUri = "http://custom-redirect.com/callback";
+
+		// 리플렉션을 사용하여 캐시에 직접 값 설정
+		Cache<String, String> redirectUriCache = Caffeine.newBuilder()
+			.expireAfterWrite(10, TimeUnit.MINUTES)
+			.build();
+		redirectUriCache.put(state, expectedRedirectUri);
+		ReflectionTestUtils.setField(oauthService, "redirectUriCache", redirectUriCache);
+
+		// when
+		String result = oauthService.consumeRedirectUri(state);
+
+		// then
+		assertThat(result).isEqualTo(expectedRedirectUri);
+
+		// 캐시에서 제거되었는지 확인
+		assertThat(redirectUriCache.getIfPresent(state)).isNull();
 	}
 }

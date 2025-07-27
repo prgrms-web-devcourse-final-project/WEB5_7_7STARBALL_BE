@@ -1,6 +1,7 @@
 package sevenstar.marineleisure.member.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
@@ -35,12 +36,12 @@ public class AuthService {
 	 *
 	 * @param code 인증 코드
 	 * @param state OAuth state 파라미터
-	 * @param encryptedState 암호화된 state 값
+	 * @param encryptedState 암호화된 "state"
 	 * @param response HTTP 응답
 	 * @return 로그인 응답 DTO
 	 */
-	public LoginResponse processKakaoLogin(String code, String state, String encryptedState,
-		HttpServletResponse response) {
+	public LoginResponse processKakaoLogin(String code, String state, String encryptedState, String codeVerifier,
+		HttpServletResponse response, String redirectUri) {
 		// 0. state 검증 (stateless)
 		log.info("Validating OAuth state: received={}, encrypted={}", state, encryptedState);
 
@@ -49,8 +50,11 @@ public class AuthService {
 			throw new BadCredentialsException("Possible CSRF attack: state parameter doesn't match");
 		}
 
+		// 0. code_verifier 추출
+		// String codeVerifier = stateEncryptionUtil.extractCodeVerifier(encryptedStateAndCodeVerifier);
+
 		// 1. 인증 코드로 카카오 토큰 교환
-		KakaoTokenResponse tokenResponse = oauthService.exchangeCodeForToken(code);
+		KakaoTokenResponse tokenResponse = oauthService.exchangeCodeForToken(code, codeVerifier, redirectUri);
 
 		// 2. 카카오 토큰으로 사용자 정보 요청 및 처리
 		String accessToken = tokenResponse != null ? tokenResponse.accessToken() : null;

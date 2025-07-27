@@ -2,7 +2,9 @@ package sevenstar.marineleisure.global.api.kakao.service;
 
 import java.time.LocalDate;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.enums.Region;
@@ -18,10 +20,12 @@ public class PresetSchedulerService {
 	private final OutdoorSpotRepository outdoorSpotRepository;
 	private final SpotPresetRepository spotPresetRepository;
 
+	@Transactional
 	public void updateRegionApi() {
 		LocalDate now = LocalDate.now();
 		BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", TotalIndex.NONE);
 		for (Region region : Region.getAllKoreaRegion()) {
+			evictRegionCache(region);
 			BestSpot bestSpotInFishing = outdoorSpotRepository.findBestSpotInFishing(region.getLatitude(),
 				region.getLongitude(), now, PRESET_RADIUS).map(BestSpot::new).orElse(emptySpot);
 			BestSpot bestSpotInMudflat = outdoorSpotRepository.findBestSpotInMudflat(region.getLatitude(),
@@ -37,5 +41,10 @@ public class PresetSchedulerService {
 				bestSpotInScuba.getTotalIndex().name(), bestSpotInSurfing.getSpotId(), bestSpotInSurfing.getName(),
 				bestSpotInSurfing.getTotalIndex().name());
 		}
+	}
+
+	@CacheEvict(value = "spotPresetPreviews", key = "#region.name()")
+	public void evictRegionCache(Region region) {
+		// 아무 동작 없음
 	}
 }
