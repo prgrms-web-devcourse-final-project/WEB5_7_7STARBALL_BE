@@ -27,7 +27,9 @@ public class SpotPreset {
 	@AttributeOverrides({
 		@AttributeOverride(name = "spotId",column = @Column(name = "fishing_spot_id")),
 		@AttributeOverride(name = "name",column = @Column(name = "fishing_name")),
-		@AttributeOverride(name = "totalIndex",column = @Column(name = "fishing_total_index"))
+		@AttributeOverride(name = "totalIndex",column = @Column(name = "fishing_total_index")),
+		@AttributeOverride(name = "monthView",column = @Column(name = "fishing_monthView")),
+		@AttributeOverride(name = "weekView",column = @Column(name = "fishing_weekView"))
 	})
 	private BestSpot fishing;
 
@@ -35,7 +37,9 @@ public class SpotPreset {
 	@AttributeOverrides({
 		@AttributeOverride(name = "spotId",column = @Column(name = "mudflat_spot_id")),
 		@AttributeOverride(name = "name",column = @Column(name = "mudflat_name")),
-		@AttributeOverride(name = "totalIndex",column = @Column(name = "mudflat_total_index"))
+		@AttributeOverride(name = "totalIndex",column = @Column(name = "mudflat_total_index")),
+		@AttributeOverride(name = "monthView",column = @Column(name = "mudflat_monthView")),
+		@AttributeOverride(name = "weekView",column = @Column(name = "mudflat_weekView"))
 	})
 	private BestSpot mudflat;
 
@@ -43,7 +47,9 @@ public class SpotPreset {
 	@AttributeOverrides({
 		@AttributeOverride(name = "spotId",column = @Column(name = "scuba_spot_id")),
 		@AttributeOverride(name = "name",column = @Column(name = "scuba_name")),
-		@AttributeOverride(name = "totalIndex",column = @Column(name = "scuba_total_index"))
+		@AttributeOverride(name = "totalIndex",column = @Column(name = "scuba_total_index")),
+		@AttributeOverride(name = "monthView",column = @Column(name = "scuba_monthView")),
+		@AttributeOverride(name = "weekView",column = @Column(name = "scuba_weekView"))
 	})
 	private BestSpot scuba;
 
@@ -51,7 +57,9 @@ public class SpotPreset {
 	@AttributeOverrides({
 		@AttributeOverride(name = "spotId",column = @Column(name = "surfing_spot_id")),
 		@AttributeOverride(name = "name",column = @Column(name = "surfing_name")),
-		@AttributeOverride(name = "totalIndex",column = @Column(name = "surfing_total_index"))
+		@AttributeOverride(name = "totalIndex",column = @Column(name = "surfing_total_index")),
+		@AttributeOverride(name = "monthView",column = @Column(name = "surfing_monthView")),
+		@AttributeOverride(name = "weekView",column = @Column(name = "surfing_weekView"))
 	})
 	private BestSpot surfing;
 

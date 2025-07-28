@@ -17,16 +17,22 @@ public class BestSpot {
 	private String name;
 	@Enumerated(EnumType.STRING)
 	private TotalIndex totalIndex;
+	private Integer monthView;
+	private Integer weekView;
 
-	public BestSpot(Long spotId, String name, TotalIndex totalIndex) {
+	public BestSpot(Long spotId, String name, TotalIndex totalIndex, Integer monthView, Integer weekView) {
 		this.spotId = spotId;
 		this.name = name;
 		this.totalIndex = totalIndex;
+		this.monthView = monthView;
+		this.weekView = weekView;
 	}
 
 	public BestSpot(BestSpotProjection bestSpotProjection) {
 		this.spotId = bestSpotProjection.getId();
 		this.name = bestSpotProjection.getName();
 		this.totalIndex = bestSpotProjection.getTotalIndex();
+		this.monthView = bestSpotProjection.getMonthView();
+		this.weekView = bestSpotProjection.getWeekView();
 	}
 }
