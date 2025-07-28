@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import sevenstar.marineleisure.global.util.PkceUtil;
 import sevenstar.marineleisure.global.util.StateEncryptionUtil;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.dto.KakaoTokenResponse;
@@ -35,6 +36,7 @@ public class OauthService {
 	private final MemberRepository memberRepository;
 	private final WebClient webClient;
 	private final StateEncryptionUtil stateEncryptionUtil;
+	private final PkceUtil pkceUtil;
 
 	@Value("${kakao.login.api_key}")
 	private String apiKey;
