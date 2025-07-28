@@ -114,7 +114,7 @@ public class SpotServiceImpl implements SpotService {
 		Region region = geoUtils.searchRegion(latitude, longitude);
 		if (region == Region.OCEAN) {
 			LocalDate now = LocalDate.now();
-			BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", null);
+			BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", null,0,0);
 			double radius = 500_000;
 			BestSpot bestSpotInFishing = outdoorSpotRepository.findBestSpotInFishing(region.getLatitude(),
 				region.getLongitude(), now, radius).map(BestSpot::new).orElse(emptySpot);
