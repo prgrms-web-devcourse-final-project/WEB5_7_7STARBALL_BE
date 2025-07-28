@@ -18,5 +18,4 @@ public interface SpotViewStatsRepository extends JpaRepository<SpotViewStats, Sp
 				   VALUES (:spotId,:viewDate,1) ON DUPLICATE KEY UPDATE view_count = view_count + 1
 		""", nativeQuery = true)
 	void upsertViewStats(@Param("spotId") Long spotId, @Param("viewDate") LocalDate viewDate);
-
 }
