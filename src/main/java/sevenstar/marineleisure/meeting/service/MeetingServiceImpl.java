@@ -82,8 +82,11 @@ public class MeetingServiceImpl implements MeetingService {
 		Member host = memberValidate.foundMember(targetMeeting.getHostId());
 		OutdoorSpot targetSpot = spotValidate.foundOutdoorSpot(targetMeeting.getSpotId());
 		Tag targetTag = tagValidate.findByMeetingId(meetingId).orElse(null);
+		Integer currentParticipants = participantRepository.countMeetingId(targetMeeting.getId()).orElseThrow(
+			() -> new CustomException(ParticipantError.PARTICIPANT_NOT_FOUND)
+		);
 
-		return meetingMapper.MeetingDetailResponseMapper(targetMeeting, host, targetSpot, targetTag);
+		return meetingMapper.MeetingDetailResponseMapper(targetMeeting, host,currentParticipants,targetSpot, targetTag);
 	}
 
 	@Override
