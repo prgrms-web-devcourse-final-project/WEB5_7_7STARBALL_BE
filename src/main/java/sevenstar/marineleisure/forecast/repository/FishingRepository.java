@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Fishing;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.spot.dto.projection.FishingReadProjection;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
@@ -117,9 +118,13 @@ public interface FishingRepository extends ActivityRepository<Fishing, Long> {
 		LocalDateTime endDateTime
 	);
 
-	Optional<Fishing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
+	Optional<Fishing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start,
+		LocalDateTime end);
 
 	Optional<Fishing> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
 
 	Optional<Fishing> findBySpotIdOrderByCreatedAt(Long spotId);
+
+	Optional<Fishing> findFishingBySpotIdAndForecastDateAndTimePeriod(Long spotId, LocalDate forecastDate,
+		TimePeriod timePeriod);
 }
