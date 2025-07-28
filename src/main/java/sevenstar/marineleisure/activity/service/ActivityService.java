@@ -208,25 +208,28 @@ public class ActivityService {
     public ActivityWeatherResponse getWeatherBySpot(BigDecimal latitude, BigDecimal longitude) {
         OutdoorSpot nearSpot = outdoorSpotRepository.findByCoordinates(latitude, longitude, 1).getFirst();
 
-        Fishing fishingSpot = fishingRepository.findBySpotIdOrderByCreatedAt(nearSpot.getId()).get();
+        Optional<Fishing> fishingSpot = fishingRepository.findBySpotIdOrderByCreatedAt(nearSpot.getId());
 
-        if (fishingSpot != null) {
+        if (fishingSpot.isPresent()) {
+            Fishing fishingSpotGet = fishingSpot.get();
+
             return new ActivityWeatherResponse(
                 nearSpot.getName(),
-                fishingSpot.getWindSpeedMax().toString(),
-                fishingSpot.getWaveHeightMax().toString(),
-                fishingSpot.getSeaTempMax().toString()
+                fishingSpotGet.getWindSpeedMax().toString(),
+                fishingSpotGet.getWaveHeightMax().toString(),
+                fishingSpotGet.getSeaTempMax().toString()
             );
         }
 
-        Surfing surfingSpot = surfingRepository.findBySpotIdOrderByCreatedAt(nearSpot.getId()).get();
+        Optional<Surfing> surfingSpot = surfingRepository.findBySpotIdOrderByCreatedAt(nearSpot.getId());
 
-        if (surfingSpot != null) {
+        if (surfingSpot.isPresent()) {
+            Surfing surfingSpotGet = surfingSpot.get();
             return new ActivityWeatherResponse(
                 nearSpot.getName(),
-                surfingSpot.getWindSpeed().toString(),
-                surfingSpot.getWaveHeight().toString(),
-                surfingSpot.getSeaTemp().toString()
+                surfingSpotGet.getWindSpeed().toString(),
+                surfingSpotGet.getWaveHeight().toString(),
+                surfingSpotGet.getSeaTemp().toString()
             );
         } else {
             throw new RuntimeException("Spot not found");
