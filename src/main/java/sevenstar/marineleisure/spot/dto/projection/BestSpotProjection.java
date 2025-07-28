@@ -6,4 +6,6 @@ public interface BestSpotProjection {
 	Long getId();
 	String getName();
 	TotalIndex getTotalIndex();
+	Integer getMonthView();
+	Integer getWeekView();
 }

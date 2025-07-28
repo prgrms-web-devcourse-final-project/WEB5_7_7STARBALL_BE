@@ -23,7 +23,7 @@ public class PresetSchedulerService {
 	@Transactional
 	public void updateRegionApi() {
 		LocalDate now = LocalDate.now();
-		BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", TotalIndex.NONE);
+		BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", TotalIndex.NONE, 0, 0);
 		for (Region region : Region.getAllKoreaRegion()) {
 			evictRegionCache(region);
 			BestSpot bestSpotInFishing = outdoorSpotRepository.findBestSpotInFishing(region.getLatitude(),
@@ -36,10 +36,14 @@ public class PresetSchedulerService {
 				region.getLongitude(), now, PRESET_RADIUS).map(BestSpot::new).orElse(emptySpot);
 
 			spotPresetRepository.upsert(region.name(), bestSpotInFishing.getSpotId(), bestSpotInFishing.getName(),
-				bestSpotInFishing.getTotalIndex().name(), bestSpotInMudflat.getSpotId(), bestSpotInMudflat.getName(),
-				bestSpotInMudflat.getTotalIndex().name(), bestSpotInScuba.getSpotId(), bestSpotInScuba.getName(),
-				bestSpotInScuba.getTotalIndex().name(), bestSpotInSurfing.getSpotId(), bestSpotInSurfing.getName(),
-				bestSpotInSurfing.getTotalIndex().name());
+				bestSpotInFishing.getTotalIndex().name(), bestSpotInFishing.getMonthView(),
+				bestSpotInFishing.getWeekView(), bestSpotInMudflat.getSpotId(), bestSpotInMudflat.getName(),
+				bestSpotInMudflat.getTotalIndex().name(), bestSpotInMudflat.getMonthView(),
+				bestSpotInMudflat.getWeekView(), bestSpotInScuba.getSpotId(), bestSpotInScuba.getName(),
+				bestSpotInScuba.getTotalIndex().name(), bestSpotInScuba.getMonthView(), bestSpotInScuba.getWeekView(),
+				bestSpotInSurfing.getSpotId(), bestSpotInSurfing.getName(),
+				bestSpotInSurfing.getTotalIndex().name(), bestSpotInSurfing.getMonthView(),
+				bestSpotInSurfing.getWeekView());
 		}
 	}
 
