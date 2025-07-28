@@ -20,7 +20,7 @@ public class SpotMapper {
 		return new SpotReadResponse.SpotInfo(spotDistanceProjection.getId(), spotDistanceProjection.getName(),
 			ActivityCategory.parse(spotDistanceProjection.getCategory()),
 			spotDistanceProjection.getLatitude().floatValue(), spotDistanceProjection.getLongitude().floatValue(),
-			spotDistanceProjection.getDistance().floatValue(), totalIndex, spotViewQuartile.getMonthQuartile(),
+			spotDistanceProjection.getDistance().floatValue() / 1000f, totalIndex, spotViewQuartile.getMonthQuartile(),
 			spotViewQuartile.getWeekQuartile(), isFavorite);
 	}
 

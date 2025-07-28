@@ -71,6 +71,6 @@ kakao:
     uri: https://dapi.kakao.com/v2/local/geo/coord2regioncode
 jwt:
   secret: ${JWT_SECRET}
-  access-token-validity-in-seconds: 300
+  access-token-validity-in-seconds: 3600
   refresh-token-validity-in-seconds: 86400  # 24시간
   use-cookie: false # 개발 환경에서. 클라이언트 개발 완료 후 쿠키 사용 방식으로 변경.
