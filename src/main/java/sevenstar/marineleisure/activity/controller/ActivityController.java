@@ -43,7 +43,7 @@ public class ActivityController {
         try {
             return BaseResponse.success(activityService.getActivityDetail(activity, activityDetailRequest.latitude(), activityDetailRequest.longitude()));
         } catch (RuntimeException e) {
-            return BaseResponse.error(WEATHER_NOT_FOUND);
+            return BaseResponse.error(INVALID_ACTIVITY);
         }
     }
 
@@ -53,7 +53,7 @@ public class ActivityController {
             return BaseResponse.success(activityService.getWeatherBySpot(activityWeatherRequest.latitude(), activityWeatherRequest.longitude()));
         }
         catch (Exception e) {
-            return BaseResponse.error(INVALID_ACTIVITY);
+            return BaseResponse.error(WEATHER_NOT_FOUND);
         }
     }
 
