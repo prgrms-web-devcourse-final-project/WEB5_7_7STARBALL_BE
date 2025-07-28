@@ -18,7 +18,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import ch.qos.logback.core.joran.action.ParamAction;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +43,9 @@ public class OauthService {
 
 	@Value("${kakao.login.client_secret}")
 	private String clientSecret;
+
+	@Value("${kakao.login.admin_key}")
+	private String adminKey;
 
 	@Value("${kakao.login.uri.base}")
 	private String kakaoBaseUri;
@@ -234,7 +236,7 @@ public class OauthService {
 
 		Map<String, Object> response = webClient.post()
 			.uri(unlinkUrl)
-			.header("Authorization", "KakaoAK " + clientSecret)
+			.header("Authorization", "KakaoAK " + adminKey)
 			.header("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
 			.body(BodyInserters.fromFormData(params))
 			.retrieve()
