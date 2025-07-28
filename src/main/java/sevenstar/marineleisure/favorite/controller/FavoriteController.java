@@ -27,7 +27,7 @@ import sevenstar.marineleisure.global.exception.enums.FavoriteErrorCode;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/favorite")
+@RequestMapping("/favorites")
 public class FavoriteController {
 
 	private final FavoriteServiceImpl service;
