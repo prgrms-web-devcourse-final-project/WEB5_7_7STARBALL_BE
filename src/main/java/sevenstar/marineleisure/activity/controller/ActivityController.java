@@ -5,9 +5,9 @@ import static sevenstar.marineleisure.global.exception.enums.ActivityErrorCode.*
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,7 +30,7 @@ public class ActivityController {
     private final ActivityService activityService;
 
     @GetMapping("/index")
-    public ResponseEntity<BaseResponse<Map<String, ActivitySummaryResponse>>> getActivityIndex(@RequestBody ActivityIndexRequest activityIndexRequest) {
+    public ResponseEntity<BaseResponse<Map<String, ActivitySummaryResponse>>> getActivityIndex(@ModelAttribute ActivityIndexRequest activityIndexRequest) {
         return BaseResponse.success(activityService.getActivitySummary(
             activityIndexRequest.latitude(),
             activityIndexRequest.longitude(),
@@ -39,7 +39,7 @@ public class ActivityController {
     }
 
     @GetMapping("/{activity}/detail")
-    public ResponseEntity<BaseResponse<ActivityDetailResponse>> getActivityDetail(@PathVariable ActivityCategory activity, @RequestBody ActivityDetailRequest activityDetailRequest) {
+    public ResponseEntity<BaseResponse<ActivityDetailResponse>> getActivityDetail(@PathVariable ActivityCategory activity, @ModelAttribute ActivityDetailRequest activityDetailRequest) {
         try {
             return BaseResponse.success(activityService.getActivityDetail(activity, activityDetailRequest.latitude(), activityDetailRequest.longitude()));
         } catch (RuntimeException e) {
@@ -48,7 +48,7 @@ public class ActivityController {
     }
 
     @GetMapping("/weather")
-    public ResponseEntity<BaseResponse<ActivityWeatherResponse>> getActivityWeather(@RequestBody ActivityWeatherRequest activityWeatherRequest) {
+    public ResponseEntity<BaseResponse<ActivityWeatherResponse>> getActivityWeather(@ModelAttribute ActivityWeatherRequest activityWeatherRequest) {
         try {
             return BaseResponse.success(activityService.getWeatherBySpot(activityWeatherRequest.latitude(), activityWeatherRequest.longitude()));
         }
