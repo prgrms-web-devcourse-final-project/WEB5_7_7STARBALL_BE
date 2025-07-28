@@ -61,6 +61,7 @@ kakao:
   login:
     api_key: ${KAKAO_API_KEY}
     client_secret: ${KAKAO_CLIENT_SECRET}
+    admin_key: ${KAKAO_ADMIN_KEY}
     redirect_uri: ${KAKAO_REDIRECT_URI}
 
     uri:
