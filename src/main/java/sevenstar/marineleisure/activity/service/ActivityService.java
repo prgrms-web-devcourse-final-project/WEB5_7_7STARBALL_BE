@@ -225,6 +225,4 @@ public class ActivityService {
             fishing.getSeaTempMax().toString()
         );
     }
-
-
 }
