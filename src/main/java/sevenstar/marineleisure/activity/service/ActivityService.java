@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import sevenstar.marineleisure.forecast.repository.MudflatRepository;
 import sevenstar.marineleisure.forecast.repository.ScubaRepository;
 import sevenstar.marineleisure.forecast.repository.SurfingRepository;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
@@ -205,31 +207,24 @@ public class ActivityService {
     }
 
     @Transactional(readOnly = true)
-    public ActivityWeatherResponse getWeatherBySpot(BigDecimal latitude, BigDecimal longitude) {
-        OutdoorSpot nearSpot = outdoorSpotRepository.findByCoordinates(latitude, longitude, 1).getFirst();
+    public ActivityWeatherResponse getWeatherBySpot(Float latitude, Float longitude) {
+        // 1. 가까운 낚시 지점 조회
+        OutdoorSpot nearSpot = outdoorSpotRepository.findNearFishingSpot(latitude.doubleValue(),longitude.doubleValue())
+            .orElseThrow(() -> new NoSuchElementException("가까운 낚시 지점을 찾을 수 없습니다."));
 
-        Fishing fishingSpot = fishingRepository.findBySpotIdOrderByCreatedAt(nearSpot.getId()).get();
+        // 2. 해당 지점의 예보 데이터 조회
+        Fishing fishing = fishingRepository.findFishingBySpotIdAndForecastDateAndTimePeriod(nearSpot.getId(), LocalDate.now(),
+                TimePeriod.AM)
+            .orElseThrow(() -> new NoSuchElementException("해당 지점에 대한 예보 정보를 찾을 수 없습니다."));
 
-        if (fishingSpot != null) {
-            return new ActivityWeatherResponse(
-                nearSpot.getName(),
-                fishingSpot.getWindSpeedMax().toString(),
-                fishingSpot.getWaveHeightMax().toString(),
-                fishingSpot.getSeaTempMax().toString()
-            );
-        }
-
-        Surfing surfingSpot = surfingRepository.findBySpotIdOrderByCreatedAt(nearSpot.getId()).get();
-
-        if (surfingSpot != null) {
-            return new ActivityWeatherResponse(
-                nearSpot.getName(),
-                surfingSpot.getWindSpeed().toString(),
-                surfingSpot.getWaveHeight().toString(),
-                surfingSpot.getSeaTemp().toString()
-            );
-        } else {
-            throw new RuntimeException("Spot not found");
-        }
+        // 3. 결과 조합
+        return new ActivityWeatherResponse(
+            nearSpot.getName(),
+            fishing.getWindSpeedMax().toString(),
+            fishing.getWaveHeightMax().toString(),
+            fishing.getSeaTempMax().toString()
+        );
     }
+
+
 }
