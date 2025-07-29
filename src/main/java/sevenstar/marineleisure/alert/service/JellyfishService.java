@@ -3,8 +3,13 @@ package sevenstar.marineleisure.alert.service;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -56,7 +61,7 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 	/**
 	 * 웹에서 크롤링 해 Pdf를 DB에 적재합니다.
 	 */
-	// @Scheduled(cron = "0 0 0 ? * FRI")
+	@Scheduled(cron = "0 0 0 ? * FRI")
 	// 금요일 00시에 동작합니다.
 	@Transactional
 	public void updateLatestReport() {
@@ -104,4 +109,15 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 		}
 	}
 
+	public Map<String, Set<String>> convert(List<JellyfishDetailVO> jellyfish) {
+		Map<String, Set<String>> map = new HashMap<>();
+		for (JellyfishDetailVO detail : jellyfish) {
+			if (map.containsKey(detail.getSpecies())) {
+				map.get(detail.getSpecies()).add(detail.getRegion());
+			} else {
+				map.put(detail.getSpecies(), new HashSet<>(List.of(detail.getRegion())));
+			}
+		}
+		return map;
+	}
 }
