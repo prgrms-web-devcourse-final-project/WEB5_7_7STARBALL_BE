@@ -12,6 +12,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.autoconfigure.core.AutoConfigureCache;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.annotation.Rollback;
@@ -73,7 +81,8 @@ import org.springframework.ai.openai.OpenAiChatModel;
     properties = {
         "spring.task.scheduling.enabled=false",
         "spring.ai.openai.api-key=dummy",
-        "spring.ai.openai.base-url=http://localhost:8080"
+        "spring.ai.openai.base-url=http://localhost:8080",
+		"spring.cache.type=NONE"
     })
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("mysql-test")
@@ -1085,6 +1094,184 @@ class MeetingControllerTest {
 
 		log.info("Default parameters (HOST, RECRUITING) response:");
 		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@DisplayName("POST /meetings/{id}/join -- 동시성 테스트: 정원 초과 방지")
+	void joinMeeting_Concurrent_CapacityLimit() throws Exception {
+		// 정원 2명인 새로운 미팅 생성
+		Member hostMember = memberRepository.findAll().get(3); // testHost
+		OutdoorSpot spot = outdoorSpotRepository.findAll().get(0);
+		
+		Meeting concurrentTestMeeting = Meeting.builder()
+			.hostId(hostMember.getId())
+			.spotId(spot.getId())
+			.title("동시성 테스트 미팅")
+			.description("정원 2명 제한")
+			.category(ActivityCategory.FISHING)
+			.status(MeetingStatus.RECRUITING)
+			.capacity(2) // 정원 2명으로 제한
+			.meetingTime(LocalDateTime.now().plusDays(7))
+			.build();
+		Meeting savedMeeting = meetingRepository.save(concurrentTestMeeting);
+		
+		// 호스트를 참가자로 추가 (이미 1명)
+		Participant hostParticipant = Participant.builder()
+			.meetingId(savedMeeting.getId())
+			.userId(hostMember.getId())
+			.role(MeetingRole.HOST)
+			.build();
+		participantRepository.save(hostParticipant);
+		
+		// 5명의 사용자가 동시에 참가 시도 (정원은 2명이므로 3명은 실패해야 함)
+		List<Member> testMembers = Arrays.asList(
+			memberRepository.findAll().get(0), // mainTester
+			memberRepository.findAll().get(1), // testUser1  
+			memberRepository.findAll().get(2)  // testUser2
+		);
+		
+		ExecutorService executor = Executors.newFixedThreadPool(3);
+		CountDownLatch latch = new CountDownLatch(3);
+		AtomicInteger successCount = new AtomicInteger(0);
+		AtomicInteger failCount = new AtomicInteger(0);
+		
+		try {
+			// 3명의 사용자가 동시에 참가 시도
+			List<CompletableFuture<Void>> futures = testMembers.stream()
+				.map(member -> CompletableFuture.runAsync(() -> {
+					try {
+						// SecurityContext 설정
+						TestUtil.setupSecurityContext(member.getId(), member.getEmail());
+						
+						latch.countDown();
+						latch.await(); // 모든 스레드가 준비될 때까지 대기
+						
+						// 미팅 참가 요청
+						mockMvc.perform(
+							post("/meetings/{id}/join", savedMeeting.getId())
+								.accept(MediaType.APPLICATION_JSON)
+						).andDo(result -> {
+							int status = result.getResponse().getStatus();
+							if (status == 201) { // CREATED
+								successCount.incrementAndGet();
+								log.info("User {} successfully joined meeting", member.getId());
+							} else if (status == 409) { // CONFLICT - 정원 초과
+								failCount.incrementAndGet();
+								log.info("User {} failed to join - meeting full", member.getId());
+							} else {
+								log.warn("User {} unexpected status: {}", member.getId(), status);
+							}
+						});
+					} catch (Exception e) {
+						failCount.incrementAndGet();
+						log.error("User {} exception during join: {}", member.getId(), e.getMessage());
+					} finally {
+						TestUtil.clearSecurityContext();
+					}
+				}, executor))
+				.collect(Collectors.toList());
+			
+			// 모든 비동기 작업 완료 대기
+			CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+			
+			// 결과 검증
+			log.info("Success count: {}, Fail count: {}", successCount.get(), failCount.get());
+			
+			// 최종 참가자 수 확인 (호스트 1명 + 성공한 참가자들)
+			int finalParticipantCount = participantRepository.countMeetingId(savedMeeting.getId()).orElse(0);
+			log.info("Final participant count: {}", finalParticipantCount);
+			
+			// 정원 2명을 초과하지 않았는지 확인
+			assertTrue(finalParticipantCount <= 2, "참가자 수가 정원을 초과했습니다");
+			
+			// 성공한 참가 시도는 최대 1명이어야 함 (호스트 제외)
+			assertTrue(successCount.get() <= 1, "정원을 초과하여 참가가 허용되었습니다");
+			
+		} finally {
+			executor.shutdown();
+		}
+	}
+
+	@Test
+	@DisplayName("POST /meetings/{id}/join -- 동시성 테스트: Race Condition 방지")
+	void joinMeeting_Concurrent_RaceCondition() throws Exception {
+		// 정원 5명인 미팅 생성
+		Member hostMember = memberRepository.findAll().get(3);
+		OutdoorSpot spot = outdoorSpotRepository.findAll().get(0);
+		
+		Meeting raceMeeting = Meeting.builder()
+			.hostId(hostMember.getId())
+			.spotId(spot.getId())
+			.title("Race Condition 테스트")
+			.description("정원 5명")
+			.category(ActivityCategory.FISHING)
+			.status(MeetingStatus.RECRUITING)
+			.capacity(5)
+			.meetingTime(LocalDateTime.now().plusDays(7))
+			.build();
+		Meeting savedMeeting = meetingRepository.save(raceMeeting);
+		
+		// 호스트 참가자 추가
+		Participant hostParticipant = Participant.builder()
+			.meetingId(savedMeeting.getId())
+			.userId(hostMember.getId())
+			.role(MeetingRole.HOST)
+			.build();
+		participantRepository.save(hostParticipant);
+		
+		// 10명의 사용자가 동시에 참가 시도 (정원 5명이므로 5명은 실패)
+		ExecutorService executor = Executors.newFixedThreadPool(10);
+		CountDownLatch startLatch = new CountDownLatch(10);
+		AtomicInteger totalSuccess = new AtomicInteger(0);
+		AtomicInteger totalFail = new AtomicInteger(0);
+		
+		try {
+			List<CompletableFuture<Void>> futures = IntStream.range(0, 10)
+				.mapToObj(i -> CompletableFuture.runAsync(() -> {
+					try {
+						// 각 스레드마다 다른 사용자 ID 사용 (100 + i)
+						Long userId = 100L + i;
+						TestUtil.setupSecurityContext(userId, "test" + i + "@example.com");
+						
+						startLatch.countDown();
+						startLatch.await(); // 모든 스레드 동시 시작
+						
+						mockMvc.perform(
+							post("/meetings/{id}/join", savedMeeting.getId())
+								.accept(MediaType.APPLICATION_JSON)
+						).andDo(result -> {
+							int status = result.getResponse().getStatus();
+							if (status == 201) {
+								totalSuccess.incrementAndGet();
+								log.info("Thread {} (User {}) joined successfully", i, userId);
+							} else {
+								totalFail.incrementAndGet();
+								log.info("Thread {} (User {}) failed with status {}", i, userId, status);
+							}
+						});
+					} catch (Exception e) {
+						totalFail.incrementAndGet();
+						log.error("Thread {} failed with exception: {}", i, e.getMessage());
+					} finally {
+						TestUtil.clearSecurityContext();
+					}
+				}, executor))
+				.collect(Collectors.toList());
+			
+			CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+			
+			log.info("Race condition test - Success: {}, Fail: {}", totalSuccess.get(), totalFail.get());
+			
+			// 최종 참가자 수 확인
+			int finalCount = participantRepository.countMeetingId(savedMeeting.getId()).orElse(0);
+			log.info("Final participant count: {}", finalCount);
+			
+			// 정원을 초과하지 않았는지 확인
+			assertTrue(finalCount <= 5, "정원 초과: " + finalCount);
+			
+		} finally {
+			executor.shutdown();
+		}
 	}
 
 }

@@ -1,6 +1,8 @@
 package sevenstar.marineleisure.meeting.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Slice;
@@ -59,21 +61,53 @@ public class MeetingController {
 		@RequestParam(name = "size", defaultValue = "10") Integer size
 	) {
 		Slice<Meeting> not_mapping_result = meetingService.getAllMeetings(cursorId, size);
-		List<MeetingListResponse> dtoList = not_mapping_result.getContent().stream()
-			//TODO :: 개선예정
+		List<Meeting> meetingList = not_mapping_result.getContent();
+
+		// 🚀 Map Batch 최적화로 N+1 문제 해결! (5개 쿼리만)
+		// 1. 모든 ID 수집
+		Set<Long> hostIds = meetingList.stream().map(Meeting::getHostId).collect(Collectors.toSet());
+		Set<Long> spotIds = meetingList.stream().map(Meeting::getSpotId).collect(Collectors.toSet());
+		List<Long> meetingIds = meetingList.stream().map(Meeting::getId).collect(Collectors.toList());
+
+		// 2. Batch 조회 (5개 쿼리만!)
+		Map<Long, Member> hostMap = memberRepository.findAllById(hostIds)
+			.stream().collect(Collectors.toMap(Member::getId, m -> m));
+
+		Map<Long, OutdoorSpot> spotMap = outdoorSpotRepository.findAllById(spotIds)
+			.stream().collect(Collectors.toMap(OutdoorSpot::getId, s -> s));
+
+		Map<Long, Tag> tagMap = tagRepository.findByMeetingIdIn(meetingIds)
+			.stream().collect(Collectors.toMap(Tag::getMeetingId, t -> t));
+
+		Map<Long, Long> participantCountMap = participantRepository.countByMeetingIdIn(meetingIds)
+			.stream().collect(Collectors.toMap(
+				result -> (Long) result[0],      // meetingId
+				result -> (Long) result[1]       // count
+			));
+
+		// 3. 메모리에서 조합 (추가 쿼리 없음!)
+		List<MeetingListResponse> dtoList = meetingList.stream()
 			.map(meeting -> {
-				Member host = memberRepository.findById(meeting.getHostId())
-					.orElseThrow(() -> new RuntimeException("Host not found for meeting id: " + meeting.getId()));
-				OutdoorSpot spot = outdoorSpotRepository.findById(meeting.getSpotId())
-					.orElseThrow(() -> new RuntimeException("Spot not found for meeting id: " + meeting.getId()));
-				Tag tag = tagRepository.findByMeetingId(meeting.getId())
-					.orElseThrow(() ->  new CustomException(MeetingError.MEETING_NOT_FOUND));
-				long participantCount = participantRepository.countMeetingId(meeting.getId())
-					.map(Integer::longValue)
-					.orElse(0L);
+				Member host = hostMap.get(meeting.getHostId());
+				OutdoorSpot spot = spotMap.get(meeting.getSpotId());
+				Tag tag = tagMap.get(meeting.getId());
+				Long participantCount = participantCountMap.getOrDefault(meeting.getId(), 0L);
+
+				// Null 체크 (기존 예외 처리 유지)
+				if (host == null) {
+					throw new RuntimeException("Host not found for meeting id: " + meeting.getId());
+				}
+				if (spot == null) {
+					throw new RuntimeException("Spot not found for meeting id: " + meeting.getId());
+				}
+				if (tag == null) {
+					throw new CustomException(MeetingError.MEETING_NOT_FOUND);
+				}
+
 				return MeetingListResponse.fromEntity(meeting, host, participantCount, spot, tag);
 			})
 			.collect(Collectors.toList());
+
 		Long nextCursorId = null;
 		if(not_mapping_result.hasNext() && !not_mapping_result.getContent().isEmpty()) {
 			Meeting lastMeetingInSlice = not_mapping_result.getContent().get(size - 1);
@@ -88,6 +122,7 @@ public class MeetingController {
 			);
 		return BaseResponse.success(result_Mapping);
 	}
+
 	@GetMapping("/meetings/{id}")
 	public ResponseEntity<BaseResponse<MeetingDetailResponse>> getMeetingDetail(
 		@PathVariable("id") Long meetingId
@@ -97,7 +132,7 @@ public class MeetingController {
 	@GetMapping("/meetings/my")
 	public ResponseEntity<BaseResponse<CustomSlicePageResponse<MeetingListResponse>>> getStatusListMeeting(
 		@RequestParam(name = "status",defaultValue = "RECRUITING") MeetingStatus status,
-		@RequestParam(name = "role",defaultValue = "HOST") MeetingRole role,
+		@RequestParam(name = "role",defaultValue = "GUEST") MeetingRole role,
 		@RequestParam(name = "cursorId", defaultValue = "0") Long cursorId,
 		@RequestParam(name = "size", defaultValue = "10") Integer size,
 		@AuthenticationPrincipal UserPrincipal userDetails
@@ -105,18 +140,49 @@ public class MeetingController {
 
 		Long memberId = userDetails.getId();
 		Slice<Meeting> not_mapping_result = meetingService.getStatusMyMeetings_role(memberId,role,cursorId,size,status);
-		List<MeetingListResponse> dtoList = not_mapping_result.getContent().stream()
-			//TODO :: 개선예정
+		List<Meeting> meetingList = not_mapping_result.getContent();
+
+		// 🚀 Map Batch 최적화로 N+1 문제 해결! (5개 쿼리만)
+		// 1. 모든 ID 수집
+		Set<Long> hostIds = meetingList.stream().map(Meeting::getHostId).collect(Collectors.toSet());
+		Set<Long> spotIds = meetingList.stream().map(Meeting::getSpotId).collect(Collectors.toSet());
+		List<Long> meetingIds = meetingList.stream().map(Meeting::getId).collect(Collectors.toList());
+
+		// 2. Batch 조회 (5개 쿼리만!)
+		Map<Long, Member> hostMap = memberRepository.findAllById(hostIds)
+			.stream().collect(Collectors.toMap(Member::getId, m -> m));
+
+		Map<Long, OutdoorSpot> spotMap = outdoorSpotRepository.findAllById(spotIds)
+			.stream().collect(Collectors.toMap(OutdoorSpot::getId, s -> s));
+
+		Map<Long, Tag> tagMap = tagRepository.findByMeetingIdIn(meetingIds)
+			.stream().collect(Collectors.toMap(Tag::getMeetingId, t -> t));
+
+		Map<Long, Long> participantCountMap = participantRepository.countByMeetingIdIn(meetingIds)
+			.stream().collect(Collectors.toMap(
+				result -> (Long) result[0],      // meetingId
+				result -> (Long) result[1]       // count
+			));
+
+		// 3. 메모리에서 조합 (추가 쿼리 없음!)
+		List<MeetingListResponse> dtoList = meetingList.stream()
 			.map(meeting -> {
-				Member host = memberRepository.findById(meeting.getHostId())
-					.orElseThrow(() -> new RuntimeException("Host not found for meeting id: " + meeting.getId()));
-				OutdoorSpot spot = outdoorSpotRepository.findById(meeting.getSpotId())
-					.orElseThrow(() -> new RuntimeException("Spot not found for meeting id: " + meeting.getId()));
-				Tag tag = tagRepository.findByMeetingId(meeting.getId())
-					.orElseThrow(() ->  new CustomException(MeetingError.MEETING_NOT_FOUND));
-				long participantCount = participantRepository.countMeetingId(meeting.getId())
-					.map(Integer::longValue)
-					.orElse(0L);
+				Member host = hostMap.get(meeting.getHostId());
+				OutdoorSpot spot = spotMap.get(meeting.getSpotId());
+				Tag tag = tagMap.get(meeting.getId());
+				Long participantCount = participantCountMap.getOrDefault(meeting.getId(), 0L);
+
+				// Null 체크 (기존 예외 처리 유지)
+				if (host == null) {
+					throw new RuntimeException("Host not found for meeting id: " + meeting.getId());
+				}
+				if (spot == null) {
+					throw new RuntimeException("Spot not found for meeting id: " + meeting.getId());
+				}
+				if (tag == null) {
+					throw new CustomException(MeetingError.MEETING_NOT_FOUND);
+				}
+
 				return MeetingListResponse.fromEntity(meeting, host, participantCount, spot, tag);
 			})
 			.collect(Collectors.toList());

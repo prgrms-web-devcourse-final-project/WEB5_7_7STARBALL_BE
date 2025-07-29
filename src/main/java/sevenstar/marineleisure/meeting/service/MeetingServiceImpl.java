@@ -137,11 +137,9 @@ public class MeetingServiceImpl implements MeetingService {
 	public Long joinMeeting(Long meetingId, Long memberId) {
 		memberValidate.existMember(memberId);
 		Meeting meeting = meetingValidate.foundMeeting(meetingId);
-		
-		// 도메인 서비스를 통해 참가자 추가
-		meetingDomainService.addParticipant(meeting, memberId, MeetingRole.GUEST);
-		
-		// 미팅 상태가 변경되었을 수 있으므로 저장
+
+		meetingDomainService.addParticipant(meetingId, memberId, MeetingRole.GUEST);
+
 		meetingRepository.save(meeting);
 		
 		return meetingId;
@@ -151,14 +149,10 @@ public class MeetingServiceImpl implements MeetingService {
 	@Transactional
 	public void leaveMeeting(Long meetingId, Long memberId) {
 		memberValidate.existMember(memberId);
-		Meeting meeting = meetingValidate.foundMeeting(meetingId);
-		
-		// 도메인 서비스를 통해 참가자 제거
-		meetingDomainService.removeParticipant(meeting, memberId);
-		
-		// 미팅 상태가 변경되었을 수 있으므로 저장
-		meetingRepository.save(meeting);
+
+		meetingDomainService.removeParticipant(meetingId, memberId);
 	}
+
 
 	@Override
 	@Transactional
