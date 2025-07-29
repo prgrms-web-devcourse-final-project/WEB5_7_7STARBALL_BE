@@ -26,4 +26,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	boolean existsByMeetingIdAndUserId(Long meetingId, Long memberId);
 
 	List<Participant> findByUserId(Long memberId);
+
+	@Query("SELECT p.meetingId, COUNT(p) FROM Participant p WHERE p.meetingId IN :meetingIds GROUP BY p.meetingId")
+	List<Object[]> countByMeetingIdIn(@Param("meetingIds") List<Long> meetingIds);
 }
