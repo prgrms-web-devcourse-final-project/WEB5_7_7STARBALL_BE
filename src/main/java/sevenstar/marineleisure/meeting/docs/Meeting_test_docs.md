@@ -15,23 +15,23 @@
 🗺️ Map-Batch 최적화 (N+1 문제 해결)
 
 1. 기존 N+1 문제 코드
-
+```
 // ❌ N+1 문제 발생 코드
+
 public List<MeetingListResponse> getAllMeetings() {
 List<Meeting> meetings = meetingRepository.findAll();
 
       return meetings.stream()
           .map(meeting -> {
               Member host = memberRepository.findById(meeting.getHostId()).get(); // N번 쿼리
-              OutdoorSpot spot = outdoorSpotRepository.findById(meeting.getSpotId()).get(); // N번 
-쿼리
+              OutdoorSpot spot = outdoorSpotRepository.findById(meeting.getSpotId()).get(); // N번
 Tag tag = tagRepository.findByMeetingId(meeting.getId()).get(); // N번 쿼리
 Long count = participantRepository.countByMeetingId(meeting.getId()); // N번 쿼리
 return MeetingListResponse.fromEntity(meeting, host, count, spot, tag);
 })
 .collect(Collectors.toList());
 }
-
+```
 2. Map-Batch 최적화 코드
 
 // ✅ Map-Batch로 N+1 문제 해결 (총 5개 쿼리만 실행)
@@ -255,7 +255,4 @@ Native_Query
     NETWORK
     data_received...........................................................: 200 MB 555 kB/s
     data_sent...............................................................: 3.0 MB 8.2 kB/s
-
-running (6m00.5s), 000/400 VUs, 22923 complete and 0 interrupted iterations
-n_plus_1_load_test     ✓ [======================================] 000/200 VUs  6m0s  001.29 iters/s
-n_plus_1_max_load_test ✓ [======================================] 200 VUs      3m0s 
+ 
