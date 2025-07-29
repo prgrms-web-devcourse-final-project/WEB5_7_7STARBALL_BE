@@ -17,6 +17,7 @@ public interface FavoriteRepository extends JpaRepository<FavoriteSpot, Long> {
 
 	@Query("""
 		SELECT new sevenstar.marineleisure.favorite.dto.vo.FavoriteItemVO(
+			os.id,
 		    fs.id,
 		    os.name,
 		    os.category,
