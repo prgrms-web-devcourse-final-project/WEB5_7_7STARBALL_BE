@@ -3,3 +3,16 @@ spring:
     name: MarineLeisure
   profiles:
     active: prod
+
+resilience4j.circuitbreaker:
+  instances:
+    openai-api:
+      sliding-window-size: 10 # 최근 10개의 요청을 기반으로 실패율 계산
+      failure-rate-threshold: 50 # 실패율이 50% 이상이면 서킷을 OPEN
+      wait-duration-in-open-state: 10s # 서킷이 OPEN된 상태를 10초간 유지
+      permitted-number-of-calls-in-half-open-state: 5 # HALF-OPEN 상태에서 5개의 테스트 요청을 허용
+    kakao-api:
+      sliding-window-size: 10 # 최근 10개의 요청을 기반으로 실패율 계산
+      failure-rate-threshold: 50 # 실패율이 50% 이상이면 서킷을 OPEN
+      wait-duration-in-open-state: 10s # 서킷이 OPEN된 상태를 10초간 유지
+      permitted-number-of-calls-in-half-open-state: 5 # HALF-OPEN 상태에서 5개의 테스트 요청을 허용
