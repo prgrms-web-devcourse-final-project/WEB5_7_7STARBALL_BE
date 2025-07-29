@@ -83,13 +83,14 @@ public class MeetingMapper {
 				.build();
 	}
 
-	public MeetingDetailResponse MeetingDetailResponseMapper(Meeting targetMeeting, Member host,
+	public MeetingDetailResponse MeetingDetailResponseMapper(Meeting targetMeeting, Member host,Integer currentParticipant,
 		OutdoorSpot targetSpot, Tag targetTag) {
 		return MeetingDetailResponse.builder()
 			.id(targetMeeting.getId())
 			.title(targetMeeting.getTitle())
 			.category(targetMeeting.getCategory())
 			.capacity(targetMeeting.getCapacity())
+			.currentParticipants(currentParticipant)
 			.hostId(targetMeeting.getHostId())
 			.hostNickName(host.getNickname())
 			.hostEmail(host.getEmail())
@@ -102,9 +103,7 @@ public class MeetingMapper {
 			.meetingTime(targetMeeting.getMeetingTime())
 			.status(targetMeeting.getStatus())
 			.createdAt(targetMeeting.getCreatedAt())
-			.tag(TagList.builder()
-				.content(targetTag.getContent())
-				.build())
+			.tag(targetTag != null ? TagList.builder().content(targetTag.getContent()).build() : TagList.builder().content(Collections.emptyList()).build())
 			.build();
 	}
 
