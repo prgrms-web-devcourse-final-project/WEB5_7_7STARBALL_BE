@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.InOrder;
+
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -488,6 +490,113 @@ class MeetingServiceImplTest {
         assertEquals(MeetingError.MEETING_MEMBER_NOT_FOUND, exception.getErrorCode());
         verify(meetingRepository, never()).findMeetingsByParticipantRoleWithCursor(
             anyLong(), any(), any(), anyLong(), any());
+    }
+
+    // deleteMeeting Tests
+    @Test
+    @DisplayName("미팅 삭제 성공 - 호스트가 삭제")
+    void deleteMeeting_Success_AsHost() {
+        // given
+        Long hostMemberId = 1L;
+        Long meetingId = 1L;
+        Meeting targetMeeting = Meeting.builder()
+            .id(meetingId)
+            .title("삭제할 미팅")
+            .hostId(hostMemberId)
+            .status(MeetingStatus.RECRUITING)
+            .capacity(5)
+            .spotId(1L)
+            .build();
+
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(targetMeeting);
+
+        // when
+        meetingService.deleteMeeting(hostMemberId, meetingId);
+
+        // then
+        verify(meetingValidate).foundMeeting(meetingId);
+        verify(participantRepository).deleteByMeetingId(meetingId);
+        verify(tagRepository).deleteByMeetingId(meetingId);
+        verify(meetingRepository).deleteById(meetingId);
+    }
+
+    @Test
+    @DisplayName("미팅 삭제 실패 - 호스트가 아닌 사용자")
+    void deleteMeeting_Fail_NotHost() {
+        // given
+        Long hostMemberId = 1L;
+        Long nonHostMemberId = 2L;
+        Long meetingId = 1L;
+        Meeting targetMeeting = Meeting.builder()
+            .id(meetingId)
+            .title("삭제할 미팅")
+            .hostId(hostMemberId)
+            .status(MeetingStatus.RECRUITING)
+            .capacity(5)
+            .spotId(1L)
+            .build();
+
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(targetMeeting);
+
+        // when & then
+        CustomException exception = assertThrows(
+            CustomException.class,
+            () -> meetingService.deleteMeeting(nonHostMemberId, meetingId)
+        );
+
+        assertEquals(MeetingError.MEETING_NOT_HOST, exception.getErrorCode());
+        verify(participantRepository, never()).deleteByMeetingId(anyLong());
+        verify(tagRepository, never()).deleteByMeetingId(anyLong());
+        verify(meetingRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    @DisplayName("미팅 삭제 실패 - 존재하지 않는 미팅")
+    void deleteMeeting_Fail_MeetingNotFound() {
+        // given
+        Long hostMemberId = 1L;
+        Long nonExistentMeetingId = 99L;
+
+        when(meetingValidate.foundMeeting(nonExistentMeetingId))
+            .thenThrow(new CustomException(MeetingError.MEETING_NOT_FOUND));
+
+        // when & then
+        CustomException exception = assertThrows(
+            CustomException.class,
+            () -> meetingService.deleteMeeting(hostMemberId, nonExistentMeetingId)
+        );
+
+        assertEquals(MeetingError.MEETING_NOT_FOUND, exception.getErrorCode());
+        verify(participantRepository, never()).deleteByMeetingId(anyLong());
+        verify(tagRepository, never()).deleteByMeetingId(anyLong());
+        verify(meetingRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    @DisplayName("미팅 삭제 성공 - cascade 삭제 순서 검증")
+    void deleteMeeting_Success_CascadeOrder() {
+        // given
+        Long hostMemberId = 1L;
+        Long meetingId = 1L;
+        Meeting targetMeeting = Meeting.builder()
+            .id(meetingId)
+            .title("삭제할 미팅")
+            .hostId(hostMemberId)
+            .status(MeetingStatus.FULL)
+            .capacity(5)
+            .spotId(1L)
+            .build();
+
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(targetMeeting);
+
+        // when
+        meetingService.deleteMeeting(hostMemberId, meetingId);
+
+        // then - 삭제 순서 검증 (InOrder 사용)
+        InOrder inOrder = inOrder(participantRepository, tagRepository, meetingRepository);
+        inOrder.verify(participantRepository).deleteByMeetingId(meetingId);
+        inOrder.verify(tagRepository).deleteByMeetingId(meetingId);
+        inOrder.verify(meetingRepository).deleteById(meetingId);
     }
 
     private <T> T withId(T entity, Long id) {
