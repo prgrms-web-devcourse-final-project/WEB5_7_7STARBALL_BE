@@ -35,6 +35,7 @@ return MeetingListResponse.fromEntity(meeting, host, count, spot, tag);
 2. Map-Batch 최적화 코드
 
 // ✅ Map-Batch로 N+1 문제 해결 (총 5개 쿼리만 실행)
+```
 @GetMapping("/meetings/map-optimized")
 public ResponseEntity<BaseResponse<CustomSlicePageResponse<MeetingListResponse>>>
 getAllListMeetingsMapOptimized(
@@ -80,6 +81,7 @@ meetingList.stream().map(Meeting::getId).collect(Collectors.toList());
       // 나머지 페이징 로직...
       return BaseResponse.success(result);
 }
+```
 
 3. Native Query 최적화 (Repository 레벨)
 
