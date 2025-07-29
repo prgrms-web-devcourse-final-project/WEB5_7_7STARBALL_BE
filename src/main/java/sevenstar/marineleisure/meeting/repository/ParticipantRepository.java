@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,4 +30,8 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 
 	@Query("SELECT p.meetingId, COUNT(p) FROM Participant p WHERE p.meetingId IN :meetingIds GROUP BY p.meetingId")
 	List<Object[]> countByMeetingIdIn(@Param("meetingIds") List<Long> meetingIds);
+
+	@Modifying
+	@Query("DELETE FROM Participant p WHERE p.userId = :userId")
+	int deleteByUserId(@Param("userId") Long userId);
 }
