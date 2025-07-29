@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
+import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.Surfing;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
@@ -76,6 +77,15 @@ public interface SurfingRepository extends ActivityRepository<Surfing, Long> {
 		LocalDateTime startDateTime,
 		LocalDateTime endDateTime
 	);
+
+	@Query(value = """
+        SELECT *
+        FROM surfing_forecast s
+        WHERE s.forecast_date = :forecastDate
+        ORDER BY s.total_index DESC
+        LIMIT 1
+        """,nativeQuery = true)
+	Optional<Surfing> findBestTotaIndexSurfing(@Param("forecastDate") LocalDate forecastDate);
 
 	Optional<Surfing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
