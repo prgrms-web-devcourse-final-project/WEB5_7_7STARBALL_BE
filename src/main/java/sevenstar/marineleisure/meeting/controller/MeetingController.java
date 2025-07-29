@@ -29,6 +29,7 @@ import sevenstar.marineleisure.global.jwt.UserPrincipal;
 import sevenstar.marineleisure.meeting.dto.mapper.CustomSlicePageResponse;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.GoingMeetingResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingListResponse;
@@ -251,6 +252,15 @@ public class MeetingController {
 	){
 		Long memberId = userDetails.getId();
 		return BaseResponse.success(meetingService.updateMeeting(meetingId, memberId, request));
+	}
+
+	@PostMapping("/meetings/{id}/going")
+	public ResponseEntity<BaseResponse<GoingMeetingResponse>> goingMeeting(
+		@PathVariable("id") Long meetingId,
+		@AuthenticationPrincipal UserPrincipal userDetails
+	){
+		Long memberId = userDetails.getId();
+		return BaseResponse.success(meetingService.goingMeeting(meetingId, memberId));
 	}
 
 
