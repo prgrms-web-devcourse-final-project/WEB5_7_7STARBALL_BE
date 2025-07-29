@@ -90,7 +90,7 @@ import org.springframework.ai.openai.OpenAiChatModel;
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Transactional
-@Disabled
+//@Disabled
 @Rollback
 class MeetingControllerTest {
 
