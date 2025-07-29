@@ -118,6 +118,15 @@ public interface FishingRepository extends ActivityRepository<Fishing, Long> {
 		LocalDateTime endDateTime
 	);
 
+	@Query(value = """
+        SELECT *
+        FROM fishing_forecast f
+        WHERE f.forecast_date = :forecastDate
+        ORDER BY f.total_index DESC
+        LIMIT 1
+        """,nativeQuery = true)
+	Optional<Fishing> findBestTotaIndexFishing(@Param("forecastDate") LocalDate forecastDate);
+
 	Optional<Fishing> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start,
 		LocalDateTime end);
 

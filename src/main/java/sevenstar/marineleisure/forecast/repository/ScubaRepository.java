@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Scuba;
+import sevenstar.marineleisure.forecast.domain.Surfing;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 public interface ScubaRepository extends ActivityRepository<Scuba, Long> {
@@ -74,6 +75,15 @@ public interface ScubaRepository extends ActivityRepository<Scuba, Long> {
 		@Param("spotId") Long spotId,
 		@Param("forecastDate") LocalDate forecastDate
 	);
+
+	@Query(value = """
+        SELECT *
+        FROM scuba_forecast s
+        WHERE s.forecast_date = :forecastDate
+        ORDER BY s.total_index DESC
+        LIMIT 1
+        """,nativeQuery = true)
+	Optional<Scuba> findBestTotaIndexScuba(@Param("forecastDate") LocalDate forecastDate);
 
 	Optional<Scuba> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
