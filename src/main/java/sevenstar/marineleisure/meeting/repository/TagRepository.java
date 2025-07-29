@@ -13,6 +13,5 @@ import sevenstar.marineleisure.meeting.domain.Tag;
 public interface TagRepository extends JpaRepository<Tag, Long> {
 	Optional<Tag> findByMeetingId(Long meetingId);
 
-	@Query("SELECT t.content FROM Tag t WHERE t.meetingId = :meetingId")
-	List<String> findContentsByMeetingId(Long meetingId);
+	List<Tag> findByMeetingIdIn(List<Long> meetingIds);
 }
