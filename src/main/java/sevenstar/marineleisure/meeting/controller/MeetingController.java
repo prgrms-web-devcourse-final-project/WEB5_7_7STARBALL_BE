@@ -263,5 +263,15 @@ public class MeetingController {
 		return BaseResponse.success(meetingService.goingMeeting(meetingId, memberId));
 	}
 
+	@DeleteMapping("/meetings/{id}")
+	public ResponseEntity<BaseResponse<String>> deleteMeeting(
+		@PathVariable("id") Long meetingId,
+		@AuthenticationPrincipal UserPrincipal userDetails
+	){
+		Long memberId = userDetails.getId();
+		meetingService.deleteMeeting(memberId, meetingId);
+		return BaseResponse.success(HttpStatus.NO_CONTENT, "success");
+	}
+
 
 }

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.meeting.error.MeetingError;
 import sevenstar.marineleisure.meeting.error.ParticipantError;
 import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 import sevenstar.marineleisure.meeting.domain.Meeting;
@@ -195,8 +196,18 @@ public class MeetingServiceImpl implements MeetingService {
 	// 프론트분한테 물어보기 대작전 해야할듯
 	//삭제 할 필요가 있을까? 고민해봐야할것같음.
 	@Override
-	public void deleteMeeting(Member member, Long meetingId) {
+	@Transactional
+	public void deleteMeeting(Long memberId, Long meetingId) {
+		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
 
+		if(!targetMeeting.isHost(memberId)) {
+			throw new CustomException(MeetingError.MEETING_NOT_HOST);
+		}
+		participantRepository.deleteByMeetingId(targetMeeting.getId());
+
+		tagRepository.deleteByMeetingId(targetMeeting.getId());
+
+		meetingRepository.deleteById(meetingId);
 	}
 
 	@Override
