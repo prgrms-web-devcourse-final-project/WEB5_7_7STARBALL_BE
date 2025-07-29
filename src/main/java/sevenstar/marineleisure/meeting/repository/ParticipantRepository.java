@@ -34,4 +34,6 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
 	@Modifying
 	@Query("DELETE FROM Participant p WHERE p.userId = :userId")
 	int deleteByUserId(@Param("userId") Long userId);
+
+	void deleteByMeetingId(Long id);
 }
