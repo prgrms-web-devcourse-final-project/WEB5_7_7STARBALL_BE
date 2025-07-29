@@ -1274,4 +1274,148 @@ class MeetingControllerTest {
 		}
 	}
 
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("POST /meetings/{id}/going -- 호스트가 미팅을 ONGOING 상태로 변경 성공")
+	void goingMeeting_Success_AsHost() throws Exception {
+		List<Meeting> meetings = meetingRepository.findAll();
+		Meeting recruitingMeeting = meetings.stream()
+			.filter(m -> m.getStatus() == MeetingStatus.RECRUITING && m.getHostId().equals(4L))
+			.findFirst()
+			.orElse(meetings.get(0));
+
+		MvcResult mvcResult = mockMvc.perform(
+			post("/meetings/{id}/going", recruitingMeeting.getId())
+				.accept(MediaType.APPLICATION_JSON)
+		)
+			.andExpect(status().isOk())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("Going Meeting Success Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 2L, username = "testUser1")
+	@DisplayName("POST /meetings/{id}/going -- 호스트가 아닌 사용자가 요청 시 실패")
+	void goingMeeting_Fail_NotHost() throws Exception {
+		List<Meeting> meetings = meetingRepository.findAll();
+		Meeting hostMeeting = meetings.stream()
+			.filter(m -> m.getHostId().equals(4L))
+			.findFirst()
+			.orElse(meetings.get(0));
+
+		MvcResult mvcResult = mockMvc.perform(
+			post("/meetings/{id}/going", hostMeeting.getId())
+				.accept(MediaType.APPLICATION_JSON)
+		)
+			.andExpect(status().isBadRequest())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("Going Meeting Not Host Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("POST /meetings/{id}/going -- 이미 COMPLETED 상태인 미팅 변경 시도 실패")
+	void goingMeeting_Fail_AlreadyCompleted() throws Exception {
+		Member hostMember = memberRepository.findAll().get(3);
+		OutdoorSpot spot = outdoorSpotRepository.findAll().get(0);
+		
+		Meeting completedMeeting = Meeting.builder()
+			.hostId(hostMember.getId())
+			.spotId(spot.getId())
+			.title("완료된 미팅")
+			.description("이미 완료된 상태")
+			.category(ActivityCategory.FISHING)
+			.status(MeetingStatus.COMPLETED)
+			.capacity(5)
+			.meetingTime(LocalDateTime.now().plusDays(1))
+			.build();
+		Meeting savedMeeting = meetingRepository.save(completedMeeting);
+
+		MvcResult mvcResult = mockMvc.perform(
+			post("/meetings/{id}/going", savedMeeting.getId())
+				.accept(MediaType.APPLICATION_JSON)
+		)
+			.andExpect(status().isBadRequest())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("Going Meeting Already Completed Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("POST /meetings/{id}/going -- 이미 ONGOING 상태인 미팅 변경 시도 실패")
+	void goingMeeting_Fail_AlreadyOngoing() throws Exception {
+		Member hostMember = memberRepository.findAll().get(3);
+		OutdoorSpot spot = outdoorSpotRepository.findAll().get(0);
+		
+		Meeting ongoingMeeting = Meeting.builder()
+			.hostId(hostMember.getId())
+			.spotId(spot.getId())
+			.title("진행중인 미팅")
+			.description("이미 진행중인 상태")
+			.category(ActivityCategory.FISHING)
+			.status(MeetingStatus.ONGOING)
+			.capacity(5)
+			.meetingTime(LocalDateTime.now().plusDays(1))
+			.build();
+		Meeting savedMeeting = meetingRepository.save(ongoingMeeting);
+
+		MvcResult mvcResult = mockMvc.perform(
+			post("/meetings/{id}/going", savedMeeting.getId())
+				.accept(MediaType.APPLICATION_JSON)
+		)
+			.andExpect(status().isBadRequest())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("Going Meeting Already Ongoing Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
+	@Test
+	@WithMockCustomUser(id = 4L, username = "testHost")
+	@DisplayName("POST /meetings/{id}/going -- 미팅이 존재하지 않을 때 실패")
+	void goingMeeting_Fail_MeetingNotFound() throws Exception {
+		Long nonExistentMeetingId = 99999L;
+
+		MvcResult mvcResult = mockMvc.perform(
+			post("/meetings/{id}/going", nonExistentMeetingId)
+				.accept(MediaType.APPLICATION_JSON)
+		)
+			.andExpect(status().isNotFound())
+			.andReturn();
+
+		String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+		Object jsonObject = objectMapper.readValue(responseBody, Object.class);
+		String prettyJson = objectMapper.writerWithDefaultPrettyPrinter()
+			.writeValueAsString(jsonObject);
+
+		log.info("Going Meeting Not Found Response:");
+		log.info("prettyJson == {}", prettyJson);
+	}
+
 }
