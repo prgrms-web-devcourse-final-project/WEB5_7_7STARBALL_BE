@@ -25,55 +25,18 @@ public class MeetingValidate {
 
 	}
 
-	// Rich Domain Model 리팩토링으로 불필요해진 메서드들
-	// Meeting.isHost()로 대체됨
-	/*
 	@Transactional(readOnly = true)
-	public void verifyIsHost(Long memberId, Long hostId){
-		if(!Objects.equals(hostId, memberId)){
+	public void validateHost(Meeting targetMeeting , Long memberId){
+		if(!(targetMeeting.getHostId()).equals(memberId)){
 			throw new CustomException(MeetingError.MEETING_NOT_HOST);
 		}
 	}
-	*/
 
-	// Meeting.canJoin()로 대체됨
-	/*
 	@Transactional(readOnly = true)
-	public void verifyRecruiting(Meeting meeting){
-		if(meeting.getStatus() != MeetingStatus.RECRUITING){
-			throw new CustomException(MeetingError.MEETING_NOT_RECRUITING);
+	public void validateStatus(Meeting targetMeeting){
+		if(targetMeeting.getStatus()==MeetingStatus.COMPLETED || targetMeeting.getStatus() == MeetingStatus.ONGOING){
+			throw new CustomException(MeetingError.CANNOT_CHANGE_GOING_STATUS);
 		}
 	}
-	*/
-
-	// Meeting.isFull()로 대체됨
-	/*
-	@Transactional(readOnly = true)
-	public void verifyMeetingCount(int targetCount, Meeting meeting){
-		if(targetCount >= meeting.getCapacity()){
-			throw new CustomException(MeetingError.MEETING_ALREADY_FULL);
-		}
-	}
-	*/
-
-	// Meeting.removeParticipant()에서 처리됨
-	/*
-	@Transactional(readOnly = true)
-	public void verifyNotHost(Long memberId, Meeting meeting){
-		if(memberId.equals(meeting.getHostId())){
-			throw new CustomException(MeetingError.MEETING_NOT_LEAVE_HOST);
-		}
-	}
-	*/
-
-	// Meeting.canLeave()로 대체됨
-	/*
-	@Transactional(readOnly = true)
-	public void verifyLeave(Meeting meeting){
-		if(meeting.getStatus() == MeetingStatus.COMPLETED || meeting.getStatus() == MeetingStatus.ONGOING){
-			throw new CustomException(MeetingError.CANNOT_LEAVE_COMPLETED_MEETING);
-		}
-	}
-	*/
 
 }

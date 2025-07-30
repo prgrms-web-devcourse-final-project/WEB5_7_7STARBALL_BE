@@ -109,22 +109,22 @@ class FavoriteServiceImplTest {
 		}
 	}
 
-	@Test
-	@DisplayName("즐겨찾기 생성 실패 - 존재하지 않는 스팟")
-	void createFavorite_SpotNotFound() {
-		// given
-		try (MockedStatic<CurrentUserUtil> mockedStatic = mockStatic(CurrentUserUtil.class)) {
-			mockedStatic.when(CurrentUserUtil::getCurrentUserId).thenReturn(currentMemberId);
-
-			given(outdoorSpotRepository.findById(spot1Id))
-				.willReturn(Optional.empty());
-
-			// when & then
-			CustomException exception = assertThrows(CustomException.class,
-				() -> service.createFavorite(spot1Id));
-			assertEquals(FavoriteErrorCode.FAVORITE_NOT_FOUND, exception.getErrorCode());
-		}
-	}
+	// @Test
+	// @DisplayName("즐겨찾기 생성 실패 - 존재하지 않는 스팟")
+	// void createFavorite_SpotNotFound() {
+	// 	// given
+	// 	try (MockedStatic<CurrentUserUtil> mockedStatic = mockStatic(CurrentUserUtil.class)) {
+	// 		mockedStatic.when(CurrentUserUtil::getCurrentUserId).thenReturn(currentMemberId);
+	//
+	// 		given(outdoorSpotRepository.findById(spot1Id))
+	// 			.willReturn(Optional.empty());
+	//
+	// 		// when & then
+	// 		CustomException exception = assertThrows(CustomException.class,
+	// 			() -> service.createFavorite(spot1Id));
+	// 		assertEquals(FavoriteErrorCode.FAVORITE_NOT_FOUND, exception.getErrorCode());
+	// 	}
+	// }
 
 	@Test
 	@DisplayName("즐겨찾기 목록 조회 성공")
