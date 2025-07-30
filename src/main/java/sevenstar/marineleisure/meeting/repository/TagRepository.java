@@ -14,4 +14,6 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
 	Optional<Tag> findByMeetingId(Long meetingId);
 
 	List<Tag> findByMeetingIdIn(List<Long> meetingIds);
+
+	void deleteByMeetingId(Long meetingId);
 }

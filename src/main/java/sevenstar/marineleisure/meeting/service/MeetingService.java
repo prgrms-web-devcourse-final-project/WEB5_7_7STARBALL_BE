@@ -99,7 +99,7 @@ public interface MeetingService {
 	 * @param member
 	 * @param meetingId
 	 */
-	void deleteMeeting(Member member, Long meetingId);
+	void deleteMeeting(Long member, Long meetingId);
 
 	GoingMeetingResponse goingMeeting(Long meetingId, Long memberId);
 }
