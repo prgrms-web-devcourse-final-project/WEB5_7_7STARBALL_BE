@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import jakarta.transaction.Transactional;
 import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.Surfing;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 public interface SurfingRepository extends ActivityRepository<Surfing, Long> {
@@ -92,4 +93,6 @@ public interface SurfingRepository extends ActivityRepository<Surfing, Long> {
 	Optional<Surfing> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
 
 	Optional<Surfing> findBySpotIdOrderByCreatedAt(Long spotId);
+
+	Optional<Surfing> findBySpotIdAndForecastDateAndTimePeriod(Long spotId, LocalDate forecastDate, TimePeriod timePeriod);
 }
