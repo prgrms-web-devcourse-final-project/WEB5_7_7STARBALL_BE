@@ -61,12 +61,16 @@ public class ActivityService {
 
 		SpotPreviewReadResponse preview = spotService.preview(latitude.floatValue(), longitude.floatValue());
 		responses.put("Fishing",
-			new ActivitySummaryResponse(preview.fishing().getName(), preview.fishing().getTotalIndex()));
+			new ActivitySummaryResponse(preview.fishing().getName(), preview.fishing().getTotalIndex(),preview.fishing()
+				.getSpotId()));
 		responses.put("Mudflat",
-			new ActivitySummaryResponse(preview.mudflat().getName(), preview.mudflat().getTotalIndex()));
+			new ActivitySummaryResponse(preview.mudflat().getName(), preview.mudflat().getTotalIndex(),preview.mudflat()
+				.getSpotId()));
 		responses.put("Surfing",
-			new ActivitySummaryResponse(preview.surfing().getName(), preview.surfing().getTotalIndex()));
-		responses.put("Scuba", new ActivitySummaryResponse(preview.scuba().getName(), preview.scuba().getTotalIndex()));
+			new ActivitySummaryResponse(preview.surfing().getName(), preview.surfing().getTotalIndex(),preview.surfing()
+				.getSpotId()));
+		responses.put("Scuba", new ActivitySummaryResponse(preview.scuba().getName(), preview.scuba().getTotalIndex(),preview.scuba()
+			.getSpotId()));
 
 		// Fishing fishingBySpot = null;
 		// Mudflat mudflatBySpot = null;
@@ -151,25 +155,25 @@ public class ActivityService {
 		if (fishingResult.isPresent()) {
 			Fishing fishing = fishingResult.get();
 			OutdoorSpot spot = outdoorSpotRepository.findById(fishing.getSpotId()).get();
-			responses.put("Fishing", new ActivitySummaryResponse(spot.getName(), fishing.getTotalIndex()));
+			responses.put("Fishing", new ActivitySummaryResponse(spot.getName(), fishing.getTotalIndex(),fishing.getSpotId()));
 		}
 
 		if (mudflatResult.isPresent()) {
 			Mudflat mudflat = mudflatResult.get();
 			OutdoorSpot spot = outdoorSpotRepository.findById(mudflat.getSpotId()).get();
-			responses.put("Mudflat", new ActivitySummaryResponse(spot.getName(), mudflat.getTotalIndex()));
+			responses.put("Mudflat", new ActivitySummaryResponse(spot.getName(), mudflat.getTotalIndex(),mudflat.getSpotId()));
 		}
 
 		if (scubaResult.isPresent()) {
 			Scuba scuba = scubaResult.get();
 			OutdoorSpot spot = outdoorSpotRepository.findById(scuba.getSpotId()).get();
-			responses.put("Scuba", new ActivitySummaryResponse(spot.getName(), scuba.getTotalIndex()));
+			responses.put("Scuba", new ActivitySummaryResponse(spot.getName(), scuba.getTotalIndex(),scuba.getSpotId()));
 		}
 
 		if (surfingResult.isPresent()) {
 			Surfing surfing = surfingResult.get();
 			OutdoorSpot spot = outdoorSpotRepository.findById(surfing.getSpotId()).get();
-			responses.put("Surfing", new ActivitySummaryResponse(spot.getName(), surfing.getTotalIndex()));
+			responses.put("Surfing", new ActivitySummaryResponse(spot.getName(), surfing.getTotalIndex(),surfing.getSpotId()));
 		}
 
 		return responses;
