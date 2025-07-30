@@ -23,16 +23,12 @@ import sevenstar.marineleisure.meeting.domain.Tag;
 import sevenstar.marineleisure.meeting.dto.mapper.MeetingMapper;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.GoingMeetingResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
 import sevenstar.marineleisure.meeting.dto.response.ParticipantResponse;
-import sevenstar.marineleisure.meeting.dto.mapper.MeetingMapper;
 import sevenstar.marineleisure.meeting.repository.MeetingRepository;
-import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 import sevenstar.marineleisure.meeting.repository.TagRepository;
-import sevenstar.marineleisure.meeting.domain.Meeting;
-import sevenstar.marineleisure.meeting.domain.Participant;
-import sevenstar.marineleisure.meeting.domain.Tag;
 import sevenstar.marineleisure.meeting.validate.MeetingValidate;
 import sevenstar.marineleisure.meeting.validate.MemberValidate;
 import sevenstar.marineleisure.meeting.validate.ParticipantValidate;
@@ -200,7 +196,29 @@ public class MeetingServiceImpl implements MeetingService {
 	// 프론트분한테 물어보기 대작전 해야할듯
 	//삭제 할 필요가 있을까? 고민해봐야할것같음.
 	@Override
-	public void deleteMeeting(Member member, Long meetingId) {
+	@Transactional
+	public void deleteMeeting(Long memberId, Long meetingId) {
+		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
 
+		if(!targetMeeting.isHost(memberId)) {
+			throw new CustomException(MeetingError.MEETING_NOT_HOST);
+		}
+		participantRepository.deleteByMeetingId(targetMeeting.getId());
+
+		tagRepository.deleteByMeetingId(targetMeeting.getId());
+
+		meetingRepository.deleteById(meetingId);
 	}
+
+	@Override
+	public GoingMeetingResponse goingMeeting(Long meetingId, Long memberId) {
+		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
+		meetingValidate.validateHost(targetMeeting, memberId);
+		meetingValidate.validateStatus(targetMeeting);
+		targetMeeting.changeStatus(MeetingStatus.ONGOING);
+		return GoingMeetingResponse.builder()
+			.meetingId(targetMeeting.getId())
+			.build();
+	}
+
 }
