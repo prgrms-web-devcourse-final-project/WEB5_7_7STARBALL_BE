@@ -23,6 +23,7 @@ import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.utils.DateUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.dto.EmailContent;
 import sevenstar.marineleisure.spot.dto.projection.FishingReadProjection;
 import sevenstar.marineleisure.spot.mapper.SpotDetailMapper;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
@@ -92,6 +93,11 @@ public class FishingProvider extends ActivityProvider {
 				fishingRepository.updateUvIndex(uvIndexValue, spotId, date);
 			}
 		}
+	}
+
+	@Override
+	public List<EmailContent> findEmailContent(TotalIndex totalIndex, LocalDate forecastDate) {
+		return fishingRepository.findEmailContentByTotalIndexAndForecastDate(totalIndex, forecastDate);
 	}
 
 	private List<ActivitySpotDetail> transform(List<FishingReadProjection> fishingForecasts) {
