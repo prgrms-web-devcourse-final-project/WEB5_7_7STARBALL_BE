@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS favorite_spots
     updated_at   DATETIME              NULL,
     member_id    BIGINT                NOT NULL,
     spot_id      BIGINT                NOT NULL,
-    notification BIT(1)                NOT NULL,
+    notification BOOLEAN               NOT NULL,
     CONSTRAINT pk_favorite_spots PRIMARY KEY (id)
 );
 
@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens
     updated_at    DATETIME              NULL,
     refresh_token VARCHAR(512)          NOT NULL,
     user_id       BIGINT                NOT NULL,
-    expired       BIT(1)                NOT NULL,
+    expired       BOOLEAN               NOT NULL,
     CONSTRAINT pk_refresh_tokens PRIMARY KEY (id)
 );
 
