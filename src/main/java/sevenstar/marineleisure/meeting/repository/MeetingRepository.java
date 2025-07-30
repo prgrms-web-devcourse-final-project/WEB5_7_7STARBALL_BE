@@ -59,4 +59,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 	@Modifying
 	@Query("DELETE FROM Meeting m WHERE m.hostId = :hostId")
 	int deleteMeetingByHostId(@Param("hostId") Long hostId);
+
+	@Query("SELECT m FROM Meeting m WHERE m.meetingTime < :currentTime AND m.status != :completedStatus")
+	List<Meeting> findExpiredMeetingsNotCompleted(@Param("currentTime") LocalDateTime currentTime, @Param("completedStatus") MeetingStatus completedStatus);
 }
