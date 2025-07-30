@@ -186,4 +186,13 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 """,nativeQuery = true)
 	Optional<OutdoorSpot> findNearFishingSpot(@Param("latitude") double latitude,
 		@Param("longitude") double longitude);
+
+	@Query(value = """
+		SELECT * FROM outdoor_spots os
+		WHERE os.category = :category
+		ORDER BY ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) ASC 
+		LIMIT 1;
+""",nativeQuery = true)
+	Optional<OutdoorSpot> findNearSpot(@Param("latitude") double latitude,
+		@Param("longitude") double longitude,@Param("category") String category);
 }
