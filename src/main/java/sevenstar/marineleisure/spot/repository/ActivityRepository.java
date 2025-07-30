@@ -11,6 +11,7 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 
 import sevenstar.marineleisure.global.enums.TotalIndex;
+import sevenstar.marineleisure.spot.dto.EmailContent;
 
 @NoRepositoryBean
 public interface ActivityRepository<T, ID> extends JpaRepository<T, ID> {
@@ -28,5 +29,14 @@ public interface ActivityRepository<T, ID> extends JpaRepository<T, ID> {
 		    	AND e.forecastDate = :date
 		""")
 	List<T> findForecasts(@Param("spotId") Long spotId, @Param("date") LocalDate date);
+
+	@Query(value = """
+		SELECT new sevenstar.marineleisure.spot.dto.EmailContent(o.id,o.name,o.category)
+		FROM OutdoorSpot o
+		JOIN #{#entityName} e ON o.id=e.spotId
+		WHERE e.totalIndex = :totalIndex
+		  AND e.forecastDate = :forecastDate
+		""")
+	List<EmailContent> findEmailContentByTotalIndexAndForecastDate(TotalIndex totalIndex, LocalDate forecastDate);
 
 }
