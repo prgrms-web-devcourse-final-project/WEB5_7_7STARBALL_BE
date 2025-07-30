@@ -6,6 +6,7 @@ import sevenstar.marineleisure.global.enums.TotalIndex;
 @Builder
 public record ActivitySummaryResponse(
     String spotName,
-    TotalIndex totalIndex
+    TotalIndex totalIndex,
+	Long spotId
 ) {
 }
