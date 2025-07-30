@@ -11,8 +11,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
+import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.Scuba;
 import sevenstar.marineleisure.forecast.domain.Surfing;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 public interface ScubaRepository extends ActivityRepository<Scuba, Long> {
@@ -93,4 +95,6 @@ public interface ScubaRepository extends ActivityRepository<Scuba, Long> {
 		Long spotId,
 		LocalDateTime startDateTime,
 		LocalDateTime endDateTime);
+
+	Optional<Scuba> findBySpotIdAndForecastDateAndTimePeriod(Long spotId, LocalDate forecastDate, TimePeriod timePeriod);
 }

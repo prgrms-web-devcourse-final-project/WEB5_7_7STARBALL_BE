@@ -6,6 +6,7 @@ import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.GoingMeetingResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
 import sevenstar.marineleisure.meeting.domain.Meeting;
@@ -98,5 +99,7 @@ public interface MeetingService {
 	 * @param member
 	 * @param meetingId
 	 */
-	void deleteMeeting(Member member, Long meetingId);
+	void deleteMeeting(Long member, Long meetingId);
+
+	GoingMeetingResponse goingMeeting(Long meetingId, Long memberId);
 }

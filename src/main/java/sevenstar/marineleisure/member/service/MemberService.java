@@ -175,19 +175,32 @@ public class MemberService {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-		// 1. 회원이 호스트인 경우 해당 미팅을 삭제
+		// 1. 회원이 호스트인 경우 먼저 참가자 삭제. 해당 미팅을 삭제
 		List<Meeting> hostedMeetings = meetingRepository.findByHostId(memberId);
 		if (!hostedMeetings.isEmpty()) {
 			log.info("호스트로 등록된 미팅 삭제: memberId={}, meetingCount={}", memberId, hostedMeetings.size());
-			meetingRepository.deleteAll(hostedMeetings);
+			// 각 미팅 참가자 삭제
+			for (Meeting meeting : hostedMeetings) {
+				List<Participant> p = participantRepository.findParticipantsByMeetingId(meeting.getId());
+				if (!p.isEmpty()) {
+					log.info("참가자 삭제: meetingId={}, participantCount={}", meeting.getId(), p.size());
+					participantRepository.deleteAll(p);
+				}
+			}
+			int deleteMeetingCnt = meetingRepository.deleteMeetingByHostId(memberId);
+			log.info("호스트로 등록된 미팅 삭제: memberId = {} meetingCount={}", memberId, deleteMeetingCnt);
 		}
 
 		// 2. 회원이 게스트인 경우 참가자 목록에서 삭제
-		List<Participant> participations = participantRepository.findByUserId(memberId);
-		if (!participations.isEmpty()) {
-			log.info("참가자 목록에서 삭제: memberId={}, participationCount={}", memberId, participations.size());
-			participantRepository.deleteAll(participations);
+		int deleteParticipationsCnt = participantRepository.deleteByUserId(memberId);
+		if(deleteParticipationsCnt > 0){
+			log.info("참가자로 등록된 목록에서 삭제: memberId={}, participationCount={}", memberId, deleteParticipationsCnt);
 		}
+		// List<Participant> participations = participantRepository.findByUserId(memberId);
+		// if (!participations.isEmpty()) {
+		// 	log.info("참가자 목록에서 삭제: memberId={}, participationCount={}", memberId, participations.size());
+		// 	participantRepository.deleteAll(participations);
+		// }
 
 		// 3. 카카오 계정 연결 끊기 (providerId가 있는 경우)
 		if (member.getProvider() != null && "kakao".equals(member.getProvider()) && member.getProviderId() != null) {
