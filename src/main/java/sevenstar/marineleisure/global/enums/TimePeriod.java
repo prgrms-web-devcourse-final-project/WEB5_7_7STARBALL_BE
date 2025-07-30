@@ -18,7 +18,8 @@ public enum TimePeriod {
 				return timePeriod;
 			}
 		}
-		throw new IllegalArgumentException("Invalid TimePeriod value: " + value);
+		return TimePeriod.AM;
+		// throw new IllegalArgumentException("Invalid TimePeriod value: " + value);
 	}
 
 }
