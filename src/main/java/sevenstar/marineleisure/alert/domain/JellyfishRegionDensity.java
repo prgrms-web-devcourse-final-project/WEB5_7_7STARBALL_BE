@@ -30,7 +30,7 @@ public class JellyfishRegionDensity extends BaseEntity {
 
 	@Column(name = "region_name", nullable = false, length = 100)
 	private String regionName;
-	@JoinColumn(name = "species_id", nullable = false)
+	@Column(name = "species_id", nullable = false)
 	private Long species;
 
 	@Column(name = "report_date", nullable = false)

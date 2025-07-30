@@ -9,6 +9,7 @@ import sevenstar.marineleisure.meeting.domain.Meeting;
 import sevenstar.marineleisure.meeting.domain.Participant;
 import sevenstar.marineleisure.meeting.error.MeetingError;
 import sevenstar.marineleisure.meeting.error.ParticipantError;
+import sevenstar.marineleisure.meeting.repository.MeetingRepository;
 import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 
 @Service
@@ -16,40 +17,60 @@ import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 public class MeetingDomainService {
     
     private final ParticipantRepository participantRepository;
-    
-    public Participant addParticipant(Meeting meeting, Long userId, MeetingRole role) {
+
+    private final MeetingRepository meetingRepository;
+
+    public Participant addParticipant(Long meetingId, Long userId, MeetingRole role) {
+
+        Meeting meeting = meetingRepository.findByIdWithLock(meetingId)
+            .orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
+
         validateForJoining(meeting, userId);
-        
+
+
+        int currentCount = getCurrentParticipantCount(meetingId);
+
+
+        if (currentCount >= meeting.getCapacity()) {
+            throw new CustomException(MeetingError.MEETING_ALREADY_FULL);
+        }
+
+
         Participant newParticipant = Participant.builder()
-            .meetingId(meeting.getId())
+            .meetingId(meetingId)
             .userId(userId)
             .role(role)
             .build();
-        
+
         Participant savedParticipant = participantRepository.save(newParticipant);
-        
-        // 정원이 찼으면 상태 변경
-        int currentCount = getCurrentParticipantCount(meeting.getId());
-        if (currentCount >= meeting.getCapacity() && meeting.getStatus() == MeetingStatus.RECRUITING) {
+
+
+        int finalCount = getCurrentParticipantCount(meetingId);
+        if (finalCount >= meeting.getCapacity() && meeting.getStatus() == MeetingStatus.RECRUITING) {
             meeting.changeStatus(MeetingStatus.FULL);
         }
-        
+
         return savedParticipant;
     }
-    
-    public void removeParticipant(Meeting meeting, Long userId) {
+
+    public void removeParticipant(Long meetingId, Long userId) {
+        Meeting meeting = meetingRepository.findByIdWithLock(meetingId)
+            .orElseThrow(() -> new CustomException(MeetingError.MEETING_NOT_FOUND));
+
         validateForLeaving(meeting, userId);
-        
-        Participant participant = participantRepository.findByMeetingIdAndUserId(meeting.getId(), userId)
+
+        Participant participant = participantRepository.findByMeetingIdAndUserId(meetingId, userId)
             .orElseThrow(() -> new CustomException(ParticipantError.PARTICIPANT_NOT_FOUND));
-        
+
         participantRepository.delete(participant);
-        
-        // 정원에 여유가 생겼으면 상태 변경
+
         if (meeting.getStatus() == MeetingStatus.FULL) {
             meeting.changeStatus(MeetingStatus.RECRUITING);
         }
     }
+
+
+
     
     public boolean isParticipating(Long meetingId, Long userId) {
         return participantRepository.existsByMeetingIdAndUserId(meetingId, userId);

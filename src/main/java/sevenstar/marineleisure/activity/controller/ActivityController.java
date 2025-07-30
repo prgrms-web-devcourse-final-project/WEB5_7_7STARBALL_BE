@@ -2,6 +2,7 @@ package sevenstar.marineleisure.activity.controller;
 
 import static sevenstar.marineleisure.global.exception.enums.ActivityErrorCode.*;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public class ActivityController {
     @GetMapping("/{activity}/detail")
     public ResponseEntity<BaseResponse<ActivityDetailResponse>> getActivityDetail(@PathVariable ActivityCategory activity, @ModelAttribute ActivityDetailRequest activityDetailRequest) {
         try {
-            return BaseResponse.success(activityService.getActivityDetail(activity, activityDetailRequest.latitude(), activityDetailRequest.longitude()));
+            return BaseResponse.success(activityService.getActivityDetail(activity, new BigDecimal(activityDetailRequest.latitude()), new BigDecimal(activityDetailRequest.longitude())));
         } catch (RuntimeException e) {
             return BaseResponse.error(INVALID_ACTIVITY);
         }
