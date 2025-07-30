@@ -18,8 +18,10 @@ import sevenstar.marineleisure.global.api.openmeteo.dto.item.SunTimeItem;
 import sevenstar.marineleisure.global.api.openmeteo.dto.item.UvIndexItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
+import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.utils.GeoUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.dto.EmailContent;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
@@ -42,6 +44,8 @@ public abstract class ActivityProvider {
 	public abstract void upsert(LocalDate startDate, LocalDate endDate);
 
 	public abstract void update(LocalDate startDate, LocalDate endDate);
+
+	public abstract List<EmailContent> findEmailContent(TotalIndex totalIndex, LocalDate forecastDate);
 
 	@Transactional
 	protected OutdoorSpot createOutdoorSpot(KhoaItem item, FishingType fishingType) {
