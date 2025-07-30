@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.alert.domain.JellyfishRegionDensity;
@@ -37,6 +38,11 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 	private final JellyfishParser parser;
 	private final JellyfishCrawler crawler;
 	private final RestTemplate restTemplate = new RestTemplate();
+
+	@PostConstruct
+	public void onStartUp() {
+		updateLatestReport();
+	}
 
 	/**
 	 * 가장최신의 지역별 해파리 발생 리스트를 반환합니다.
