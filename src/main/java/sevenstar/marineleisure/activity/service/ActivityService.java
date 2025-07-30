@@ -234,7 +234,8 @@ public class ActivityService {
 			nearSpot.getName(),
 			fishing.getWindSpeedMax().toString(),
 			fishing.getWaveHeightMax().toString(),
-			fishing.getSeaTempMax().toString()
+			fishing.getSeaTempMax().toString(),
+			nearSpot.getId()
 		);
 	}
 
