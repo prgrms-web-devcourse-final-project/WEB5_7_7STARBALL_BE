@@ -136,4 +136,6 @@ public interface FishingRepository extends ActivityRepository<Fishing, Long> {
 
 	Optional<Fishing> findFishingBySpotIdAndForecastDateAndTimePeriod(Long spotId, LocalDate forecastDate,
 		TimePeriod timePeriod);
+
+	Optional<Fishing> findBySpotIdAndForecastDateAndTimePeriod(Long spotId, LocalDate forecastDate, TimePeriod timePeriod);
 }
