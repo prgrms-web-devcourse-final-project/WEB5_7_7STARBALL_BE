@@ -15,6 +15,8 @@ public enum MeetingError implements ErrorCode {
 	CANNOT_UPDATE_COMPLETED_MEETING(2400, HttpStatus.BAD_REQUEST, "Cannot Update Completed Meeting"),
 	CAPACITY_LESS_THAN_PARTICIPANTS(2400, HttpStatus.BAD_REQUEST, "Capacity Less Than Participants"),
 	CANNOT_CHANGE_COMPLETED_STATUS(2400, HttpStatus.BAD_REQUEST, "Cannot Change Completed Status"),
+	CANNOT_CHANGE_GOING_STATUS(2400, HttpStatus.BAD_REQUEST, "Cannot Change Going Status"),
+
 	;
 
 
