@@ -2,10 +2,7 @@ spring:
   application:
     name: MarineLeisure
   profiles:
-    active: dev
-
-server:
-  forward-headers-strategy: native
+    active: prod
 
 resilience4j.circuitbreaker:
   instances:

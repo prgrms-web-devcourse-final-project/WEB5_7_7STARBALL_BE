@@ -27,12 +27,12 @@ public class SurfingSpotDetail implements ActivitySpotDetail {
 		this.forecastDate = forecastDate;
 		this.timePeriod = timePeriod;
 		// this.waveHeight = waveHeight;
-		this.waveHeight = new RangeDetail(waveHeight, waveHeight + 0.1f);
+		this.waveHeight = new RangeDetail(waveHeight, waveHeight);
 		this.wavePeriod = wavePeriod;
 		// this.windSpeed = windSpeed;
-		this.windSpeed = new RangeDetail(windSpeed, windSpeed + 0.1f);
+		this.windSpeed = new RangeDetail(windSpeed, windSpeed);
 		// this.seaTemp = seaTemp;
-		this.seaTemp = new RangeDetail(seaTemp, seaTemp + 0.1f);
+		this.seaTemp = new RangeDetail(seaTemp, seaTemp);
 		this.totalIndex = totalIndex;
 		this.uvIndex = uvIndex;
 	}
