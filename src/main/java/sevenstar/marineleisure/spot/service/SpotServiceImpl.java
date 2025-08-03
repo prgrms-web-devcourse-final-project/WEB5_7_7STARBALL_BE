@@ -6,6 +6,7 @@ import static sevenstar.marineleisure.global.util.CurrentUserUtil.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
@@ -142,5 +143,13 @@ public class SpotServiceImpl implements SpotService {
 	public void upsertSpotViewStats(Long spotId) {
 		spotViewStatsRepository.upsertViewStats(spotId, LocalDate.now());
 	}
+
+	@Override
+	public Long nearSpotId(float latitude, float longitude, ActivityCategory category) {
+		return outdoorSpotRepository.findNearSpot(latitude, longitude, category.name())
+			.map(OutdoorSpot::getId)
+			.orElse(0L);
+	}
+
 
 }

@@ -14,4 +14,6 @@ public interface SpotService {
 	SpotPreviewReadResponse preview(float latitude, float longitude);
 
 	void upsertSpotViewStats(Long spotId);
+
+	Long nearSpotId(float latitude, float longitude, ActivityCategory category);
 }
