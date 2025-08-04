@@ -59,6 +59,8 @@ public class SecurityConfig {
 				//Meeting 조회에는 인증이 필요하지 않습니다.
 				.requestMatchers(HttpMethod.GET, "/meetings").permitAll()
 				.requestMatchers(HttpMethod.GET, "/meetings/{id}").permitAll()
+				// 헬스 체크 엔드포인트는 인증이 필요하지 않습니다.
+				.requestMatchers("/health").permitAll()
 				// (6) 나머지는 인증 필요
 				.anyRequest().authenticated()
 			)
