@@ -11,24 +11,30 @@ import sevenstar.marineleisure.spot.dto.detail.provider.ActivitySpotDetail;
 public class SurfingSpotDetail implements ActivitySpotDetail {
 	private final LocalDate forecastDate;
 	private final TimePeriod timePeriod;
-	private final float waveHeight;
+	// private final float waveHeight;
 	private final int wavePeriod;
-	private final float windSpeed;
-	private final float seaTemp;
+	// private final float windSpeed;
+	// private final float seaTemp;
 	private final TotalIndex totalIndex;
 	private final int uvIndex;
+
+	private RangeDetail waveHeight;
+	private RangeDetail seaTemp;
+	private RangeDetail windSpeed;
 
 	public SurfingSpotDetail(LocalDate forecastDate, TimePeriod timePeriod, float waveHeight, int wavePeriod,
 		float windSpeed, float seaTemp, TotalIndex totalIndex, int uvIndex) {
 		this.forecastDate = forecastDate;
 		this.timePeriod = timePeriod;
-		this.waveHeight = waveHeight;
+		// this.waveHeight = waveHeight;
+		this.waveHeight = new RangeDetail(waveHeight, waveHeight);
 		this.wavePeriod = wavePeriod;
-		this.windSpeed = windSpeed;
-		this.seaTemp = seaTemp;
+		// this.windSpeed = windSpeed;
+		this.windSpeed = new RangeDetail(windSpeed, windSpeed);
+		// this.seaTemp = seaTemp;
+		this.seaTemp = new RangeDetail(seaTemp, seaTemp);
 		this.totalIndex = totalIndex;
 		this.uvIndex = uvIndex;
 	}
-
 
 }

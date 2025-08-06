@@ -37,9 +37,19 @@ spring:
 
   flyway:
     enabled: false
-  #    baseline-on-migrate: true
+    baseline-on-migrate: true
   #    locations: classpath:db/migration
-
+  mail:
+    host: smtp.gmail.com        # SMTP 서버 호스트
+    port: 587                   # SMTP 서버 포트
+    username: gwj16301
+    password: ${EMAIL_PASSWORD}  # SMTP 서버 비밀번호
+    properties:
+      mail:
+        smtp:
+          auth: true            # 사용자 인증 시도 여부
+          starttls:
+            enable: true        # starttls 활성화 여부
 api:
   # 국립해양조사원(Korea Hydrographic and Oceanographic Agency, KHOA)
   khoa:
@@ -61,6 +71,7 @@ kakao:
   login:
     api_key: ${KAKAO_API_KEY}
     client_secret: ${KAKAO_CLIENT_SECRET}
+    admin_key: ${KAKAO_ADMIN_KEY}
     redirect_uri: ${KAKAO_REDIRECT_URI}
 
     uri:
@@ -70,6 +81,6 @@ kakao:
     uri: https://dapi.kakao.com/v2/local/geo/coord2regioncode
 jwt:
   secret: ${JWT_SECRET}
-  access-token-validity-in-seconds: 300
+  access-token-validity-in-seconds: 3600
   refresh-token-validity-in-seconds: 86400  # 24시간
   use-cookie: false # 개발 환경에서. 클라이언트 개발 완료 후 쿠키 사용 방식으로 변경.

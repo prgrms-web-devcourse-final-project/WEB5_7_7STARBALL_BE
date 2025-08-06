@@ -29,6 +29,7 @@ public record MeetingDetailResponse(
 	String title,
 	ActivityCategory category,
 	long capacity,
+	Integer currentParticipants,
 	long hostId,
 	String hostNickName,
 	String hostEmail,

@@ -11,7 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
+import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.Mudflat;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 public interface MudflatRepository extends ActivityRepository<Mudflat, Long> {
@@ -78,8 +80,19 @@ public interface MudflatRepository extends ActivityRepository<Mudflat, Long> {
 		LocalDateTime endDateTime
 	);
 
+	@Query(value = """
+		SELECT *
+		FROM mudflat_forecast m
+		WHERE m.forecast_date = :forecastDate
+		ORDER BY m.total_index DESC
+		LIMIT 1
+		""",nativeQuery = true)
+	Optional<Mudflat> findBestTotaIndexMudflat(@Param("forecastDate") LocalDate forecastDate);
+
 	Optional<Mudflat> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
 	Optional<Mudflat> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
+
+	Optional<Mudflat> findBySpotIdAndForecastDate(Long spotId, LocalDate forecastDate);
 
 }

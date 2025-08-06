@@ -65,33 +65,3 @@ public class RedisConfig {
 		return template;
 	}
 }
-
-/**
- * Redis 설정
- * 토큰 블랙리스트 관리를 위한 Redis 설정을 제공합니다.
- */
-//@Configuration
-//public class RedisConfig {
-//
-//    /**
-//     * Redis 연결 팩토리
-//     * 기본 설정으로 localhost:6379에 연결합니다.
-//     */
-//    @Bean
-//    public RedisConnectionFactory redisConnectionFactory() {
-//        return new LettuceConnectionFactory();
-//    }
-//
-//    /**
-//     * Redis 템플릿
-//     * 키는 문자열, 값은 JSON으로 직렬화하여 저장합니다.
-//     */
-//    @Bean
-//    public RedisTemplate<String, Object> redisTemplate() {
-//        RedisTemplate<String, Object> template = new RedisTemplate<>();
-//        template.setConnectionFactory(redisConnectionFactory());
-//        template.setKeySerializer(new StringRedisSerializer());
-//        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
-//        return template;
-//    }
-//}

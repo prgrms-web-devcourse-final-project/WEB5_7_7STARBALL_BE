@@ -2,14 +2,19 @@ package sevenstar.marineleisure.meeting.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
+import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.meeting.domain.Meeting;
 
@@ -33,4 +38,28 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 	@Query("SELECT m FROM Meeting m WHERE m.hostId = :memberId")
 	List<Meeting> findByHostId(@Param("memberId") Long memberId);
 
+	@Query("SELECT m FROM Meeting m WHERE "
+		+ "m.status = :status AND "
+		+ " m.id <  :cursorId AND m.id IN "
+		+ "(SELECT p.meetingId FROM Participant p WHERE p.userId = :userId AND p.role = :role) "
+		+ "ORDER BY m.id DESC")
+	Slice<Meeting> findMeetingsByParticipantRoleWithCursor(
+		@Param("userId") Long userId,
+		@Param("status")MeetingStatus status,
+		@Param("role") MeetingRole role,
+		@Param("cursorId") Long cursorId,
+		Pageable pageable
+	);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT m FROM Meeting m WHERE m.id = :meetingId")
+	Optional<Meeting> findByIdWithLock(@Param("meetingId") Long meetingId);
+
+
+	@Modifying
+	@Query("DELETE FROM Meeting m WHERE m.hostId = :hostId")
+	int deleteMeetingByHostId(@Param("hostId") Long hostId);
+
+	@Query("SELECT m FROM Meeting m WHERE m.meetingTime < :currentTime AND m.status != :completedStatus")
+	List<Meeting> findExpiredMeetingsNotCompleted(@Param("currentTime") LocalDateTime currentTime, @Param("completedStatus") MeetingStatus completedStatus);
 }

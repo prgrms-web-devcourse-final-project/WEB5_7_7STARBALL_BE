@@ -17,6 +17,7 @@ public interface FavoriteRepository extends JpaRepository<FavoriteSpot, Long> {
 
 	@Query("""
 		SELECT new sevenstar.marineleisure.favorite.dto.vo.FavoriteItemVO(
+			os.id,
 		    fs.id,
 		    os.name,
 		    os.category,
@@ -35,4 +36,12 @@ public interface FavoriteRepository extends JpaRepository<FavoriteSpot, Long> {
 		Pageable pageable
 	);
 	boolean existsByMemberIdAndSpotId(Long memberId, Long spotId);
+
+	@Query(value = """
+		SELECT m.email
+		FROM FavoriteSpot fs
+		JOIN Member m ON fs.memberId = m.id
+		WHERE fs.spotId = :spotId
+		""")
+	List<String> findEmailByFavoriteBestSpot(Long spotId);
 }

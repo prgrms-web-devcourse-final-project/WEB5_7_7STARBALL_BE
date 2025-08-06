@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS blacklisted_refresh_tokens
     CONSTRAINT uc_blacklisted_refresh_tokens_jti UNIQUE (jti)
 );
 
+CREATE INDEX idx_blacklisted_refresh_tokens_jti ON blacklisted_refresh_tokens (jti);
+
 -- =================================================================================
 --  Favorite Spots
 -- =================================================================================
@@ -23,7 +25,7 @@ CREATE TABLE IF NOT EXISTS favorite_spots
     updated_at   DATETIME              NULL,
     member_id    BIGINT                NOT NULL,
     spot_id      BIGINT                NOT NULL,
-    notification BIT(1)                NOT NULL,
+    notification BOOLEAN               NOT NULL,
     CONSTRAINT pk_favorite_spots PRIMARY KEY (id)
 );
 
@@ -76,7 +78,6 @@ CREATE TABLE IF NOT EXISTS jellyfish_region_density
     created_at   DATETIME              NOT NULL,
     updated_at   DATETIME              NULL,
     region_name  VARCHAR(100)          NOT NULL,
-    species      BIGINT                NOT NULL,
     species_id   BIGINT                NOT NULL,
     report_date  DATE                  NOT NULL,
     density_type VARCHAR(10)           NOT NULL,
@@ -107,7 +108,7 @@ CREATE TABLE IF NOT EXISTS meeting_participants
     updated_at DATETIME              NULL,
     meeting_id BIGINT                NOT NULL,
     user_id    BIGINT                NOT NULL,
-    `role`     SMALLINT              NOT NULL,
+    `role`     VARCHAR(20)           NOT NULL,
     CONSTRAINT pk_meeting_participants PRIMARY KEY (id)
 );
 
@@ -120,11 +121,11 @@ CREATE TABLE IF NOT EXISTS meetings
     created_at    DATETIME              NOT NULL,
     updated_at    DATETIME              NULL,
     title         VARCHAR(20)           NOT NULL,
-    category      SMALLINT              NOT NULL,
+    category      VARCHAR(255)          NOT NULL,
     capacity      INT                   NOT NULL,
     host_id       BIGINT                NOT NULL,
     meeting_time  DATETIME              NOT NULL,
-    status        SMALLINT              NOT NULL,
+    status        VARCHAR(255)          NOT NULL,
     spot_id       BIGINT                NOT NULL,
     `description` TEXT                  NULL,
     CONSTRAINT pk_meetings PRIMARY KEY (id)
@@ -142,7 +143,7 @@ CREATE TABLE IF NOT EXISTS members
     email       VARCHAR(50)           NOT NULL,
     provider    VARCHAR(255)          NULL,
     provider_id VARCHAR(255)          NULL,
-    status      SMALLINT              NOT NULL,
+    status      VARCHAR(255)          NOT NULL,
     latitude    DECIMAL(9, 6)         NULL,
     longitude   DECIMAL(9, 6)         NULL,
     CONSTRAINT pk_members PRIMARY KEY (id),
@@ -184,7 +185,7 @@ CREATE TABLE IF NOT EXISTS observatories
     name       VARCHAR(255)  NOT NULL,
     latitude   DECIMAL(9, 6) NOT NULL,
     longitude  DECIMAL(9, 6) NOT NULL,
-    hl_code    SMALLINT      NOT NULL,
+    hl_code    VARCHAR(255)  NOT NULL,
     time       TIME          NOT NULL,
     CONSTRAINT pk_observatories PRIMARY KEY (id)
 );
@@ -222,7 +223,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens
     updated_at    DATETIME              NULL,
     refresh_token VARCHAR(512)          NOT NULL,
     user_id       BIGINT                NOT NULL,
-    expired       BIT(1)                NOT NULL,
+    expired       BOOLEAN               NOT NULL,
     CONSTRAINT pk_refresh_tokens PRIMARY KEY (id)
 );
 
@@ -256,19 +257,27 @@ CREATE TABLE IF NOT EXISTS scuba_forecast
 -- =================================================================================
 CREATE TABLE spot_preset
 (
-    region              VARCHAR(255) NOT NULL,
-    fishing_spot_id     BIGINT       NULL,
-    fishing_name        VARCHAR(255) NULL,
-    fishing_total_index VARCHAR(255) NULL,
-    mudflat_spot_id     BIGINT       NULL,
-    mudflat_name        VARCHAR(255) NULL,
-    mudflat_total_index VARCHAR(255) NULL,
-    scuba_spot_id       BIGINT       NULL,
-    scuba_name          VARCHAR(255) NULL,
-    scuba_total_index   VARCHAR(255) NULL,
-    surfing_spot_id     BIGINT       NULL,
-    surfing_name        VARCHAR(255) NULL,
-    surfing_total_index VARCHAR(255) NULL,
+    region                VARCHAR(255) NOT NULL,
+    fishing_spot_id       BIGINT       NULL,
+    fishing_name          VARCHAR(255) NULL,
+    fishing_total_index   VARCHAR(255) NULL,
+    fishing_monthView     INT          NULL,
+    fishing_weekView      INT          NULL,
+    mudflat_spot_id       BIGINT       NULL,
+    mudflat_name          VARCHAR(255) NULL,
+    mudflat_total_index   VARCHAR(255) NULL,
+    mudflat_monthView     INT          NULL,
+    mudflat_weekView      INT          NULL,
+    scuba_spot_id         BIGINT       NULL,
+    scuba_name            VARCHAR(255) NULL,
+    scuba_total_index     VARCHAR(255) NULL,
+    scuba_monthView       INT          NULL,
+    scuba_weekView        INT          NULL,
+    surfing_spot_id       BIGINT       NULL,
+    surfing_name          VARCHAR(255) NULL,
+    surfing_total_index   VARCHAR(255) NULL,
+    surfing_monthView     INT          NULL,
+    surfing_weekView      INT          NULL,
     CONSTRAINT pk_spot_preset PRIMARY KEY (region)
 );
 
@@ -317,7 +326,7 @@ CREATE TABLE IF NOT EXISTS surfing_forecast
 );
 
 -- =================================================================================
---  Tags (Commented out)
+--  Tags
 -- =================================================================================
 CREATE TABLE if not exists tags
 (

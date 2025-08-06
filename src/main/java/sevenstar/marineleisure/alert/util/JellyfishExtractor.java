@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVO;
@@ -21,6 +22,7 @@ public class JellyfishExtractor {
 	private final OpenAiChatModel chatModel;
 	private final ObjectMapper objectMapper;
 
+	@CircuitBreaker(name = "openai-api", fallbackMethod = "fallbackExtractJellyfishData")
 	public List<ParsedJellyfishVO> extractJellyfishData(String text) {
 		try {
 			String instruction = """
@@ -70,5 +72,10 @@ public class JellyfishExtractor {
 
 			return List.of();
 		}
+	}
+
+	public List<ParsedJellyfishVO> fallbackExtractJellyfishData(String text, Throwable t) {
+		log.error("OpenAI API 호출에 실패하여 fallback 메서드가 실행되었습니다. message: {}", t.getMessage());
+		return List.of();
 	}
 }

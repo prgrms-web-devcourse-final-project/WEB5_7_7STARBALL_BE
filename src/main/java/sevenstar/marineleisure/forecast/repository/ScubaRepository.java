@@ -11,7 +11,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
+import sevenstar.marineleisure.forecast.domain.Fishing;
 import sevenstar.marineleisure.forecast.domain.Scuba;
+import sevenstar.marineleisure.forecast.domain.Surfing;
+import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 
 public interface ScubaRepository extends ActivityRepository<Scuba, Long> {
@@ -75,6 +78,15 @@ public interface ScubaRepository extends ActivityRepository<Scuba, Long> {
 		@Param("forecastDate") LocalDate forecastDate
 	);
 
+	@Query(value = """
+        SELECT *
+        FROM scuba_forecast s
+        WHERE s.forecast_date = :forecastDate
+        ORDER BY s.total_index DESC
+        LIMIT 1
+        """,nativeQuery = true)
+	Optional<Scuba> findBestTotaIndexScuba(@Param("forecastDate") LocalDate forecastDate);
+
 	Optional<Scuba> findTopByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByTotalIndexDesc(LocalDateTime start, LocalDateTime end);
 
 	Optional<Scuba> findBySpotIdAndCreatedAtBeforeOrderByCreatedAtDesc(Long spotId, LocalDateTime createdAtBefore);
@@ -83,4 +95,6 @@ public interface ScubaRepository extends ActivityRepository<Scuba, Long> {
 		Long spotId,
 		LocalDateTime startDateTime,
 		LocalDateTime endDateTime);
+
+	Optional<Scuba> findBySpotIdAndForecastDateAndTimePeriod(Long spotId, LocalDate forecastDate, TimePeriod timePeriod);
 }

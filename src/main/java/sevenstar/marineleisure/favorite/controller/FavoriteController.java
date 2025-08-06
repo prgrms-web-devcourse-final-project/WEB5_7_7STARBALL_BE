@@ -27,7 +27,7 @@ import sevenstar.marineleisure.global.exception.enums.FavoriteErrorCode;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/favorite")
+@RequestMapping("/favorites")
 public class FavoriteController {
 
 	private final FavoriteServiceImpl service;
@@ -51,7 +51,7 @@ public class FavoriteController {
 	@GetMapping
 	public ResponseEntity<BaseResponse<FavoriteGetListDto>> searchFavorites(
 		@RequestParam(defaultValue = "0") Long cursorId,
-		@RequestParam(defaultValue = "20") @Min(1) @Max(10) int size) {
+		@RequestParam(defaultValue = "20") @Min(1) @Max(20) int size) {
 		List<FavoriteItemVO> result = service.searchFavorite(cursorId, size);
 
 		boolean hasNext = result.size() > size;

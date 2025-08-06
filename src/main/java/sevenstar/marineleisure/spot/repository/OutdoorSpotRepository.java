@@ -31,7 +31,20 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 
 	// Fishing Forecast
 	@Query(value = """
-		SELECT os.id AS id, os.name AS name, f.total_index AS totalIndex
+		SELECT os.id AS id, os.name AS name, f.total_index AS totalIndex,
+		         		COALESCE((
+		                         	SELECT SUM(svs.view_count)
+		                         	FROM spot_view_stats svs
+		                         	WHERE svs.spot_id = os.id
+		                         	  AND svs.view_date BETWEEN :forecastDate - INTERVAL 6 DAY AND :forecastDate
+		                         ), 0) AS weekView,
+		
+		                         COALESCE((
+		                         	SELECT SUM(svs.view_count)
+		                         	FROM spot_view_stats svs
+		                         	WHERE svs.spot_id = os.id
+		                         	  AND svs.view_date BETWEEN :forecastDate - INTERVAL 29 DAY AND :forecastDate
+		                         ), 0) AS monthView
 		FROM outdoor_spots os
 		JOIN fishing_forecast f ON os.id = f.spot_id
 		WHERE f.forecast_date = :forecastDate
@@ -53,7 +66,20 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 
 	// Mudflat Forecast
 	@Query(value = """
-		SELECT os.id AS id, os.name AS name, m.total_index AS totalIndex
+		SELECT os.id AS id, os.name AS name, m.total_index AS totalIndex,
+		         		COALESCE((
+		                         	SELECT SUM(svs.view_count)
+		                         	FROM spot_view_stats svs
+		                         	WHERE svs.spot_id = os.id
+		                         	  AND svs.view_date BETWEEN :forecastDate - INTERVAL 6 DAY AND :forecastDate
+		                         ), 0) AS weekView,
+		
+		                         COALESCE((
+		                         	SELECT SUM(svs.view_count)
+		                         	FROM spot_view_stats svs
+		                         	WHERE svs.spot_id = os.id
+		                         	  AND svs.view_date BETWEEN :forecastDate - INTERVAL 29 DAY AND :forecastDate
+		                         ), 0) AS monthView
 		FROM outdoor_spots os
 		JOIN mudflat_forecast m ON os.id = m.spot_id
 		WHERE m.forecast_date = :forecastDate
@@ -75,7 +101,20 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 
 	// Surfing Forecast
 	@Query(value = """
-		SELECT os.id AS id, os.name AS name, s.total_index AS totalIndex
+		SELECT os.id AS id, os.name AS name, s.total_index AS totalIndex,
+		         		COALESCE((
+		                         	SELECT SUM(svs.view_count)
+		                         	FROM spot_view_stats svs
+		                         	WHERE svs.spot_id = os.id
+		                         	  AND svs.view_date BETWEEN :forecastDate - INTERVAL 6 DAY AND :forecastDate
+		                         ), 0) AS weekView,
+		
+		                         COALESCE((
+		                         	SELECT SUM(svs.view_count)
+		                         	FROM spot_view_stats svs
+		                         	WHERE svs.spot_id = os.id
+		                         	  AND svs.view_date BETWEEN :forecastDate - INTERVAL 29 DAY AND :forecastDate
+		                         ), 0) AS monthView
 		FROM outdoor_spots os
 		JOIN surfing_forecast s ON os.id = s.spot_id
 		WHERE s.forecast_date = :forecastDate
@@ -97,7 +136,20 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 
 	// Scuba Forecast
 	@Query(value = """
-		SELECT os.id AS id, os.name AS name, s.total_index AS totalIndex
+		SELECT os.id AS id, os.name AS name, s.total_index AS totalIndex,
+		         		COALESCE((
+		                         	SELECT SUM(svs.view_count)
+		                         	FROM spot_view_stats svs
+		                         	WHERE svs.spot_id = os.id
+		                         	  AND svs.view_date BETWEEN :forecastDate - INTERVAL 6 DAY AND :forecastDate
+		                         ), 0) AS weekView,
+		
+		                         COALESCE((
+		                         	SELECT SUM(svs.view_count)
+		                         	FROM spot_view_stats svs
+		                         	WHERE svs.spot_id = os.id
+		                         	  AND svs.view_date BETWEEN :forecastDate - INTERVAL 29 DAY AND :forecastDate
+		                         ), 0) AS monthView
 		FROM outdoor_spots os
 		JOIN scuba_forecast s ON os.id = s.spot_id
 		WHERE s.forecast_date = :forecastDate
@@ -125,4 +177,22 @@ public interface OutdoorSpotRepository extends JpaRepository<OutdoorSpot, Long> 
 		""", nativeQuery = true)
 	List<OutdoorSpot> findByCoordinates(@Param("latitude") BigDecimal latitude,
 		@Param("longitude") BigDecimal longitude, @Param("limit") int limit);
+
+	@Query(value = """
+		SELECT * FROM outdoor_spots os
+		WHERE os.category = 'FISHING'
+		ORDER BY ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) ASC 
+		LIMIT 1;
+""",nativeQuery = true)
+	Optional<OutdoorSpot> findNearFishingSpot(@Param("latitude") double latitude,
+		@Param("longitude") double longitude);
+
+	@Query(value = """
+		SELECT * FROM outdoor_spots os
+		WHERE os.category = :category
+		ORDER BY ST_Distance_Sphere(os.geo_point, ST_SRID(POINT(:longitude, :latitude), 4326)) ASC 
+		LIMIT 1;
+""",nativeQuery = true)
+	Optional<OutdoorSpot> findNearSpot(@Param("latitude") double latitude,
+		@Param("longitude") double longitude,@Param("category") String category);
 }

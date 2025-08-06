@@ -12,17 +12,20 @@ import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.global.api.kakao.service.PresetSchedulerService;
 import sevenstar.marineleisure.global.api.khoa.service.KhoaApiService;
 import sevenstar.marineleisure.global.api.openmeteo.dto.service.OpenMeteoService;
+import sevenstar.marineleisure.global.mail.MailService;
 import sevenstar.marineleisure.spot.repository.SpotViewQuartileRepository;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class SchedulerService {
 	public static final int MAX_UPDATE_DAY = 3;
 	private final KhoaApiService khoaApiService;
 	private final OpenMeteoService openMeteoService;
 	private final PresetSchedulerService presetSchedulerService;
 	private final SpotViewQuartileRepository spotViewQuartileRepository;
+
+	private final MailService mailService;
 	private final Executor taskExecutor;
 
 	/**
@@ -52,6 +55,12 @@ public class SchedulerService {
 
 		// 모든 병렬 작업이 완료될 때까지 기다림
 		CompletableFuture.allOf(openMeteoFuture, presetSchedulerFuture, spotViewQuartileFuture).join();
+
+		try {
+			mailService.sendMailToHaveFavoriteBestSpot(today);
+		} catch (Exception e) {
+			log.error("Error sending mail to users with favorite best spots", e);
+		}
 
 		log.info("=== update data ===");
 	}

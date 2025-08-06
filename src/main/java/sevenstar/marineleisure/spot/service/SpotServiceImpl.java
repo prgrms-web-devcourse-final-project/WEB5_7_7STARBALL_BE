@@ -6,6 +6,7 @@ import static sevenstar.marineleisure.global.util.CurrentUserUtil.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
@@ -114,7 +115,7 @@ public class SpotServiceImpl implements SpotService {
 		Region region = geoUtils.searchRegion(latitude, longitude);
 		if (region == Region.OCEAN) {
 			LocalDate now = LocalDate.now();
-			BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", null);
+			BestSpot emptySpot = new BestSpot(-1L, "없는 지역입니다", null,0,0);
 			double radius = 500_000;
 			BestSpot bestSpotInFishing = outdoorSpotRepository.findBestSpotInFishing(region.getLatitude(),
 				region.getLongitude(), now, radius).map(BestSpot::new).orElse(emptySpot);
@@ -142,5 +143,13 @@ public class SpotServiceImpl implements SpotService {
 	public void upsertSpotViewStats(Long spotId) {
 		spotViewStatsRepository.upsertViewStats(spotId, LocalDate.now());
 	}
+
+	@Override
+	public Long nearSpotId(float latitude, float longitude, ActivityCategory category) {
+		return outdoorSpotRepository.findNearSpot(latitude, longitude, category.name())
+			.map(OutdoorSpot::getId)
+			.orElse(0L);
+	}
+
 
 }

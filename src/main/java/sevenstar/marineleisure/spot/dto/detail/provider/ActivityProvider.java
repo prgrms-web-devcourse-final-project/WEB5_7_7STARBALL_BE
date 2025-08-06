@@ -12,20 +12,28 @@ import sevenstar.marineleisure.global.api.khoa.KhoaApiClient;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.KhoaItem;
 import sevenstar.marineleisure.global.api.khoa.mapper.KhoaMapper;
+import sevenstar.marineleisure.global.api.openmeteo.OpenMeteoApiClient;
+import sevenstar.marineleisure.global.api.openmeteo.dto.common.OpenMeteoReadResponse;
+import sevenstar.marineleisure.global.api.openmeteo.dto.item.SunTimeItem;
+import sevenstar.marineleisure.global.api.openmeteo.dto.item.UvIndexItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
+import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.utils.GeoUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.dto.EmailContent;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
 import sevenstar.marineleisure.spot.repository.OutdoorSpotRepository;
 
 public abstract class ActivityProvider {
 	@Autowired
-	private OutdoorSpotRepository outdoorSpotRepository;
+	protected OutdoorSpotRepository outdoorSpotRepository;
 	@Autowired
 	private GeoUtils geoUtils;
 	@Autowired
 	private KhoaApiClient khoaApiClient;
+	@Autowired
+	private OpenMeteoApiClient openMeteoApiClient;
 
 	abstract ActivityCategory getSupportCategory();
 
@@ -34,6 +42,10 @@ public abstract class ActivityProvider {
 	public abstract List<ActivitySpotDetail> getDetails(Long spotId, LocalDate date);
 
 	public abstract void upsert(LocalDate startDate, LocalDate endDate);
+
+	public abstract void update(LocalDate startDate, LocalDate endDate);
+
+	public abstract List<EmailContent> findEmailContent(TotalIndex totalIndex, LocalDate forecastDate);
 
 	@Transactional
 	protected OutdoorSpot createOutdoorSpot(KhoaItem item, FishingType fishingType) {
@@ -63,6 +75,20 @@ public abstract class ActivityProvider {
 				break;
 			}
 		}
+	}
+
+	protected SunTimeItem getSunTimes(LocalDate startDate, LocalDate endDate, double latitude, double longitude) {
+		ResponseEntity<OpenMeteoReadResponse<SunTimeItem>> response = openMeteoApiClient.getSunTimes(
+			new ParameterizedTypeReference<>() {
+			}, startDate, endDate, latitude, longitude);
+		return response.getBody().getDaily();
+	}
+
+	protected UvIndexItem getUvIndex(LocalDate startDate, LocalDate endDate, double latitude, double longitude) {
+		ResponseEntity<OpenMeteoReadResponse<UvIndexItem>> response = openMeteoApiClient.getUvIndex(
+			new ParameterizedTypeReference<>() {
+			}, startDate, endDate, latitude, longitude);
+		return response.getBody().getDaily();
 	}
 
 }

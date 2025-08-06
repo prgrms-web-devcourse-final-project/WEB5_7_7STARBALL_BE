@@ -2,9 +2,11 @@ package sevenstar.marineleisure.meeting.service;
 
 import org.springframework.data.domain.Slice;
 
+import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.GoingMeetingResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
 import sevenstar.marineleisure.meeting.domain.Meeting;
@@ -40,7 +42,9 @@ public interface MeetingService {
 	 * @param MeetingStatus
 	 * @return
 	 */
-	Slice<Meeting> getStatusMyMeetings(Long memberId,Long cursorId, int size , MeetingStatus MeetingStatus);
+	Slice<Meeting> getStatusMyMeetings_role(Long memberId , MeetingRole role , Long cursorId, int size, MeetingStatus meetingStatus);
+
+
 
 
 	MeetingDetailAndMemberResponse getMeetingDetailAndMember(Long memberId, Long meetingId);
@@ -95,5 +99,7 @@ public interface MeetingService {
 	 * @param member
 	 * @param meetingId
 	 */
-	void deleteMeeting(Member member, Long meetingId);
+	void deleteMeeting(Long member, Long meetingId);
+
+	GoingMeetingResponse goingMeeting(Long meetingId, Long memberId);
 }

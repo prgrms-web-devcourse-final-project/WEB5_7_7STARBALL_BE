@@ -26,37 +26,16 @@ public class MeetingValidate {
 	}
 
 	@Transactional(readOnly = true)
-	public void verifyIsHost(Long memberId, Long hostId){
-		if(!Objects.equals(hostId, memberId)){
+	public void validateHost(Meeting targetMeeting , Long memberId){
+		if(!(targetMeeting.getHostId()).equals(memberId)){
 			throw new CustomException(MeetingError.MEETING_NOT_HOST);
 		}
 	}
 
 	@Transactional(readOnly = true)
-	public void verifyRecruiting(Meeting meeting){
-		if(meeting.getStatus() != MeetingStatus.RECRUITING){
-			throw new CustomException(MeetingError.MEETING_NOT_RECRUITING);
-		}
-	}
-
-	@Transactional(readOnly = true)
-	public void verifyMeetingCount(int targetCount, Meeting meeting){
-		if(targetCount >= meeting.getCapacity()){
-			throw new CustomException(MeetingError.MEETING_ALREADY_FULL);
-		}
-	}
-
-	@Transactional(readOnly = true)
-	public void verifyNotHost(Long memberId, Meeting meeting){
-		if(memberId.equals(meeting.getHostId())){
-			throw new CustomException(MeetingError.MEETING_NOT_LEAVE_HOST);
-		}
-	}
-
-	@Transactional(readOnly = true)
-	public void verifyLeave(Meeting meeting){
-		if(meeting.getStatus() == MeetingStatus.COMPLETED || meeting.getStatus() == MeetingStatus.ONGOING){
-			throw new CustomException(MeetingError.CANNOT_LEAVE_COMPLETED_MEETING);
+	public void validateStatus(Meeting targetMeeting){
+		if(targetMeeting.getStatus()==MeetingStatus.COMPLETED || targetMeeting.getStatus() == MeetingStatus.ONGOING){
+			throw new CustomException(MeetingError.CANNOT_CHANGE_GOING_STATUS);
 		}
 	}
 

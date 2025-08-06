@@ -1,6 +1,8 @@
 package sevenstar.marineleisure.alert.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import sevenstar.marineleisure.alert.dto.response.JellyfishResponse;
 import sevenstar.marineleisure.alert.dto.response.JellyfishResponseDto;
 import sevenstar.marineleisure.alert.dto.vo.JellyfishDetailVO;
 import sevenstar.marineleisure.alert.mapper.AlertMapper;
@@ -26,9 +29,11 @@ public class AlertController {
 	 * @return 해파리 발생 관련 정보
 	 */
 	@GetMapping("/jellyfish")
-	public ResponseEntity<BaseResponse<JellyfishResponseDto>> getJellyfishList() {
+	public ResponseEntity<BaseResponse<JellyfishResponse>> getJellyfishList() {
 		List<JellyfishDetailVO> items = jellyfishService.search();
-		JellyfishResponseDto result = alertMapper.toResponseDto(items);
+		Map<String, Set<String>> map = jellyfishService.convert(items);
+
+		JellyfishResponse result = alertMapper.toResponseDto(items.getFirst().getReportDate(), map);
 		return BaseResponse.success(result);
 	}
 

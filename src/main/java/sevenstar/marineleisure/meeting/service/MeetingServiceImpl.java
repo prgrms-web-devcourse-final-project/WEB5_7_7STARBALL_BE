@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import sevenstar.marineleisure.global.enums.MeetingRole;
 import sevenstar.marineleisure.global.enums.MeetingStatus;
+import sevenstar.marineleisure.global.exception.CustomException;
+import sevenstar.marineleisure.meeting.error.MeetingError;
+import sevenstar.marineleisure.meeting.error.ParticipantError;
 import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 import sevenstar.marineleisure.meeting.domain.Meeting;
 import sevenstar.marineleisure.meeting.domain.Participant;
@@ -20,21 +23,18 @@ import sevenstar.marineleisure.meeting.domain.Tag;
 import sevenstar.marineleisure.meeting.dto.mapper.MeetingMapper;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.GoingMeetingResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
 import sevenstar.marineleisure.meeting.dto.response.ParticipantResponse;
-import sevenstar.marineleisure.meeting.dto.mapper.MeetingMapper;
 import sevenstar.marineleisure.meeting.repository.MeetingRepository;
-import sevenstar.marineleisure.meeting.repository.ParticipantRepository;
 import sevenstar.marineleisure.meeting.repository.TagRepository;
-import sevenstar.marineleisure.meeting.domain.Meeting;
-import sevenstar.marineleisure.meeting.domain.Participant;
-import sevenstar.marineleisure.meeting.domain.Tag;
 import sevenstar.marineleisure.meeting.validate.MeetingValidate;
 import sevenstar.marineleisure.meeting.validate.MemberValidate;
 import sevenstar.marineleisure.meeting.validate.ParticipantValidate;
 import sevenstar.marineleisure.meeting.validate.SpotValidate;
 import sevenstar.marineleisure.meeting.validate.TagValidate;
+import sevenstar.marineleisure.meeting.domain.service.MeetingDomainService;
 import sevenstar.marineleisure.member.domain.Member;
 import sevenstar.marineleisure.member.repository.MemberRepository;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
@@ -54,6 +54,7 @@ public class MeetingServiceImpl implements MeetingService {
 	private final MemberValidate memberValidate;
 	private final TagValidate tagValidate;
 	private final SpotValidate spotValidate;
+	private final MeetingDomainService meetingDomainService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -77,18 +78,26 @@ public class MeetingServiceImpl implements MeetingService {
 		Member host = memberValidate.foundMember(targetMeeting.getHostId());
 		OutdoorSpot targetSpot = spotValidate.foundOutdoorSpot(targetMeeting.getSpotId());
 		Tag targetTag = tagValidate.findByMeetingId(meetingId).orElse(null);
+		Integer currentParticipants = participantRepository.countMeetingId(targetMeeting.getId()).orElseThrow(
+			() -> new CustomException(ParticipantError.PARTICIPANT_NOT_FOUND)
+		);
 
-		return meetingMapper.MeetingDetailResponseMapper(targetMeeting, host, targetSpot, targetTag);
+		return meetingMapper.MeetingDetailResponseMapper(targetMeeting, host,currentParticipants,targetSpot, targetTag);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Slice<Meeting> getStatusMyMeetings(Long memberId, Long cursorId, int size, MeetingStatus meetingStatus) {
+	public Slice<Meeting> getStatusMyMeetings_role(Long memberId ,MeetingRole role , Long cursorId, int size, MeetingStatus meetingStatus) {
 		Pageable pageable = PageRequest.of(0, size);
 		memberValidate.existMember(memberId);
 		Long currentCursorId = (cursorId == null || cursorId == 0L) ? Long.MAX_VALUE : cursorId;
-		return meetingRepository.findMyMeetingsByMemberIdAndStatusWithCursor(memberId, meetingStatus,
-			currentCursorId, pageable);
+		return meetingRepository.findMeetingsByParticipantRoleWithCursor(
+			memberId,
+			meetingStatus,
+			role,
+			currentCursorId,
+			pageable
+		);
 	}
 
 	@Override
@@ -96,7 +105,9 @@ public class MeetingServiceImpl implements MeetingService {
 	public MeetingDetailAndMemberResponse getMeetingDetailAndMember(Long memberId , Long meetingId){
 		Member host = memberValidate.foundMember(memberId);
 		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
-		meetingValidate.verifyIsHost(host.getId(), meetingId);
+		if (!targetMeeting.isHost(host.getId())) {
+			throw new IllegalArgumentException("Only host can access member details");
+		}
 		OutdoorSpot targetSpot = spotValidate.foundOutdoorSpot(targetMeeting.getSpotId());
 		List<Participant> participants = participantRepository.findParticipantsByMeetingId(meetingId);
 		participantValidate.existParticipant(memberId);
@@ -119,17 +130,14 @@ public class MeetingServiceImpl implements MeetingService {
 
 	@Override
 	@Transactional
-	//동시성을 처리해야할 문제가 있음
 	public Long joinMeeting(Long meetingId, Long memberId) {
 		memberValidate.existMember(memberId);
 		Meeting meeting = meetingValidate.foundMeeting(meetingId);
-		meetingValidate.verifyRecruiting(meeting);
-		participantValidate.verifyNotAlreadyParticipant(memberId, meetingId);
-		int targetCount = participantValidate.getParticipantCount(meetingId);
-		meetingValidate.verifyMeetingCount(targetCount,meeting);
-		participantRepository.save(
-			meetingMapper.saveParticipant(memberId , meetingId , MeetingRole.GUEST)
-		);
+
+		meetingDomainService.addParticipant(meetingId, memberId, MeetingRole.GUEST);
+
+		meetingRepository.save(meeting);
+		
 		return meetingId;
 	}
 
@@ -137,26 +145,22 @@ public class MeetingServiceImpl implements MeetingService {
 	@Transactional
 	public void leaveMeeting(Long meetingId, Long memberId) {
 		memberValidate.existMember(memberId);
-		Meeting meeting = meetingValidate.foundMeeting(meetingId);
-		participantValidate.existParticipant(memberId);
-		meetingValidate.verifyNotHost(memberId,meeting);
-		meetingValidate.verifyLeave(meeting);
-		Participant targetParticipant = participantValidate.foundParticipantMeetingIdAndUserId(meetingId, memberId);
-		participantRepository.delete(targetParticipant);
-		if (meeting.getStatus() == MeetingStatus.FULL) {
-			meetingRepository.save(meetingMapper.UpdateStatus(meeting, MeetingStatus.RECRUITING));
-		}
 
+		meetingDomainService.removeParticipant(meetingId, memberId);
 	}
+
 
 	@Override
 	@Transactional
 	public Long createMeeting(Long memberId, CreateMeetingRequest request) {
 		Member host = memberValidate.foundMember(memberId);
 		Meeting saveMeeting = meetingRepository.save(meetingMapper.CreateMeeting(request, host.getId()));
-		participantRepository.save(
-			meetingMapper.saveParticipant(saveMeeting.getId(),host.getId(),MeetingRole.HOST)
-		);
+		Participant hostParticipant = Participant.builder()
+			.meetingId(saveMeeting.getId())
+			.userId(host.getId())
+			.role(MeetingRole.HOST)
+			.build();
+		participantRepository.save(hostParticipant);
 		tagRepository.save(
 			meetingMapper.saveTag(saveMeeting.getId(), request)
 		);
@@ -170,19 +174,51 @@ public class MeetingServiceImpl implements MeetingService {
 	public Long updateMeeting(Long meetingId, Long memberId, UpdateMeetingRequest request) {
 		Member host = memberValidate.foundMember(memberId);
 		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
-		meetingValidate.verifyIsHost(host.getId(), targetMeeting.getHostId());
+		
+		if (!targetMeeting.isHost(host.getId())) {
+			throw new IllegalArgumentException("Only host can update meeting");
+		}
+		
+		targetMeeting.updateMeetingInfo(
+			request.title(),
+			request.description(),
+			request.localDateTime(),
+			request.capacity()
+		);
+		
 		Tag targetTag = tagValidate.findByMeetingId(meetingId).orElse(null);
-		Meeting updateMeeting = meetingRepository.save(meetingMapper.UpdateMeeting(request, targetMeeting));
+		Meeting updateMeeting = meetingRepository.save(targetMeeting);
 		tagRepository.save(
 			meetingMapper.UpdateTag(request, targetTag)
 		);
 		return updateMeeting.getId();
-
 	}
 	// 프론트분한테 물어보기 대작전 해야할듯
 	//삭제 할 필요가 있을까? 고민해봐야할것같음.
 	@Override
-	public void deleteMeeting(Member member, Long meetingId) {
+	@Transactional
+	public void deleteMeeting(Long memberId, Long meetingId) {
+		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
 
+		if(!targetMeeting.isHost(memberId)) {
+			throw new CustomException(MeetingError.MEETING_NOT_HOST);
+		}
+		participantRepository.deleteByMeetingId(targetMeeting.getId());
+
+		tagRepository.deleteByMeetingId(targetMeeting.getId());
+
+		meetingRepository.deleteById(meetingId);
 	}
+
+	@Override
+	public GoingMeetingResponse goingMeeting(Long meetingId, Long memberId) {
+		Meeting targetMeeting = meetingValidate.foundMeeting(meetingId);
+		meetingValidate.validateHost(targetMeeting, memberId);
+		meetingValidate.validateStatus(targetMeeting);
+		targetMeeting.changeStatus(MeetingStatus.ONGOING);
+		return GoingMeetingResponse.builder()
+			.meetingId(targetMeeting.getId())
+			.build();
+	}
+
 }

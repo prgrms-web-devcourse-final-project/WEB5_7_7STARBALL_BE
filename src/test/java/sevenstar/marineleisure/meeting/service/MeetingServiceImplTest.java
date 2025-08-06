@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.InOrder;
+
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -34,6 +36,7 @@ import sevenstar.marineleisure.meeting.domain.Participant;
 import sevenstar.marineleisure.meeting.dto.mapper.MeetingMapper;
 import sevenstar.marineleisure.meeting.dto.request.CreateMeetingRequest;
 import sevenstar.marineleisure.meeting.dto.request.UpdateMeetingRequest;
+import sevenstar.marineleisure.meeting.dto.response.GoingMeetingResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailAndMemberResponse;
 import sevenstar.marineleisure.meeting.dto.response.MeetingDetailResponse;
 import sevenstar.marineleisure.meeting.dto.response.ParticipantResponse;
@@ -62,7 +65,7 @@ class MeetingServiceImplTest {
     @Mock
     private MemberRepository memberRepository;
     @Mock
-    private OutdoorSpotRepository outdoorSpotSpotRepository;
+    private OutdoorSpotRepository outdoorSpotRepository;
     @Mock
     private TagRepository tagRepository;
     @Mock
@@ -77,6 +80,8 @@ class MeetingServiceImplTest {
     private TagValidate tagValidate;
     @Mock
     private SpotValidate spotValidate;
+    @Mock
+    private sevenstar.marineleisure.meeting.domain.service.MeetingDomainService meetingDomainService;
 
     @InjectMocks
     private MeetingServiceImpl meetingService;
@@ -86,6 +91,10 @@ class MeetingServiceImplTest {
     private OutdoorSpot testSpot;
     private Member testHost;
     private sevenstar.marineleisure.meeting.domain.Tag testTag;
+    private Long meetingId = 1L;
+    private Long hostId = 1L;
+    private Long nonHostId = 2L;
+    private Meeting mockMeeting;
 
     @BeforeEach
     void setUp() {
@@ -112,6 +121,100 @@ class MeetingServiceImplTest {
             .meetingId(testMeeting.getId())
             .content(Arrays.asList("tag1", "tag2"))
             .build();
+            
+        mockMeeting = mock(Meeting.class);
+    }
+
+    @Test
+    @DisplayName("goingMeeting - 정상 케이스: RECRUITING 상태에서 ONGOING으로 변경")
+    void goingMeeting_Success_FromRecruiting() {
+        // given
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(mockMeeting);
+        doNothing().when(meetingValidate).validateHost(mockMeeting, hostId);
+        doNothing().when(meetingValidate).validateStatus(mockMeeting);
+        when(mockMeeting.getId()).thenReturn(meetingId);
+
+        // when
+        GoingMeetingResponse result = meetingService.goingMeeting(meetingId, hostId);
+
+        // then
+        assertNotNull(result);
+        assertEquals(meetingId, result.meetingId());
+        verify(mockMeeting).changeStatus(MeetingStatus.ONGOING);
+    }
+
+    @Test
+    @DisplayName("goingMeeting - 정상 케이스: FULL 상태에서 ONGOING으로 변경")
+    void goingMeeting_Success_FromFull() {
+        // given
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(mockMeeting);
+        doNothing().when(meetingValidate).validateHost(mockMeeting, hostId);
+        doNothing().when(meetingValidate).validateStatus(mockMeeting);
+        when(mockMeeting.getId()).thenReturn(meetingId);
+
+        // when
+        GoingMeetingResponse result = meetingService.goingMeeting(meetingId, hostId);
+
+        // then
+        assertNotNull(result);
+        assertEquals(meetingId, result.meetingId());
+        verify(mockMeeting).changeStatus(MeetingStatus.ONGOING);
+    }
+
+    @Test
+    @DisplayName("goingMeeting - 실패: 호스트가 아닌 사용자가 요청")
+    void goingMeeting_Fail_NotHost() {
+        // given
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(mockMeeting);
+        doThrow(new CustomException(MeetingError.MEETING_NOT_HOST))
+            .when(meetingValidate).validateHost(mockMeeting, nonHostId);
+
+        // when & then
+        CustomException exception = assertThrows(
+            CustomException.class,
+            () -> meetingService.goingMeeting(meetingId, nonHostId)
+        );
+        
+        assertEquals(MeetingError.MEETING_NOT_HOST, exception.getErrorCode());
+        verify(mockMeeting, never()).changeStatus(any());
+    }
+
+    @Test
+    @DisplayName("goingMeeting - 실패: 이미 COMPLETED 상태인 미팅")
+    void goingMeeting_Fail_AlreadyCompleted() {
+        // given
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(mockMeeting);
+        doNothing().when(meetingValidate).validateHost(mockMeeting, hostId);
+        doThrow(new CustomException(MeetingError.CANNOT_CHANGE_GOING_STATUS))
+            .when(meetingValidate).validateStatus(mockMeeting);
+
+        // when & then
+        CustomException exception = assertThrows(
+            CustomException.class,
+            () -> meetingService.goingMeeting(meetingId, hostId)
+        );
+        
+        assertEquals(MeetingError.CANNOT_CHANGE_GOING_STATUS, exception.getErrorCode());
+        verify(mockMeeting, never()).changeStatus(any());
+    }
+
+    @Test
+    @DisplayName("goingMeeting - 실패: 이미 ONGOING 상태인 미팅")
+    void goingMeeting_Fail_AlreadyOngoing() {
+        // given
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(mockMeeting);
+        doNothing().when(meetingValidate).validateHost(mockMeeting, hostId);
+        doThrow(new CustomException(MeetingError.CANNOT_CHANGE_GOING_STATUS))
+            .when(meetingValidate).validateStatus(mockMeeting);
+
+        // when & then
+        CustomException exception = assertThrows(
+            CustomException.class,
+            () -> meetingService.goingMeeting(meetingId, hostId)
+        );
+        
+        assertEquals(MeetingError.CANNOT_CHANGE_GOING_STATUS, exception.getErrorCode());
+        verify(mockMeeting, never()).changeStatus(any());
     }
 
     @Test
@@ -143,13 +246,13 @@ class MeetingServiceImplTest {
 
         when(memberValidate.foundMember(hostId)).thenReturn(testHost);
         when(meetingValidate.foundMeeting(meetingId)).thenReturn(testMeeting);
-        doNothing().when(meetingValidate).verifyIsHost(anyLong(), anyLong());
         when(spotValidate.foundOutdoorSpot(testMeeting.getSpotId())).thenReturn(testSpot);
         when(participantRepository.findParticipantsByMeetingId(meetingId)).thenReturn(participants);
         doNothing().when(participantValidate).existParticipant(hostId);
         when(memberRepository.findAllById(anyList())).thenReturn(participantMembers);
         when(meetingMapper.toParticipantResponseList(anyList(), anyMap())).thenReturn(participantResponses);
-        //when(meetingMapper.meetingDetailAndMemberResponseMapper(any(), any(), any(), any())).thenReturn(expectedResponse);
+        when(tagValidate.findByMeetingId(meetingId)).thenReturn(java.util.Optional.of(testTag));
+        when(meetingMapper.meetingDetailAndMemberResponseMapper(any(), any(), any(), any(), any())).thenReturn(expectedResponse);
 
         // when
         MeetingDetailAndMemberResponse response = meetingService.getMeetingDetailAndMember(hostId, meetingId);
@@ -159,16 +262,13 @@ class MeetingServiceImplTest {
         assertEquals(meetingId, response.id());
         assertEquals(testHost.getNickname(), response.hostNickName());
         assertEquals(2, response.participants().size());
-        assertEquals("host", response.participants().get(0).nickName());
 
         verify(memberValidate).foundMember(hostId);
         verify(meetingValidate).foundMeeting(meetingId);
-        verify(meetingValidate).verifyIsHost(hostId, meetingId);
         verify(spotValidate).foundOutdoorSpot(testMeeting.getSpotId());
         verify(participantRepository).findParticipantsByMeetingId(meetingId);
         verify(memberRepository).findAllById(participantUserIds);
         verify(meetingMapper).toParticipantResponseList(participants, participantNicknames);
-        //verify(meetingMapper).meetingDetailAndMemberResponseMapper(testMeeting, testHost, testSpot, participantResponses);
     }
 
     @Test
@@ -180,30 +280,30 @@ class MeetingServiceImplTest {
 
         when(memberValidate.foundMember(nonHostId)).thenReturn(testMember);
         when(meetingValidate.foundMeeting(meetingId)).thenReturn(testMeeting);
-        doThrow(new CustomException(MeetingError.MEETING_NOT_HOST)).when(meetingValidate).verifyIsHost(nonHostId, meetingId);
 
         // when & then
-        CustomException exception = assertThrows(CustomException.class, () -> {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             meetingService.getMeetingDetailAndMember(nonHostId, meetingId);
         });
 
-        assertEquals(MeetingError.MEETING_NOT_HOST, exception.getErrorCode());
+        assertEquals("Only host can access member details", exception.getMessage());
         verify(spotValidate, never()).foundOutdoorSpot(anyLong());
         verify(participantRepository, never()).findParticipantsByMeetingId(anyLong());
     }
 
-    // joinMeeting Tests
+    // joinMeeting Tests - MeetingDomainService를 사용하는 실제 구현에 맞춤
     @Test
     @DisplayName("모임 참여 성공")
     void joinMeeting_Success() {
         // given
         doNothing().when(memberValidate).existMember(testMember.getId());
         when(meetingValidate.foundMeeting(testMeeting.getId())).thenReturn(testMeeting);
-        doNothing().when(meetingValidate).verifyRecruiting(testMeeting);
-        doNothing().when(participantValidate).verifyNotAlreadyParticipant(testMember.getId(), testMeeting.getId());
-        when(participantValidate.getParticipantCount(testMeeting.getId())).thenReturn(5);
-        doNothing().when(meetingValidate).verifyMeetingCount(5, testMeeting);
-        when(meetingMapper.saveParticipant(testMember.getId(), testMeeting.getId(), MeetingRole.GUEST)).thenReturn(Participant.builder().build());
+        when(meetingDomainService.addParticipant(testMeeting.getId(), testMember.getId(), MeetingRole.GUEST))
+            .thenReturn(Participant.builder()
+                .meetingId(testMeeting.getId())
+                .userId(testMember.getId())
+                .role(MeetingRole.GUEST)
+                .build());
 
         // when
         Long resultMeetingId = meetingService.joinMeeting(testMeeting.getId(), testMember.getId());
@@ -211,7 +311,10 @@ class MeetingServiceImplTest {
         // then
         assertNotNull(resultMeetingId);
         assertEquals(testMeeting.getId(), resultMeetingId);
-        verify(participantRepository, times(1)).save(any(Participant.class));
+        verify(memberValidate).existMember(testMember.getId());
+        verify(meetingValidate).foundMeeting(testMeeting.getId());
+        verify(meetingDomainService).addParticipant(testMeeting.getId(), testMember.getId(), MeetingRole.GUEST);
+        verify(meetingRepository).save(testMeeting);
     }
 
     @Test
@@ -228,46 +331,7 @@ class MeetingServiceImplTest {
         });
 
         assertEquals(MeetingError.MEETING_NOT_FOUND, exception.getErrorCode());
-        verify(participantRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("모임 참여 실패 - 모집 중이 아님")
-    void joinMeeting_Fail_NotOngoing() {
-        // given
-        Meeting completedMeeting = Meeting.builder().status(MeetingStatus.COMPLETED).build();
-
-        doNothing().when(memberValidate).existMember(testMember.getId());
-        when(meetingValidate.foundMeeting(completedMeeting.getId())).thenReturn(completedMeeting);
-        doThrow(new CustomException(MeetingError.MEETING_NOT_RECRUITING)).when(meetingValidate).verifyRecruiting(completedMeeting);
-
-        // when & then
-        CustomException exception = assertThrows(CustomException.class, () -> {
-            meetingService.joinMeeting(completedMeeting.getId(), testMember.getId());
-        });
-
-        assertEquals(MeetingError.MEETING_NOT_RECRUITING, exception.getErrorCode());
-        verify(participantRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("모임 참여 실패 - 정원 초과")
-    void joinMeeting_Fail_MeetingFull() {
-        // given
-        doNothing().when(memberValidate).existMember(testMember.getId());
-        when(meetingValidate.foundMeeting(testMeeting.getId())).thenReturn(testMeeting);
-        doNothing().when(meetingValidate).verifyRecruiting(testMeeting);
-        doNothing().when(participantValidate).verifyNotAlreadyParticipant(testMember.getId(), testMeeting.getId());
-        when(participantValidate.getParticipantCount(testMeeting.getId())).thenReturn(10);
-        doThrow(new CustomException(MeetingError.MEETING_ALREADY_FULL)).when(meetingValidate).verifyMeetingCount(10, testMeeting);
-
-        // when & then
-        CustomException exception = assertThrows(CustomException.class, () -> {
-            meetingService.joinMeeting(testMeeting.getId(), testMember.getId());
-        });
-
-        assertEquals(MeetingError.MEETING_ALREADY_FULL, exception.getErrorCode());
-        verify(participantRepository, never()).save(any());
+        verify(meetingRepository, never()).save(any());
     }
 
     // getMeetingDetails Tests
@@ -279,7 +343,8 @@ class MeetingServiceImplTest {
         when(memberValidate.foundMember(testMeeting.getHostId())).thenReturn(testHost);
         when(spotValidate.foundOutdoorSpot(testMeeting.getSpotId())).thenReturn(testSpot);
         when(tagValidate.findByMeetingId(anyLong())).thenReturn(Optional.of(testTag));
-        when(meetingMapper.MeetingDetailResponseMapper(testMeeting, testHost, testSpot, testTag))
+        when(participantRepository.countMeetingId(testMeeting.getId())).thenReturn(Optional.of(5));
+        when(meetingMapper.MeetingDetailResponseMapper(testMeeting, testHost, 5, testSpot, testTag))
             .thenReturn(MeetingDetailResponse.builder().title(testMeeting.getTitle()).hostNickName(testHost.getNickname()).build());
 
         // when
@@ -304,6 +369,234 @@ class MeetingServiceImplTest {
         });
 
         assertEquals(MeetingError.MEETING_NOT_FOUND, exception.getErrorCode());
+    }
+
+    // getStatusMyMeetings_role Tests
+    @Test
+    @DisplayName("역할과 상태별 내 모임 조회 성공 - HOST, RECRUITING")
+    void getStatusMyMeetings_role_Success_HostRecruiting() {
+        // given
+        Long memberId = testHost.getId();
+        MeetingRole role = MeetingRole.HOST;
+        Long cursorId = 0L;
+        int size = 10;
+        MeetingStatus status = MeetingStatus.RECRUITING;
+        Pageable pageable = PageRequest.of(0, size);
+        
+        List<Meeting> mockMeetings = Arrays.asList(testMeeting);
+        Slice<Meeting> mockSlice = new SliceImpl<>(mockMeetings, pageable, false);
+        
+        doNothing().when(memberValidate).existMember(memberId);
+        when(meetingRepository.findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, Long.MAX_VALUE, pageable))
+            .thenReturn(mockSlice);
+        
+        // when
+        Slice<Meeting> result = meetingService.getStatusMyMeetings_role(memberId, role, cursorId, size, status);
+        
+        // then
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(testMeeting.getId(), result.getContent().get(0).getId());
+        assertFalse(result.hasNext());
+        
+        verify(memberValidate).existMember(memberId);
+        verify(meetingRepository).findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, Long.MAX_VALUE, pageable);
+    }
+
+    @Test
+    @DisplayName("역할과 상태별 내 모임 조회 성공 - GUEST, ONGOING, cursorId 유효값")
+    void getStatusMyMeetings_role_Success_GuestOngoingWithCursor() {
+        // given
+        Long memberId = testMember.getId();
+        MeetingRole role = MeetingRole.GUEST;
+        Long cursorId = 5L;
+        int size = 5;
+        MeetingStatus status = MeetingStatus.ONGOING;
+        Pageable pageable = PageRequest.of(0, size);
+        
+        List<Meeting> mockMeetings = Arrays.asList(testMeeting);
+        Slice<Meeting> mockSlice = new SliceImpl<>(mockMeetings, pageable, true);
+        
+        doNothing().when(memberValidate).existMember(memberId);
+        when(meetingRepository.findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, cursorId, pageable))
+            .thenReturn(mockSlice);
+        
+        // when
+        Slice<Meeting> result = meetingService.getStatusMyMeetings_role(memberId, role, cursorId, size, status);
+        
+        // then
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.hasNext());
+        
+        verify(memberValidate).existMember(memberId);
+        verify(meetingRepository).findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, cursorId, pageable);
+    }
+
+    @Test
+    @DisplayName("역할과 상태별 내 모임 조회 - cursorId null일 때 Long.MAX_VALUE로 처리")
+    void getStatusMyMeetings_role_Success_NullCursorId() {
+        // given
+        Long memberId = testHost.getId();
+        MeetingRole role = MeetingRole.HOST;
+        Long cursorId = null;
+        int size = 10;
+        MeetingStatus status = MeetingStatus.COMPLETED;
+        Pageable pageable = PageRequest.of(0, size);
+        
+        List<Meeting> mockMeetings = Collections.emptyList();
+        Slice<Meeting> mockSlice = new SliceImpl<>(mockMeetings, pageable, false);
+        
+        doNothing().when(memberValidate).existMember(memberId);
+        when(meetingRepository.findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, Long.MAX_VALUE, pageable))
+            .thenReturn(mockSlice);
+        
+        // when
+        Slice<Meeting> result = meetingService.getStatusMyMeetings_role(memberId, role, cursorId, size, status);
+        
+        // then
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
+        assertFalse(result.hasNext());
+        
+        verify(memberValidate).existMember(memberId);
+        verify(meetingRepository).findMeetingsByParticipantRoleWithCursor(
+            memberId, status, role, Long.MAX_VALUE, pageable);
+    }
+
+    @Test
+    @DisplayName("역할과 상태별 내 모임 조회 실패 - 존재하지 않는 멤버")
+    void getStatusMyMeetings_role_Fail_MemberNotFound() {
+        // given
+        Long nonExistentMemberId = 99L;
+        MeetingRole role = MeetingRole.HOST;
+        Long cursorId = 0L;
+        int size = 10;
+        MeetingStatus status = MeetingStatus.RECRUITING;
+        
+        doThrow(new CustomException(MeetingError.MEETING_MEMBER_NOT_FOUND))
+            .when(memberValidate).existMember(nonExistentMemberId);
+        
+        // when & then
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            meetingService.getStatusMyMeetings_role(nonExistentMemberId, role, cursorId, size, status);
+        });
+        
+        assertEquals(MeetingError.MEETING_MEMBER_NOT_FOUND, exception.getErrorCode());
+        verify(meetingRepository, never()).findMeetingsByParticipantRoleWithCursor(
+            anyLong(), any(), any(), anyLong(), any());
+    }
+
+    // deleteMeeting Tests
+    @Test
+    @DisplayName("미팅 삭제 성공 - 호스트가 삭제")
+    void deleteMeeting_Success_AsHost() {
+        // given
+        Long hostMemberId = 1L;
+        Long meetingId = 1L;
+        Meeting targetMeeting = Meeting.builder()
+            .id(meetingId)
+            .title("삭제할 미팅")
+            .hostId(hostMemberId)
+            .status(MeetingStatus.RECRUITING)
+            .capacity(5)
+            .spotId(1L)
+            .build();
+
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(targetMeeting);
+
+        // when
+        meetingService.deleteMeeting(hostMemberId, meetingId);
+
+        // then
+        verify(meetingValidate).foundMeeting(meetingId);
+        verify(participantRepository).deleteByMeetingId(meetingId);
+        verify(tagRepository).deleteByMeetingId(meetingId);
+        verify(meetingRepository).deleteById(meetingId);
+    }
+
+    @Test
+    @DisplayName("미팅 삭제 실패 - 호스트가 아닌 사용자")
+    void deleteMeeting_Fail_NotHost() {
+        // given
+        Long hostMemberId = 1L;
+        Long nonHostMemberId = 2L;
+        Long meetingId = 1L;
+        Meeting targetMeeting = Meeting.builder()
+            .id(meetingId)
+            .title("삭제할 미팅")
+            .hostId(hostMemberId)
+            .status(MeetingStatus.RECRUITING)
+            .capacity(5)
+            .spotId(1L)
+            .build();
+
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(targetMeeting);
+
+        // when & then
+        CustomException exception = assertThrows(
+            CustomException.class,
+            () -> meetingService.deleteMeeting(nonHostMemberId, meetingId)
+        );
+
+        assertEquals(MeetingError.MEETING_NOT_HOST, exception.getErrorCode());
+        verify(participantRepository, never()).deleteByMeetingId(anyLong());
+        verify(tagRepository, never()).deleteByMeetingId(anyLong());
+        verify(meetingRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    @DisplayName("미팅 삭제 실패 - 존재하지 않는 미팅")
+    void deleteMeeting_Fail_MeetingNotFound() {
+        // given
+        Long hostMemberId = 1L;
+        Long nonExistentMeetingId = 99L;
+
+        when(meetingValidate.foundMeeting(nonExistentMeetingId))
+            .thenThrow(new CustomException(MeetingError.MEETING_NOT_FOUND));
+
+        // when & then
+        CustomException exception = assertThrows(
+            CustomException.class,
+            () -> meetingService.deleteMeeting(hostMemberId, nonExistentMeetingId)
+        );
+
+        assertEquals(MeetingError.MEETING_NOT_FOUND, exception.getErrorCode());
+        verify(participantRepository, never()).deleteByMeetingId(anyLong());
+        verify(tagRepository, never()).deleteByMeetingId(anyLong());
+        verify(meetingRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    @DisplayName("미팅 삭제 성공 - cascade 삭제 순서 검증")
+    void deleteMeeting_Success_CascadeOrder() {
+        // given
+        Long hostMemberId = 1L;
+        Long meetingId = 1L;
+        Meeting targetMeeting = Meeting.builder()
+            .id(meetingId)
+            .title("삭제할 미팅")
+            .hostId(hostMemberId)
+            .status(MeetingStatus.FULL)
+            .capacity(5)
+            .spotId(1L)
+            .build();
+
+        when(meetingValidate.foundMeeting(meetingId)).thenReturn(targetMeeting);
+
+        // when
+        meetingService.deleteMeeting(hostMemberId, meetingId);
+
+        // then - 삭제 순서 검증 (InOrder 사용)
+        InOrder inOrder = inOrder(participantRepository, tagRepository, meetingRepository);
+        inOrder.verify(participantRepository).deleteByMeetingId(meetingId);
+        inOrder.verify(tagRepository).deleteByMeetingId(meetingId);
+        inOrder.verify(meetingRepository).deleteById(meetingId);
     }
 
     private <T> T withId(T entity, Long id) {

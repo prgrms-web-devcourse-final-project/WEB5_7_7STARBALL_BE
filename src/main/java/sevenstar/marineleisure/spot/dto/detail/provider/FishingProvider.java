@@ -15,6 +15,7 @@ import sevenstar.marineleisure.forecast.repository.FishingTargetRepository;
 import sevenstar.marineleisure.global.api.khoa.dto.common.ApiResponse;
 import sevenstar.marineleisure.global.api.khoa.dto.item.FishingItem;
 import sevenstar.marineleisure.global.api.khoa.mapper.KhoaMapper;
+import sevenstar.marineleisure.global.api.openmeteo.dto.item.UvIndexItem;
 import sevenstar.marineleisure.global.enums.ActivityCategory;
 import sevenstar.marineleisure.global.enums.FishingType;
 import sevenstar.marineleisure.global.enums.TidePhase;
@@ -22,6 +23,7 @@ import sevenstar.marineleisure.global.enums.TimePeriod;
 import sevenstar.marineleisure.global.enums.TotalIndex;
 import sevenstar.marineleisure.global.utils.DateUtils;
 import sevenstar.marineleisure.spot.domain.OutdoorSpot;
+import sevenstar.marineleisure.spot.dto.EmailContent;
 import sevenstar.marineleisure.spot.dto.projection.FishingReadProjection;
 import sevenstar.marineleisure.spot.mapper.SpotDetailMapper;
 import sevenstar.marineleisure.spot.repository.ActivityRepository;
@@ -77,6 +79,25 @@ public class FishingProvider extends ActivityProvider {
 			}
 
 		}
+	}
+
+	@Override
+	public void update(LocalDate startDate, LocalDate endDate) {
+		for (Long spotId : fishingRepository.findByForecastDateBetween(startDate, endDate)) {
+			OutdoorSpot outdoorSpot = outdoorSpotRepository.findById(spotId).orElseThrow();
+			UvIndexItem uvIndex = getUvIndex(startDate, endDate, outdoorSpot.getLatitude().doubleValue(),
+				outdoorSpot.getLongitude().doubleValue());
+			for (int i = 0; i < uvIndex.getTime().size(); i++) {
+				Float uvIndexValue = uvIndex.getUvIndexMax().get(i);
+				LocalDate date = uvIndex.getTime().get(i);
+				fishingRepository.updateUvIndex(uvIndexValue, spotId, date);
+			}
+		}
+	}
+
+	@Override
+	public List<EmailContent> findEmailContent(TotalIndex totalIndex, LocalDate forecastDate) {
+		return fishingRepository.findEmailContentByTotalIndexAndForecastDate(totalIndex, forecastDate);
 	}
 
 	private List<ActivitySpotDetail> transform(List<FishingReadProjection> fishingForecasts) {

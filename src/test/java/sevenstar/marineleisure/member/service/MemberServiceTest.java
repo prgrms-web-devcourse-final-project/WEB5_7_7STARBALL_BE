@@ -2,6 +2,7 @@ package sevenstar.marineleisure.member.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -39,6 +40,9 @@ class MemberServiceTest {
 
 	@Mock
 	private ParticipantRepository participantRepository;
+
+	@Mock
+	private OauthService oauthService;
 
 	@InjectMocks
 	private MemberService memberService;
@@ -190,15 +194,19 @@ class MemberServiceTest {
 		// given
 		List<Meeting> hostedMeetings = new ArrayList<>();
 		Meeting mockMeeting = mock(Meeting.class);
+		when(mockMeeting.getId()).thenReturn(100L);
 		hostedMeetings.add(mockMeeting);
 
-		List<Participant> participations = new ArrayList<>();
-		Participant mockParticipant = mock(Participant.class);
-		participations.add(mockParticipant);
+		List<Participant> meetingParticipants = new ArrayList<>();
+		Participant mockMeetingParticipant = mock(Participant.class);
+		meetingParticipants.add(mockMeetingParticipant);
 
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
 		when(meetingRepository.findByHostId(memberId)).thenReturn(hostedMeetings);
-		when(participantRepository.findByUserId(memberId)).thenReturn(participations);
+		when(participantRepository.findParticipantsByMeetingId(100L)).thenReturn(meetingParticipants);
+		when(meetingRepository.deleteMeetingByHostId(memberId)).thenReturn(1);
+		when(participantRepository.deleteByUserId(memberId)).thenReturn(1);
+		when(oauthService.unlinkKakaoAccount(testMember.getProviderId())).thenReturn(12345L);
 
 		// when
 		memberService.deleteMember(memberId);
@@ -206,9 +214,49 @@ class MemberServiceTest {
 		// then
 		verify(memberRepository).findById(memberId);
 		verify(meetingRepository).findByHostId(memberId);
-		verify(meetingRepository).deleteAll(hostedMeetings);
-		verify(participantRepository).findByUserId(memberId);
-		verify(participantRepository).deleteAll(participations);
+		verify(participantRepository).findParticipantsByMeetingId(100L);
+		verify(participantRepository).deleteAll(meetingParticipants);
+		verify(meetingRepository).deleteMeetingByHostId(memberId);
+		verify(participantRepository).deleteByUserId(memberId);
+		verify(oauthService).unlinkKakaoAccount(testMember.getProviderId());
 		verify(memberRepository).save(testMember);
+	}
+
+	@Test
+	@DisplayName("회원 상태를 EXPIRED로 변경할 수 있다")
+	void updateMemberStatusToExpired() {
+		// given
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
+		when(memberRepository.save(any(Member.class))).thenReturn(testMember);
+
+		// when
+		MemberDetailResponse response = memberService.updateMemberStatus(memberId, MemberStatus.EXPIRED);
+
+		// then
+		assertThat(response).isNotNull();
+		verify(memberRepository).findById(memberId);
+		verify(memberRepository).save(testMember);
+	}
+
+	@Test
+	@DisplayName("회원 탈퇴 시 회원 상태가 EXPIRED로 변경된다")
+	void deleteMember_updatesStatusToExpired() {
+		// given
+		List<Meeting> hostedMeetings = new ArrayList<>();
+
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(testMember));
+		when(meetingRepository.findByHostId(memberId)).thenReturn(hostedMeetings);
+
+		// when
+		memberService.deleteMember(memberId);
+
+		// then
+		// Capture the argument passed to save
+		ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
+		verify(memberRepository).save(memberCaptor.capture());
+
+		// Verify that the member's status is updated to EXPIRED
+		Member savedMember = memberCaptor.getValue();
+		assertThat(savedMember.getStatus()).isEqualTo(MemberStatus.EXPIRED);
 	}
 }

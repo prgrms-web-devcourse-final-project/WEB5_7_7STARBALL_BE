@@ -4,6 +4,7 @@ public record ActivityWeatherResponse(
     String location,
     String windSpeed,
     String waveHeight,
-    String waterTemp
+    String waterTemp,
+	Long spotId
 ) {
 }
