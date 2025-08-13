@@ -4,12 +4,12 @@ import java.util.List;
 
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.retry.annotation.CircuitBreaker;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import sevenstar.marineleisure.alert.dto.vo.ParsedJellyfishVO;
@@ -22,7 +22,6 @@ public class JellyfishExtractor {
 	private final OpenAiChatModel chatModel;
 	private final ObjectMapper objectMapper;
 
-	@CircuitBreaker(name = "openai-api", fallbackMethod = "fallbackExtractJellyfishData")
 	public List<ParsedJellyfishVO> extractJellyfishData(String text) {
 		try {
 			String instruction = """

@@ -39,7 +39,7 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 	private final JellyfishCrawler crawler;
 	private final RestTemplate restTemplate = new RestTemplate();
 
-	@PostConstruct
+	// @PostConstruct
 	public void onStartUp() {
 		updateLatestReport();
 	}
@@ -67,7 +67,7 @@ public class JellyfishService implements AlertService<JellyfishDetailVO> {
 	/**
 	 * 웹에서 크롤링 해 Pdf를 DB에 적재합니다.
 	 */
-	@Scheduled(cron = "0 0 0 ? * FRI")
+	// @Scheduled(cron = "0 0 0 ? * FRI")
 	// 금요일 00시에 동작합니다.
 	@Transactional
 	public void updateLatestReport() {
